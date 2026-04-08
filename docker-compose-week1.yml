@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: tokenguard-litellm-week1
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./proxy/litellm_config.yaml:/app/config.yaml
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    command: ["--config", "/app/config.yaml", "--port", "4000", "--detailed_debug"]
+    restart: on-failure
+
+  proxy:
+    build:
+      context: ./proxy
+      dockerfile: Dockerfile_week1
+    container_name: tokenguard-proxy-week1
+    ports:
+      - "8000:8000"
+    environment:
+      - LITELLM_URL=http://litellm:4000
+      - TOKENGUARD_SECRET_KEY=${TOKENGUARD_SECRET_KEY}
+    depends_on:
+      - litellm
+    restart: on-failure

@@ -1,0 +1,14 @@
+.env
+.env.local
+__pycache__/
+*.pyc
+*.backup
+.DS_Store
+node_modules/
+.next/
+dist/
+build/
+*.log
+.vscode/
+.idea/
+demo_state.json
