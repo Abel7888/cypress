@@ -72,7 +72,9 @@ def load_tenant_budgets():
 load_tenant_budgets()
 
 LITELLM_URL = os.getenv("LITELLM_URL", "http://localhost:4000")
-TOKENGUARD_SECRET_KEY = os.getenv("TOKENGUARD_SECRET_KEY", "changeme")
+
+def get_secret_key():
+    return os.getenv("TOKENGUARD_SECRET_KEY", "changeme")
 
 
 def get_tenant_from_key(api_key: str):
@@ -114,7 +116,7 @@ def authenticate(request: Request):
             raise HTTPException(status_code=403, detail="Invalid API key")
     
     # Fall back to legacy auth for dashboard/testing (Weeks 1-6)
-    if api_key == TOKENGUARD_SECRET_KEY:
+    if api_key == get_secret_key():
         return "client-default"
     
     raise HTTPException(status_code=401, detail="Invalid API key")
