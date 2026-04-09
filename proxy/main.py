@@ -427,8 +427,8 @@ async def billing_status(request: Request):
         cur.execute("""
             SELECT name, plan, subscription_status, plan_seat_limit,
                    stripe_customer_id, stripe_subscription_id
-            FROM tenants WHERE id = %s::uuid
-        """, (client_id,))
+            FROM tenants WHERE id::text = %s OR name = %s
+        """, (client_id, client_id))
         row = cur.fetchone()
         cur.close()
         conn.close()
