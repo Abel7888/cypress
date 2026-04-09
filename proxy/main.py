@@ -32,7 +32,7 @@ app.add_middleware(
 def load_tenant_budgets():
     """Load budgets for all tenants from Postgres. Falls back to default if DB unavailable."""
     try:
-        conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
         cur = conn.cursor()
         cur.execute("SELECT id, name FROM tenants")
         tenants = cur.fetchall()
@@ -80,7 +80,7 @@ def get_secret_key():
 def get_tenant_from_key(api_key: str):
     try:
         key_hash = hashlib.sha256(api_key.encode()).hexdigest()
-        conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
         cur = conn.cursor()
         cur.execute("""
             SELECT t.id, t.name 
@@ -366,7 +366,7 @@ async def stripe_webhook(request: Request):
         if tenant_id and plan:
             try:
                 import psycopg2
-                conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+                conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
                 cur = conn.cursor()
                 seat_limit = PLANS[plan]["seat_limit"]
                 cur.execute("""
@@ -389,7 +389,7 @@ async def stripe_webhook(request: Request):
         subscription_id = event["data"]["object"]["id"]
         try:
             import psycopg2
-            conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+            conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
             cur = conn.cursor()
             cur.execute("""
                 UPDATE tenants
@@ -422,7 +422,7 @@ async def billing_status(request: Request):
 
     try:
         import psycopg2
-        conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
         cur = conn.cursor()
         cur.execute("""
             SELECT name, plan, subscription_status, plan_seat_limit,
@@ -522,7 +522,7 @@ async def billing_summary(tenant_id: str, request: Request):
     import psycopg2
 
     # Get tenant info from Postgres
-    conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+    conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
     cur = conn.cursor()
     cur.execute("SELECT name, plan, plan_seat_limit FROM tenants WHERE id = %s::uuid", (tenant_id,))
     tenant_row = cur.fetchone()
