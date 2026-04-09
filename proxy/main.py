@@ -71,7 +71,8 @@ def load_tenant_budgets():
 
 load_tenant_budgets()
 
-LITELLM_URL = os.getenv("LITELLM_URL", "http://localhost:4000")
+def get_litellm_url():
+    return os.getenv("LITELLM_URL", "http://localhost:4000")
 
 def get_secret_key():
     return os.getenv("TOKENGUARD_SECRET_KEY", "changeme")
@@ -242,7 +243,7 @@ async def proxy_completion(request: Request):
     try:
         async with httpx.AsyncClient(timeout=300) as client:
             response = await client.post(
-                f"{LITELLM_URL}/v1/chat/completions",
+                f"{get_litellm_url()}/v1/chat/completions",
                 json=body,
                 headers={
                     "Content-Type": "application/json",
