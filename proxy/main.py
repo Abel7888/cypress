@@ -714,24 +714,18 @@ async def dashboard_agents(request: Request):
 @app.get("/debug/env")
 async def debug_env():
     import psycopg2
+    # Print ALL environment variables so we can see what Railway is injecting
+    import os
+    all_env = {k: v[:20] + "..." if len(v) > 20 else v 
+               for k, v in os.environ.items() 
+               if not k.startswith("PATH")}
+    
     db_url = os.getenv("DATABASE_URL", "NOT SET")
     secret = os.getenv("TOKENGUARD_SECRET_KEY", "NOT SET")
     
-    try:
-        conn = psycopg2.connect(dsn=db_url)
-        cur = conn.cursor()
-        cur.execute("SELECT COUNT(*) FROM api_keys")
-        key_count = cur.fetchone()[0]
-        cur.close()
-        conn.close()
-        db_status = f"connected — {key_count} keys found"
-    except Exception as e:
-        db_status = f"FAILED: {str(e)}"
-
     return JSONResponse(content={
         "secret_key_set": secret != "NOT SET",
         "secret_key_length": len(secret),
         "db_url_set": db_url != "NOT SET",
-        "db_url_prefix": db_url[:30] if db_url != "NOT SET" else "none",
-        "db_status": db_status,
+        "all_env_keys": list(os.environ.keys()),
     })
