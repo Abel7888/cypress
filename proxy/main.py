@@ -243,15 +243,15 @@ async def proxy_completion(request: Request):
     try:
         async with httpx.AsyncClient(timeout=300) as client:
             response = await client.post(
-                f"{get_litellm_url()}/v1/chat/completions",
+                "https://api.openai.com/v1/chat/completions",
                 json=body,
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": "Bearer changeme-litellm-master-key"
+                    "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY', '')}"
                 }
             )
     except httpx.ConnectError:
-        raise HTTPException(status_code=503, detail="Cannot reach LiteLLM on port 4000")
+        raise HTTPException(status_code=503, detail="Cannot reach OpenAI API")
 
     result = response.json()
     latency_ms = round((time.time() - start_time) * 1000)
