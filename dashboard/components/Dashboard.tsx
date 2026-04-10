@@ -35,8 +35,7 @@ function getModelColor(model: string): string {
   return MODEL_COLORS[model] || "#4F8EF7";
 }
 
-// proxy url from env
-const API_BASE = process.env.NEXT_PUBLIC_PROXY_API_URL || "http://localhost:8000";
+const API_BASE = "https://cypress-production-1cc5.up.railway.app";
 const API_KEY = "lMNUO5f2xEAmxq8lXA9ODmCi-pxCr-9hL99fyw3VlWw";
 const HEADERS = { Authorization: `Bearer ${API_KEY}` };
 
