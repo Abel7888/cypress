@@ -453,6 +453,52 @@ async def billing_status(request: Request):
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
+@app.post("/api/tenants")
+async def create_tenant_api(request: Request):
+    authenticate(request)
+    body = await request.json()
+    name = body.get("name")
+    plan = body.get("plan", "starter")
+
+    if not name:
+        return JSONResponse(status_code=400, content={"error": "name required"})
+
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("INSERT INTO tenants (name, plan) VALUES (%s, %s) RETURNING id", (name, plan))
+        tenant_id = str(cur.fetchone()[0])
+        conn.commit()
+        cur.close()
+        conn.close()
+        return JSONResponse(content={"tenant_id": tenant_id, "name": name, "plan": plan})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.post("/api/tenants/{tenant_id}/users")
+async def create_tenant_user(tenant_id: str, request: Request):
+    authenticate(request)
+    body = await request.json()
+    name = body.get("name", "user")
+
+    import secrets
+    api_key = "tg-" + secrets.token_hex(24)
+    key_hash = hashlib.sha256(api_key.encode()).hexdigest()
+
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("INSERT INTO api_keys (tenant_id, key, label) VALUES (%s::uuid, %s, %s)",
+                    (tenant_id, key_hash, name))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return JSONResponse(content={"api_key": api_key, "label": name, "tenant_id": tenant_id})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
 @app.get("/api/tenants/{tenant_id}/users")
 async def get_user_breakdown(tenant_id: str, request: Request):
     """Per-employee usage breakdown for a tenant."""
