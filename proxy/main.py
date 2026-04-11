@@ -173,6 +173,14 @@ async def budget_reset(request: Request):
     return JSONResponse(content={"reset": True, "budget_id": "budget-001"})
 
 
+@app.post("/budget/reload")
+async def budget_reload(request: Request):
+    """Reload all tenant budgets from Postgres. Call after creating new tenants."""
+    authenticate(request)
+    load_tenant_budgets()
+    return JSONResponse(content={"reloaded": True})
+
+
 @app.post("/v1/chat/completions")
 async def proxy_completion(request: Request):
     client_id = authenticate(request)
