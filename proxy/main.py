@@ -45,7 +45,7 @@ def load_tenant_budgets():
                 tenant_id=str(tenant_id),
                 name=f"{tenant_name} Daily Cap",
                 period=BudgetPeriod.DAILY,
-                limit_usd=1.00,
+                limit_usd=0.05,
                 alert_thresholds=[50, 80, 95],
                 action_on_limit=BudgetAction.BLOCK
             )
