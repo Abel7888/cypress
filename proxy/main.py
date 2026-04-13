@@ -520,7 +520,7 @@ async def create_tenant_user(tenant_id: str, request: Request):
 
 @app.get("/api/tenants/{tenant_id}/keys")
 async def list_tenant_keys(tenant_id: str, request: Request):
-    """List all API keys for a tenant with label, status, last_used."""
+    """List all API keys for a tenant with label, status, created_at."""
     authenticate(request)
     try:
         conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
@@ -531,7 +531,6 @@ async def list_tenant_keys(tenant_id: str, request: Request):
                 label,
                 is_active,
                 created_at,
-                last_used_at,
                 LEFT(key, 8) as key_prefix
             FROM api_keys
             WHERE tenant_id = %s::uuid
@@ -542,13 +541,12 @@ async def list_tenant_keys(tenant_id: str, request: Request):
         conn.close()
         keys = []
         for row in rows:
-            key_id, label, is_active, created_at, last_used_at, key_prefix = row
+            key_id, label, is_active, created_at, key_prefix = row
             keys.append({
                 "id": str(key_id),
                 "label": label or "Unnamed",
                 "is_active": is_active,
                 "created_at": created_at.isoformat() if created_at else None,
-                "last_used_at": last_used_at.isoformat() if last_used_at else None,
                 "key_preview": f"tg-{key_prefix}...{label[:3].lower() if label else 'key'}",
             })
         return JSONResponse(content={"keys": keys, "total": len(keys)})
