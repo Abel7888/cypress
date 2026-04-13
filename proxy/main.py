@@ -486,23 +486,120 @@ async def create_tenant_api(request: Request):
 
 @app.post("/api/tenants/{tenant_id}/users")
 async def create_tenant_user(tenant_id: str, request: Request):
+    """Create a new user API key for a tenant. Returns raw key once — store it."""
     authenticate(request)
     body = await request.json()
     name = body.get("name", "user")
+    role = body.get("role", "")
 
     import secrets
     api_key = "tg-" + secrets.token_hex(24)
     key_hash = hashlib.sha256(api_key.encode()).hexdigest()
+    label = f"{name} ({role})" if role else name
 
     try:
         conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
         cur = conn.cursor()
-        cur.execute("INSERT INTO api_keys (tenant_id, key, label) VALUES (%s::uuid, %s, %s)",
-                    (tenant_id, key_hash, name))
+        cur.execute(
+            "INSERT INTO api_keys (tenant_id, key, label) VALUES (%s::uuid, %s, %s) RETURNING id",
+            (tenant_id, key_hash, label)
+        )
+        key_id = cur.fetchone()[0]
         conn.commit()
         cur.close()
         conn.close()
-        return JSONResponse(content={"api_key": api_key, "label": name, "tenant_id": tenant_id})
+        return JSONResponse(content={
+            "api_key": api_key,        # raw key — shown once only
+            "key_id": str(key_id),
+            "label": label,
+            "tenant_id": tenant_id,
+        })
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.get("/api/tenants/{tenant_id}/keys")
+async def list_tenant_keys(tenant_id: str, request: Request):
+    """List all API keys for a tenant with label, status, last_used."""
+    authenticate(request)
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT
+                id,
+                label,
+                is_active,
+                created_at,
+                last_used_at,
+                LEFT(key, 8) as key_prefix
+            FROM api_keys
+            WHERE tenant_id = %s::uuid
+            ORDER BY created_at DESC
+        """, (tenant_id,))
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        keys = []
+        for row in rows:
+            key_id, label, is_active, created_at, last_used_at, key_prefix = row
+            keys.append({
+                "id": str(key_id),
+                "label": label or "Unnamed",
+                "is_active": is_active,
+                "created_at": created_at.isoformat() if created_at else None,
+                "last_used_at": last_used_at.isoformat() if last_used_at else None,
+                "key_preview": f"tg-{key_prefix}...{label[:3].lower() if label else 'key'}",
+            })
+        return JSONResponse(content={"keys": keys, "total": len(keys)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.delete("/api/tenants/{tenant_id}/keys/{key_id}")
+async def revoke_tenant_key(tenant_id: str, key_id: str, request: Request):
+    """Revoke (deactivate) a specific API key."""
+    authenticate(request)
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE api_keys
+            SET is_active = FALSE
+            WHERE id = %s::uuid AND tenant_id = %s::uuid
+            RETURNING label
+        """, (key_id, tenant_id))
+        row = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        if not row:
+            return JSONResponse(status_code=404, content={"error": "Key not found"})
+        return JSONResponse(content={"revoked": True, "label": row[0]})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.post("/api/tenants/{tenant_id}/keys/{key_id}/reactivate")
+async def reactivate_tenant_key(tenant_id: str, key_id: str, request: Request):
+    """Reactivate a previously revoked API key."""
+    authenticate(request)
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE api_keys
+            SET is_active = TRUE
+            WHERE id = %s::uuid AND tenant_id = %s::uuid
+            RETURNING label
+        """, (key_id, tenant_id))
+        row = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        if not row:
+            return JSONResponse(status_code=404, content={"error": "Key not found"})
+        return JSONResponse(content={"reactivated": True, "label": row[0]})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 

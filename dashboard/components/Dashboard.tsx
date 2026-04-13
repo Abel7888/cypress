@@ -741,9 +741,373 @@ function ROIReportPage() {
   );
 }
 
+function MasterKeyCard() {
+  const [visible, setVisible] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const masterKey = "lMNUO5f2xEAmxq8lXA9ODmCi-pxCr-9hL99fyw3VlWw";
+
+  const copy = () => {
+    navigator.clipboard.writeText(masterKey);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <Card>
+      <CardBody>
+        <SectionHeader
+          title="Master API Key"
+          subtitle="Full admin access — never share this"
+        />
+        <div style={{
+          background: COLORS.bgAccent,
+          border: `1px solid ${COLORS.border}`,
+          borderRadius: 8,
+          padding: "12px 14px",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          marginBottom: 12,
+        }}>
+          <span style={{
+            fontFamily: "monospace",
+            fontSize: 13,
+            color: COLORS.text,
+            flex: 1,
+            letterSpacing: visible ? "0" : "0.15em",
+          }}>
+            {visible ? masterKey : "•".repeat(44)}
+          </span>
+          <button
+            onClick={() => setVisible(v => !v)}
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              color: COLORS.textMuted, fontSize: 13, padding: "2px 8px",
+            }}
+          >
+            {visible ? "Hide" : "Show"}
+          </button>
+          <button
+            onClick={copy}
+            style={{
+              background: copied ? COLORS.greenDim : COLORS.primaryDim,
+              border: `1px solid ${copied ? COLORS.green : COLORS.primary}`,
+              borderRadius: 6, cursor: "pointer",
+              color: copied ? COLORS.green : COLORS.primary,
+              fontSize: 12, padding: "4px 12px",
+            }}
+          >
+            {copied ? "Copied!" : "Copy"}
+          </button>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {[
+            { label: "Full dashboard access", color: COLORS.green },
+            { label: "Manage all keys", color: COLORS.green },
+            { label: "View billing", color: COLORS.green },
+          ].map((b, i) => (
+            <Badge key={i} color={COLORS.greenDim} textColor={COLORS.green}>
+              ✓ {b.label}
+            </Badge>
+          ))}
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
+
+function EmployeeKeyManager() {
+  const [keys, setKeys] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newRole, setNewRole] = useState("");
+  const [newKey, setNewKey] = useState<string | null>(null);
+  const [newKeyCopied, setNewKeyCopied] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/keys`, { headers: HEADERS });
+      const data = await res.json();
+      setKeys(data.keys || []);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const createKey = async () => {
+    if (!newName.trim()) return;
+    setActionLoading("creating");
+    try {
+      const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/users`, {
+        method: "POST",
+        headers: { ...HEADERS, "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName.trim(), role: newRole.trim() }),
+      });
+      const data = await res.json();
+      setNewKey(data.api_key);
+      setNewName("");
+      setNewRole("");
+      setAdding(false);
+      await load();
+    } catch (e) { console.error(e); }
+    setActionLoading(null);
+  };
+
+  const revokeKey = async (keyId: string) => {
+    setActionLoading(keyId);
+    try {
+      await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/keys/${keyId}`, {
+        method: "DELETE", headers: HEADERS,
+      });
+      await load();
+    } catch (e) { console.error(e); }
+    setActionLoading(null);
+  };
+
+  const reactivateKey = async (keyId: string) => {
+    setActionLoading(keyId);
+    try {
+      await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/keys/${keyId}/reactivate`, {
+        method: "POST", headers: HEADERS,
+      });
+      await load();
+    } catch (e) { console.error(e); }
+    setActionLoading(null);
+  };
+
+  const copyKey = (key: string) => {
+    navigator.clipboard.writeText(key);
+    setNewKeyCopied(true);
+    setTimeout(() => setNewKeyCopied(false), 2000);
+  };
+
+  const inputStyle: React.CSSProperties = {
+    background: COLORS.bgAccent,
+    border: `1px solid ${COLORS.border}`,
+    borderRadius: 8,
+    color: COLORS.text,
+    fontSize: 13,
+    padding: "8px 12px",
+    outline: "none",
+    width: "100%",
+  };
+
+  return (
+    <Card>
+      <CardBody>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <SectionHeader title="Employee API Keys" subtitle="One key per team member" />
+          <button
+            onClick={() => setAdding(v => !v)}
+            style={{
+              background: COLORS.primaryDim,
+              border: `1px solid ${COLORS.primary}`,
+              borderRadius: 8, cursor: "pointer",
+              color: COLORS.primary, fontSize: 13,
+              padding: "6px 16px", fontWeight: 600,
+            }}
+          >
+            + Add Employee
+          </button>
+        </div>
+
+        {newKey && (
+          <div style={{
+            background: COLORS.greenDim,
+            border: `1px solid ${COLORS.green}`,
+            borderRadius: 8, padding: "12px 14px",
+            marginBottom: 16, display: "flex",
+            flexDirection: "column", gap: 8,
+          }}>
+            <div style={{ fontSize: 12, color: COLORS.green, fontWeight: 600 }}>
+              ✓ New key created — copy it now, it won't be shown again
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <code style={{ fontSize: 12, color: COLORS.text, flex: 1, fontFamily: "monospace", wordBreak: "break-all" }}>
+                {newKey}
+              </code>
+              <button
+                onClick={() => copyKey(newKey)}
+                style={{
+                  background: newKeyCopied ? COLORS.greenDim : COLORS.primaryDim,
+                  border: `1px solid ${newKeyCopied ? COLORS.green : COLORS.primary}`,
+                  borderRadius: 6, cursor: "pointer",
+                  color: newKeyCopied ? COLORS.green : COLORS.primary,
+                  fontSize: 12, padding: "4px 12px", whiteSpace: "nowrap",
+                }}
+              >
+                {newKeyCopied ? "Copied!" : "Copy Key"}
+              </button>
+              <button
+                onClick={() => setNewKey(null)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.textMuted, fontSize: 16 }}
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
+        {adding && (
+          <div style={{
+            background: COLORS.bgAccent,
+            border: `1px solid ${COLORS.borderLight}`,
+            borderRadius: 8, padding: 14,
+            marginBottom: 16,
+            display: "grid", gridTemplateColumns: "1fr 1fr auto auto",
+            gap: 10, alignItems: "end",
+          }}>
+            <div>
+              <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Name *</div>
+              <input
+                style={inputStyle}
+                placeholder="Sarah Chen"
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && createKey()}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Role</div>
+              <input
+                style={inputStyle}
+                placeholder="Engineering"
+                value={newRole}
+                onChange={e => setNewRole(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && createKey()}
+              />
+            </div>
+            <button
+              onClick={createKey}
+              disabled={!newName.trim() || actionLoading === "creating"}
+              style={{
+                background: COLORS.primary, border: "none",
+                borderRadius: 8, cursor: "pointer",
+                color: "#fff", fontSize: 13,
+                padding: "8px 16px", fontWeight: 600,
+                opacity: !newName.trim() ? 0.5 : 1,
+              }}
+            >
+              {actionLoading === "creating" ? "..." : "Generate"}
+            </button>
+            <button
+              onClick={() => setAdding(false)}
+              style={{
+                background: "none",
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: 8, cursor: "pointer",
+                color: COLORS.textMuted, fontSize: 13,
+                padding: "8px 12px",
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+
+        {loading ? (
+          <div style={{ color: COLORS.textMuted, fontSize: 13, textAlign: "center", padding: 24 }}>
+            Loading keys...
+          </div>
+        ) : keys.length === 0 ? (
+          <div style={{ color: COLORS.textMuted, fontSize: 13, textAlign: "center", padding: 24 }}>
+            No employee keys yet — click Add Employee to create one
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 160px 120px 80px 120px",
+              gap: 12, padding: "0 4px",
+            }}>
+              {["Employee", "Key Preview", "Created", "Status", "Actions"].map(h => (
+                <div key={h} style={{ fontSize: 11, color: COLORS.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  {h}
+                </div>
+              ))}
+            </div>
+
+            {keys.map(k => (
+              <div
+                key={k.id}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 160px 120px 80px 120px",
+                  gap: 12, alignItems: "center",
+                  background: COLORS.bgAccent,
+                  border: `1px solid ${k.is_active ? COLORS.border : COLORS.borderLight}`,
+                  borderRadius: 8, padding: "10px 12px",
+                  opacity: k.is_active ? 1 : 0.6,
+                }}
+              >
+                <div style={{ fontSize: 13, color: COLORS.text, fontWeight: 500 }}>
+                  {k.label}
+                </div>
+                <div style={{ fontFamily: "monospace", fontSize: 12, color: COLORS.textMuted }}>
+                  {k.key_preview}
+                </div>
+                <div style={{ fontSize: 12, color: COLORS.textDim }}>
+                  {k.created_at ? new Date(k.created_at).toLocaleDateString() : "—"}
+                </div>
+                <div>
+                  <Badge
+                    color={k.is_active ? COLORS.greenDim : "#1a1a1a"}
+                    textColor={k.is_active ? COLORS.green : COLORS.textMuted}
+                  >
+                    {k.is_active ? "Active" : "Revoked"}
+                  </Badge>
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {k.is_active ? (
+                    <button
+                      onClick={() => revokeKey(k.id)}
+                      disabled={actionLoading === k.id}
+                      style={{
+                        background: "none",
+                        border: `1px solid ${COLORS.red}40`,
+                        borderRadius: 6, cursor: "pointer",
+                        color: COLORS.red, fontSize: 11,
+                        padding: "3px 10px",
+                      }}
+                    >
+                      {actionLoading === k.id ? "..." : "Revoke"}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => reactivateKey(k.id)}
+                      disabled={actionLoading === k.id}
+                      style={{
+                        background: "none",
+                        border: `1px solid ${COLORS.primary}40`,
+                        borderRadius: 6, cursor: "pointer",
+                        color: COLORS.primary, fontSize: 11,
+                        padding: "3px 10px",
+                      }}
+                    >
+                      {actionLoading === k.id ? "..." : "Restore"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardBody>
+    </Card>
+  );
+}
+
 function SettingsPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <MasterKeyCard />
+      <EmployeeKeyManager />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <Card>
           <CardBody>
