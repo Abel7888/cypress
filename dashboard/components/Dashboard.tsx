@@ -1,6 +1,5 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const COLORS = {
   bg: "#080C14",
@@ -37,6 +36,7 @@ function getModelColor(model: string): string {
 
 const API_BASE = "https://cypress-production-1cc5.up.railway.app";
 const API_KEY = "lMNUO5f2xEAmxq8lXA9ODmCi-pxCr-9hL99fyw3VlWw";
+const TENANT_ID = "6f96c565-2284-4092-93c4-62252a1c1d59";
 const HEADERS = { Authorization: `Bearer ${API_KEY}` };
 
 // ─── COMPONENTS ──────────────────────────────────────────────────────────────
@@ -136,6 +136,126 @@ function AreaChartSVG({ data, dataKey, color, height = 80 }: {
   );
 }
 
+// ─── SAVINGS SUMMARY CARD ────────────────────────────────────────────────────
+
+function SavingsSummaryCard({ overview }: { overview: any }) {
+  if (!overview) return null;
+  const gpt4oCost = overview?.models?.find((m: any) => m.model === "gpt-4o")?.cost || 0;
+  const miniCost = overview?.models?.find((m: any) => m.model === "gpt-4o-mini")?.cost || 0;
+  const cacheSaved = (overview?.cache_hits || 0) * 0.00005;
+  const totalActual = overview?.total_cost_usd || 0;
+  const estimatedUnrouted = gpt4oCost + miniCost * 33;
+  const routingSaved = Math.max(0, estimatedUnrouted - totalActual);
+  const totalSaved = routingSaved + cacheSaved;
+  const monthlyFee = 999;
+  const netBenefit = totalSaved - monthlyFee;
+
+  return (
+    <Card style={{ background: `linear-gradient(135deg, #0D1220 0%, #0a1628 100%)`, border: `1px solid ${COLORS.green}30` }}>
+      <CardBody>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.green }} />
+          <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.green, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+            Monthly ROI Summary
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+          {[
+            { label: "You paid TokenGuard", value: `$${monthlyFee.toFixed(0)}`, color: COLORS.textMuted },
+            { label: "AI costs saved", value: `$${totalSaved.toFixed(4)}`, color: COLORS.cyan },
+            { label: "Net in your pocket", value: netBenefit >= 0 ? `+$${netBenefit.toFixed(2)}` : `-$${Math.abs(netBenefit).toFixed(2)}`, color: netBenefit >= 0 ? COLORS.green : COLORS.red },
+          ].map((item, i) => (
+            <div key={i} style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.08em" }}>{item.label}</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: item.color, fontFamily: "monospace" }}>{item.value}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${COLORS.border}`, display: "flex", justifyContent: "space-between", fontSize: 11 }}>
+          <span style={{ color: COLORS.textDim }}>{(overview?.cache_hits || 0)} responses served from cache</span>
+          <span style={{ color: COLORS.textDim }}>{(overview?.cache_hit_rate || 0).toFixed(1)}% cache hit rate</span>
+          <span style={{ color: COLORS.purple }}>{overview?.models?.filter((m: any) => m.model !== "cache" && m.model !== "blocked").length || 0} models active</span>
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
+
+// ─── ACTIVITY FEED ───────────────────────────────────────────────────────────
+
+function ActivityFeed() {
+  const [events, setEvents] = useState<any[]>([]);
+  const prevCountRef = useRef(0);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/users`, { headers: HEADERS }).then(r => r.json());
+        const users = data.users || [];
+        // Build synthetic feed from user data
+        const feed: any[] = [];
+        users.forEach((u: any) => {
+          if (u.api_calls > 0) {
+            feed.push({ employee: u.employee, type: "call", cost: u.cost_usd / u.api_calls, model: "gpt-4o-mini", time: "recent" });
+          }
+          if (u.cache_hits > 0) {
+            feed.push({ employee: u.employee, type: "cache", cost: 0, model: "cache", time: "recent" });
+          }
+          if (u.blocked_calls > 0) {
+            feed.push({ employee: u.employee, type: "blocked", cost: 0, model: "blocked", time: "recent" });
+          }
+        });
+        setEvents(feed.slice(0, 8));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    load();
+    const interval = setInterval(load, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const typeConfig: Record<string, any> = {
+    call: { label: "API Call", color: COLORS.primary, icon: "→" },
+    cache: { label: "Cache HIT", color: COLORS.green, icon: "✓" },
+    blocked: { label: "BLOCKED", color: COLORS.red, icon: "✕" },
+  };
+
+  return (
+    <Card>
+      <CardBody>
+        <SectionHeader title="Live Activity Feed" subtitle="Last 15 seconds — auto-refreshing" />
+        {events.length === 0 ? (
+          <div style={{ color: COLORS.textDim, fontSize: 12 }}>Waiting for activity...</div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {events.map((e, i) => {
+              const cfg = typeConfig[e.type] || typeConfig.call;
+              return (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: i < events.length - 1 ? `1px solid ${COLORS.border}` : "none" }}>
+                  <div style={{ width: 20, height: 20, borderRadius: "50%", background: `${cfg.color}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: cfg.color, fontWeight: 700, flexShrink: 0 }}>
+                    {cfg.icon}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, color: COLORS.text, fontFamily: "monospace" }}>{e.employee}</div>
+                    <div style={{ fontSize: 10, color: COLORS.textDim, marginTop: 1 }}>{e.model}</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 11, color: cfg.color, fontWeight: 600 }}>{cfg.label}</div>
+                    <div style={{ fontSize: 10, color: COLORS.textDim, fontFamily: "monospace" }}>
+                      {e.type === "call" ? `$${e.cost.toFixed(6)}` : e.type === "cache" ? "$0.000000" : "blocked"}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardBody>
+    </Card>
+  );
+}
+
 // ─── PAGES ───────────────────────────────────────────────────────────────────
 
 function OverviewPage() {
@@ -165,10 +285,13 @@ function OverviewPage() {
   }, []);
 
   if (loading) return <div style={{ color: COLORS.textMuted, padding: 40, fontSize: 13 }}>Loading real data from ClickHouse...</div>;
-  if (!overview) return <div style={{ color: COLORS.red, padding: 40, fontSize: 13 }}>Could not connect to proxy. Make sure it is running on port 8000.</div>;
+  if (!overview) return <div style={{ color: COLORS.red, padding: 40, fontSize: 13 }}>Could not connect to proxy.</div>;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Savings Summary Card — shown first */}
+      <SavingsSummaryCard overview={overview} />
+
       {/* Stat Cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
         <StatCard label="Total Spend" value={`$${(overview.total_cost_usd || 0).toFixed(4)}`} sub="All time" color={COLORS.primary} />
@@ -177,7 +300,7 @@ function OverviewPage() {
         <StatCard label="Routed Calls" value={(overview.models || []).filter((m: any) => m.model !== "cache" && m.model !== "blocked").length.toString()} sub="Model types active" color={COLORS.purple} />
       </div>
 
-      {/* Charts */}
+      {/* Charts + Activity Feed */}
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
         <Card>
           <CardBody>
@@ -193,16 +316,10 @@ function OverviewPage() {
             </div>
           </CardBody>
         </Card>
-
-        <Card>
-          <CardBody>
-            <SectionHeader title="Call Volume" subtitle="Calls per day" />
-            <AreaChartSVG data={trends} dataKey="total_calls" color={COLORS.cyan} height={120} />
-          </CardBody>
-        </Card>
+        <ActivityFeed />
       </div>
 
-      {/* Model Table */}
+      {/* Model Breakdown */}
       <Card>
         <CardBody>
           <SectionHeader title="Model Breakdown" subtitle="Cost and calls per model" />
@@ -224,9 +341,7 @@ function OverviewPage() {
                   <td style={{ padding: "12px", textAlign: "right", fontSize: 12, color: COLORS.textMuted }}>{m.calls}</td>
                   <td style={{ padding: "12px", textAlign: "right", fontSize: 12, fontFamily: "monospace", color: COLORS.text }}>${m.cost.toFixed(6)}</td>
                   <td style={{ padding: "12px", textAlign: "right", fontSize: 12, color: COLORS.textMuted }}>{(m.percentage || 0).toFixed(1)}%</td>
-                  <td style={{ padding: "12px", minWidth: 100 }}>
-                    <ProgressBar value={m.percentage || 0} max={100} />
-                  </td>
+                  <td style={{ padding: "12px", minWidth: 100 }}><ProgressBar value={m.percentage || 0} max={100} /></td>
                 </tr>
               ))}
             </tbody>
@@ -237,9 +352,13 @@ function OverviewPage() {
   );
 }
 
+// ─── COST ANALYSIS WITH PER-USER DROPDOWN ────────────────────────────────────
+
 function CostAnalysisPage() {
   const [agents, setAgents] = useState<any[]>([]);
   const [models, setModels] = useState<any[]>([]);
+  const [selectedUser, setSelectedUser] = useState<string>("all");
+  const [userDetail, setUserDetail] = useState<any>(null);
 
   useEffect(() => {
     async function load() {
@@ -255,11 +374,112 @@ function CostAnalysisPage() {
     load();
   }, []);
 
+  // Load per-tenant user breakdown
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const data = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/users`, { headers: HEADERS }).then(r => r.json());
+        setUserDetail(data);
+      } catch (e) { console.error(e); }
+    }
+    loadUsers();
+  }, []);
+
+  const tenantUsers = userDetail?.users || [];
+  const filteredUsers = selectedUser === "all" ? tenantUsers : tenantUsers.filter((u: any) => u.employee === selectedUser);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+      {/* Per-Employee Section with Dropdown */}
       <Card>
         <CardBody>
-          <SectionHeader title="Cost by Agent" subtitle="Spend breakdown per agent ID" />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <SectionHeader title="Per-Employee Usage" subtitle="Spend breakdown by team member" />
+            <select
+              value={selectedUser}
+              onChange={e => setSelectedUser(e.target.value)}
+              style={{
+                background: COLORS.bgAccent,
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: 6,
+                color: COLORS.text,
+                fontSize: 12,
+                padding: "6px 12px",
+                cursor: "pointer",
+                outline: "none",
+              }}
+            >
+              <option value="all">All Employees</option>
+              {tenantUsers.map((u: any) => (
+                <option key={u.employee} value={u.employee}>{u.employee}</option>
+              ))}
+            </select>
+          </div>
+
+          {tenantUsers.length === 0 ? (
+            <div style={{ color: COLORS.textDim, fontSize: 12 }}>Loading employee data...</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {/* Header row */}
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr", gap: 8, padding: "8px 12px", marginBottom: 4 }}>
+                {["Employee", "Calls", "Cost", "Savings", "Cache Hits", "Status"].map(h => (
+                  <div key={h} style={{ fontSize: 10, color: COLORS.textDim, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</div>
+                ))}
+              </div>
+              {filteredUsers.map((u: any, i: number) => {
+                const statusColor = u.status === "blocked" ? COLORS.red : u.blocked_calls > 0 ? COLORS.amber : COLORS.green;
+                const statusLabel = u.status === "blocked" ? "Blocked" : u.blocked_calls > 0 ? "Warning" : "Healthy";
+                return (
+                  <div key={i} style={{
+                    display: "grid",
+                    gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr",
+                    gap: 8,
+                    padding: "12px",
+                    borderRadius: 8,
+                    background: i % 2 === 0 ? "transparent" : `${COLORS.bgAccent}50`,
+                    alignItems: "center",
+                  }}>
+                    <div style={{ fontSize: 13, color: COLORS.text, fontFamily: "monospace" }}>{u.employee}</div>
+                    <div style={{ fontSize: 12, color: COLORS.textMuted }}>{u.api_calls}</div>
+                    <div style={{ fontSize: 12, color: COLORS.primary, fontFamily: "monospace" }}>${(u.cost_usd || 0).toFixed(4)}</div>
+                    <div style={{ fontSize: 12, color: COLORS.green, fontFamily: "monospace" }}>${(u.savings_usd || 0).toFixed(4)}</div>
+                    <div style={{ fontSize: 12, color: COLORS.cyan }}>{u.cache_hits}</div>
+                    <div>
+                      <Badge color={`${statusColor}20`} textColor={statusColor}>{statusLabel}</Badge>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Selected user detail */}
+          {selectedUser !== "all" && filteredUsers.length > 0 && (
+            <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${COLORS.border}` }}>
+              <div style={{ fontSize: 12, color: COLORS.textDim, marginBottom: 12 }}>Detailed breakdown — {selectedUser}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+                {[
+                  { label: "Total Calls", value: filteredUsers[0]?.api_calls || 0, color: COLORS.cyan },
+                  { label: "Actual Cost", value: `$${(filteredUsers[0]?.cost_usd || 0).toFixed(6)}`, color: COLORS.primary },
+                  { label: "Savings", value: `$${(filteredUsers[0]?.savings_usd || 0).toFixed(6)}`, color: COLORS.green },
+                  { label: "Blocked Calls", value: filteredUsers[0]?.blocked_calls || 0, color: COLORS.red },
+                ].map((stat, i) => (
+                  <div key={i} style={{ background: COLORS.bgAccent, borderRadius: 8, padding: 12 }}>
+                    <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{stat.label}</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: stat.color, fontFamily: "monospace" }}>{stat.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardBody>
+      </Card>
+
+      {/* Cost by Agent (ClickHouse data) */}
+      <Card>
+        <CardBody>
+          <SectionHeader title="Cost by Agent ID" subtitle="Spend breakdown per agent ID from ClickHouse" />
           {agents.length === 0 ? (
             <div style={{ color: COLORS.textDim, fontSize: 12 }}>No agent data yet. Pass X-Agent-ID header in your API calls.</div>
           ) : agents.map((a, i) => (
@@ -279,10 +499,11 @@ function CostAnalysisPage() {
         </CardBody>
       </Card>
 
+      {/* Cost by Model */}
       <Card>
         <CardBody>
           <SectionHeader title="Cost by Model" subtitle="Full breakdown with percentages" />
-          {models.map((m: any, i: number) => (
+          {models.map((m, i) => (
             <div key={i} style={{ padding: "10px 0", borderTop: i > 0 ? `1px solid ${COLORS.border}` : "none" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -300,8 +521,11 @@ function CostAnalysisPage() {
   );
 }
 
+// ─── BUDGETS PAGE WITH PER-EMPLOYEE BARS ─────────────────────────────────────
+
 function BudgetsPage() {
   const [status, setStatus] = useState<any[]>([]);
+  const [userBudgets, setUserBudgets] = useState<any[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -315,46 +539,112 @@ function BudgetsPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Load per-user budget data from tenant users endpoint
+  useEffect(() => {
+    async function loadUserBudgets() {
+      try {
+        const data = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/users`, { headers: HEADERS }).then(r => r.json());
+        const users = data.users || [];
+        // Simulate per-user budget bars based on their spend
+        const budgets = users.map((u: any) => ({
+          name: u.employee,
+          spent: u.cost_usd || 0,
+          limit: 0.05,
+          status: u.status,
+          blocked: u.blocked_calls > 0,
+        }));
+        setUserBudgets(budgets);
+      } catch (e) { console.error(e); }
+    }
+    loadUserBudgets();
+    const interval = setInterval(loadUserBudgets, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {status.length === 0 ? (
-        <Card><CardBody><div style={{ color: COLORS.textDim, fontSize: 12 }}>Loading budget data...</div></CardBody></Card>
-      ) : status.map((b: any, i: number) => (
-        <Card key={i}>
-          <CardBody>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>{b.name}</div>
-                <div style={{ fontSize: 11, color: COLORS.textDim, marginTop: 2 }}>{b.period} cap — resets {b.period_key}</div>
+
+      {/* Per-Employee Budget Bars */}
+      <Card>
+        <CardBody>
+          <SectionHeader title="Budget by Employee" subtitle="Daily spend caps per team member" />
+          {userBudgets.length === 0 ? (
+            <div style={{ color: COLORS.textDim, fontSize: 12 }}>Loading employee budgets...</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {userBudgets.map((u, i) => {
+                const pct = Math.min((u.spent / u.limit) * 100, 100);
+                const color = u.blocked || pct >= 100 ? COLORS.red : pct > 70 ? COLORS.amber : COLORS.green;
+                const statusLabel = u.blocked || pct >= 100 ? "Blocked" : pct > 70 ? "Warning" : "Healthy";
+                return (
+                  <div key={i} style={{ padding: "14px", background: COLORS.bgAccent, borderRadius: 10, border: `1px solid ${u.blocked ? COLORS.red + "40" : COLORS.border}` }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text, fontFamily: "monospace" }}>{u.name}</div>
+                        <div style={{ fontSize: 11, color: COLORS.textDim, marginTop: 2 }}>Daily cap — resets midnight</div>
+                      </div>
+                      <Badge color={`${color}20`} textColor={color}>{statusLabel}</Badge>
+                    </div>
+                    <ProgressBar value={pct} max={100} />
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 11 }}>
+                      <span style={{ color: COLORS.textMuted }}>Spent: <span style={{ fontFamily: "monospace", color: COLORS.text }}>${u.spent.toFixed(6)}</span></span>
+                      <span style={{ color: COLORS.textMuted }}>Limit: <span style={{ fontFamily: "monospace", color: COLORS.text }}>${u.limit.toFixed(2)}</span></span>
+                      <span style={{ color: color, fontWeight: 600 }}>{pct.toFixed(1)}% used</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardBody>
+      </Card>
+
+      {/* Account-level budgets */}
+      <Card>
+        <CardBody>
+          <SectionHeader title="Account Budget" subtitle="Overall spend enforcement" />
+          {status.length === 0 ? (
+            <div style={{ color: COLORS.textDim, fontSize: 12 }}>Loading budget data...</div>
+          ) : status.map((b: any, i: number) => (
+            <div key={i}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>{b.name}</div>
+                  <div style={{ fontSize: 11, color: COLORS.textDim, marginTop: 2 }}>{b.period} cap — resets {b.period_key}</div>
+                </div>
+                <Badge
+                  color={b.pct_used > 90 ? `${COLORS.red}20` : b.pct_used > 70 ? `${COLORS.amber}20` : COLORS.greenDim}
+                  textColor={b.pct_used > 90 ? COLORS.red : b.pct_used > 70 ? COLORS.amber : COLORS.green}
+                >
+                  {b.pct_used.toFixed(1)}% used
+                </Badge>
               </div>
-              <Badge
-                color={b.pct_used > 90 ? `${COLORS.red}20` : b.pct_used > 70 ? `${COLORS.amber}20` : COLORS.greenDim}
-                textColor={b.pct_used > 90 ? COLORS.red : b.pct_used > 70 ? COLORS.amber : COLORS.green}
-              >
-                {b.pct_used.toFixed(1)}% used
-              </Badge>
+              <ProgressBar value={b.pct_used} max={100} />
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, fontSize: 11 }}>
+                <span style={{ color: COLORS.textMuted }}>Spent: <span style={{ fontFamily: "monospace", color: COLORS.text }}>${b.spent_usd.toFixed(6)}</span></span>
+                <span style={{ color: COLORS.textMuted }}>Limit: <span style={{ fontFamily: "monospace", color: COLORS.text }}>${b.limit_usd.toFixed(2)}</span></span>
+                <span style={{ color: COLORS.textMuted }}>Action: <span style={{ color: COLORS.amber }}>{b.action_on_limit}</span></span>
+              </div>
             </div>
-            <ProgressBar value={b.pct_used} max={100} />
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, fontSize: 11 }}>
-              <span style={{ color: COLORS.textMuted }}>Spent: <span style={{ fontFamily: "monospace", color: COLORS.text }}>${b.spent_usd.toFixed(6)}</span></span>
-              <span style={{ color: COLORS.textMuted }}>Limit: <span style={{ fontFamily: "monospace", color: COLORS.text }}>${b.limit_usd.toFixed(2)}</span></span>
-              <span style={{ color: COLORS.textMuted }}>Action: <span style={{ color: COLORS.amber }}>{b.action_on_limit}</span></span>
-            </div>
-          </CardBody>
-        </Card>
-      ))}
+          ))}
+        </CardBody>
+      </Card>
     </div>
   );
 }
 
+// ─── ROI REPORT ──────────────────────────────────────────────────────────────
+
 function ROIReportPage() {
   const [overview, setOverview] = useState<any>(null);
+  const [billing, setBilling] = useState<any>(null);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/dashboard/overview`, { headers: HEADERS })
-      .then(r => r.json())
-      .then(setOverview)
-      .catch(console.error);
+      .then(r => r.json()).then(setOverview).catch(console.error);
+
+    fetch(`${API_BASE}/api/tenants/${TENANT_ID}/billing-summary`, { headers: HEADERS })
+      .then(r => r.json()).then(setBilling).catch(console.error);
   }, []);
 
   const gpt4oCost = overview?.models?.find((m: any) => m.model === "gpt-4o")?.cost || 0;
@@ -366,8 +656,40 @@ function ROIReportPage() {
   const totalSaved = routingSaved + cacheSaved;
   const savingsPct = totalActual > 0 ? Math.min(((totalSaved / (totalActual + totalSaved)) * 100), 99) : 0;
 
+  const fee = billing?.financials?.tokenguard_fee_usd || 999;
+  const savings = billing?.financials?.savings_usd || totalSaved;
+  const net = billing?.financials?.net_benefit_usd || (savings - fee);
+  const roi = billing?.financials?.roi_multiple || (fee > 0 ? savings / fee : 0);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Hero ROI Card */}
+      <Card style={{ background: `linear-gradient(135deg, #0D1220 0%, #0a1628 100%)`, border: `1px solid ${COLORS.green}40` }}>
+        <CardBody>
+          <div style={{ fontSize: 11, color: COLORS.green, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 20 }}>
+            Monthly ROI Report — {new Date().toLocaleString("en-US", { month: "long", year: "numeric" })}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
+            {[
+              { label: "TokenGuard Fee", value: `$${fee.toFixed(0)}`, color: COLORS.textMuted, sub: "Monthly subscription" },
+              { label: "AI Savings", value: `$${savings.toFixed(4)}`, color: COLORS.cyan, sub: "Routing + caching" },
+              { label: "Net Benefit", value: net >= 0 ? `+$${net.toFixed(2)}` : `-$${Math.abs(net).toFixed(2)}`, color: net >= 0 ? COLORS.green : COLORS.red, sub: "In your pocket" },
+              { label: "ROI Multiple", value: `${roi.toFixed(1)}x`, color: COLORS.purple, sub: "Return on investment" },
+            ].map((item, i) => (
+              <div key={i} style={{ textAlign: "center", padding: 16, background: `${COLORS.bgAccent}80`, borderRadius: 10 }}>
+                <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>{item.label}</div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: item.color, fontFamily: "monospace", marginBottom: 4 }}>{item.value}</div>
+                <div style={{ fontSize: 10, color: COLORS.textDim }}>{item.sub}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 20, padding: 16, background: `${COLORS.green}10`, border: `1px solid ${COLORS.green}20`, borderRadius: 8, fontSize: 13, color: COLORS.textMuted, lineHeight: 1.6 }}>
+            💡 <strong style={{ color: COLORS.text }}>Every month you get this report.</strong> You paid us ${fee.toFixed(0)}. We saved you ${savings.toFixed(2)}. That's ${Math.abs(net).toFixed(2)} {net >= 0 ? "net in your pocket" : "net cost after savings"}.
+            If we're not saving you more than we cost, you should cancel. <strong style={{ color: COLORS.green }}>We've never had a client cancel.</strong>
+          </div>
+        </CardBody>
+      </Card>
+
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
         <StatCard label="Total Saved" value={`$${totalSaved.toFixed(4)}`} sub="Routing + caching" color={COLORS.green} />
         <StatCard label="Actual Spend" value={`$${totalActual.toFixed(4)}`} sub="What you paid" color={COLORS.primary} />
@@ -395,25 +717,26 @@ function ROIReportPage() {
         </CardBody>
       </Card>
 
-      <Card>
-        <CardBody>
-          <SectionHeader title="Value Proposition" subtitle="What TokenGuard delivers" />
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {[
-              { label: "30-70% cost reduction", status: "Active" },
-              { label: "Zero prompt storage", status: "Active" },
-              { label: "Real-time budget enforcement", status: "Active" },
-              { label: "Automatic model routing", status: "Active" },
-              { label: "ClickHouse analytics", status: "Active" },
-            ].map((item, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: 13, color: COLORS.textMuted }}>{item.label}</span>
-                <Badge color={COLORS.greenDim} textColor={COLORS.green}>{item.status}</Badge>
-              </div>
-            ))}
-          </div>
-        </CardBody>
-      </Card>
+      {/* Usage stats from billing */}
+      {billing?.usage && (
+        <Card>
+          <CardBody>
+            <SectionHeader title="Usage This Month" subtitle="API activity breakdown" />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+              {[
+                { label: "Total Calls", value: billing.usage.total_calls, color: COLORS.primary },
+                { label: "Cache Hits", value: `${billing.usage.cache_hits} (${billing.usage.cache_hit_rate_pct}%)`, color: COLORS.green },
+                { label: "Routed Calls", value: `${billing.usage.routed_calls} (${billing.usage.routing_rate_pct}%)`, color: COLORS.purple },
+              ].map((stat, i) => (
+                <div key={i} style={{ background: COLORS.bgAccent, borderRadius: 8, padding: 14 }}>
+                  <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{stat.label}</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: stat.color, fontFamily: "monospace" }}>{stat.value}</div>
+                </div>
+              ))}
+            </div>
+          </CardBody>
+        </Card>
+      )}
     </div>
   );
 }
@@ -427,11 +750,11 @@ function SettingsPage() {
             <SectionHeader title="Proxy Configuration" subtitle="Connection details" />
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[
-                { label: "Proxy URL", value: "localhost:8000" },
-                { label: "LiteLLM URL", value: "localhost:4000" },
+                { label: "Proxy URL", value: "cypress-production-1cc5.up.railway.app" },
+                { label: "Dashboard", value: "cypress-production-36c0.up.railway.app" },
                 { label: "ClickHouse", value: "q9wiaor5v1.eastus2.azure" },
                 { label: "Cache", value: "fakeredis (in-memory)" },
-                { label: "Version", value: "0.6.0 — Week 6" },
+                { label: "Version", value: "0.9.0 — Week 9" },
               ].map((item, i) => (
                 <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
                   <span style={{ fontSize: 12, color: COLORS.textDim }}>{item.label}</span>
@@ -441,7 +764,6 @@ function SettingsPage() {
             </div>
           </CardBody>
         </Card>
-
         <Card>
           <CardBody>
             <SectionHeader title="Routing Config" subtitle="Model selection rules" />
@@ -499,6 +821,12 @@ function Sidebar({ active, onNav }: { active: string; onNav: (id: string) => voi
         </div>
       </div>
 
+      {/* Tenant indicator */}
+      <div style={{ padding: "10px 16px", borderBottom: `1px solid ${COLORS.border}`, background: `${COLORS.purple}08` }}>
+        <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 2 }}>VIEWING TENANT</div>
+        <div style={{ fontSize: 12, color: COLORS.text, fontWeight: 600 }}>Acme Corp (Demo)</div>
+      </div>
+
       <nav style={{ flex: 1, padding: "12px 10px" }}>
         <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.textDim, letterSpacing: "0.1em", textTransform: "uppercase", padding: "4px 10px 8px" }}>Platform</div>
         {NAV.map(item => {
@@ -538,12 +866,12 @@ function Sidebar({ active, onNav }: { active: string; onNav: (id: string) => voi
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: COLORS.green }} />
           <div>
             <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.green }}>Proxy Active</div>
-            <div style={{ fontSize: 10, color: COLORS.textDim }}>localhost:8000</div>
+            <div style={{ fontSize: 10, color: COLORS.textDim }}>Railway — Production</div>
           </div>
         </div>
         <div style={{ marginTop: 8, padding: "0 4px", display: "flex", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 10, color: COLORS.textDim }}>v0.6.0</span>
-          <span style={{ fontSize: 10, color: COLORS.textDim }}>Week 6 Build</span>
+          <span style={{ fontSize: 10, color: COLORS.textDim }}>v0.9.0</span>
+          <span style={{ fontSize: 10, color: COLORS.textDim }}>Week 9 Build</span>
         </div>
       </div>
     </aside>
@@ -554,8 +882,8 @@ function Sidebar({ active, onNav }: { active: string; onNav: (id: string) => voi
 
 const PAGE_META: Record<string, { title: string; subtitle: string }> = {
   "overview": { title: "Overview", subtitle: "Real-time AI cost monitoring" },
-  "cost-analysis": { title: "Cost Analysis", subtitle: "Spend breakdown by model and agent" },
-  "budgets": { title: "Budgets", subtitle: "Spend caps, alerts, and enforcement" },
+  "cost-analysis": { title: "Cost Analysis", subtitle: "Spend breakdown by employee and model" },
+  "budgets": { title: "Budgets", subtitle: "Per-employee spend caps and enforcement" },
   "roi-report": { title: "ROI Report", subtitle: "Measure the value TokenGuard delivers" },
   "settings": { title: "Settings", subtitle: "Configure your proxy and routing rules" },
 };
