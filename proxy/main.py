@@ -627,7 +627,7 @@ async def get_user_breakdown(tenant_id: str, request: Request):
             avg(latency_ms) as avg_latency_ms
         FROM tokenguard.events
         WHERE client_id = {client_id:String}
-        AND created_at >= toStartOfMonth(now())
+        AND created_at >= now() - INTERVAL 30 DAY
         GROUP BY agent_id
         ORDER BY total_cost DESC
     """, parameters={"client_id": tenant_id})
@@ -704,7 +704,7 @@ async def billing_summary(tenant_id: str, request: Request):
             count(DISTINCT agent_id) as active_users
         FROM tokenguard.events
         WHERE client_id = {client_id:String}
-        AND created_at >= toStartOfMonth(now())
+        AND created_at >= now() - INTERVAL 30 DAY
     """, parameters={"client_id": tenant_id})
 
     row = result.result_rows[0] if result.result_rows else (0, 0, 0, 0, 0, 0)
