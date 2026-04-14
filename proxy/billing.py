@@ -17,7 +17,7 @@ PLANS = {
         "price_id": os.getenv("STRIPE_PRICE_STARTER"),
         "seat_limit": 10,
         "spend_limit_usd": 5000,
-        "monthly_fee": 499,
+        "monthly_fee": 299,
     },
     "growth": {
         "name": "TokenGuard Growth",
