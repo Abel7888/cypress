@@ -17,31 +17,55 @@ log = structlog.get_logger()
 
 # ── Pricing table (USD per token) ──────────────────────────────
 MODEL_PRICING = {
-    "gpt-4o": {"input": 2.50e-6, "output": 10.0e-6},
-    "gpt-4o-mini": {"input": 0.15e-6, "output": 0.60e-6},
-    "gpt-4-turbo": {"input": 10.0e-6, "output": 30.0e-6},
-    "gpt-3.5-turbo": {"input": 0.50e-6, "output": 1.50e-6},
-    "claude-3.5-sonnet": {"input": 3.0e-6, "output": 15.0e-6},
-    "claude-3.5-haiku": {"input": 0.80e-6, "output": 4.0e-6},
-    "claude-3-opus": {"input": 15.0e-6, "output": 75.0e-6},
+    # OpenAI
+    "gpt-4o":              {"input": 2.50e-6,  "output": 10.0e-6},
+    "gpt-4o-mini":         {"input": 0.15e-6,  "output": 0.60e-6},
+    "gpt-4.1":             {"input": 2.00e-6,  "output": 8.0e-6},
+    "gpt-4.1-mini":        {"input": 0.40e-6,  "output": 1.60e-6},
+    "gpt-4.1-nano":        {"input": 0.10e-6,  "output": 0.40e-6},
+    "gpt-4-turbo":         {"input": 10.0e-6,  "output": 30.0e-6},
+    "gpt-3.5-turbo":       {"input": 0.50e-6,  "output": 1.50e-6},
+    "o3":                  {"input": 10.0e-6,  "output": 40.0e-6},
+    "o3-mini":             {"input": 1.10e-6,  "output": 4.40e-6},
+    # Anthropic
+    "claude-opus-4-6":          {"input": 15.0e-6, "output": 75.0e-6},
+    "claude-sonnet-4-6":        {"input": 3.0e-6,  "output": 15.0e-6},
+    "claude-haiku-4-5":         {"input": 0.80e-6, "output": 4.0e-6},
+    "claude-haiku-4-5-20251001":{"input": 0.80e-6, "output": 4.0e-6},
+    # Google
+    "gemini-1.5-pro":      {"input": 3.50e-6,  "output": 10.5e-6},
+    "gemini-1.5-flash":    {"input": 0.075e-6, "output": 0.30e-6},
+    "gemini-2.0-flash":    {"input": 0.10e-6,  "output": 0.40e-6},
 }
 
 # ── Tier mapping for automatic downgrade ───────────────────────
 MODEL_TIERS: dict[str, list[str]] = {
-    "openai_high": ["gpt-4o", "gpt-4-turbo"],
-    "openai_low": ["gpt-4o-mini", "gpt-3.5-turbo"],
-    "anthropic_high": ["claude-3.5-sonnet", "claude-3-opus"],
-    "anthropic_low": ["claude-3.5-haiku"],
+    "openai_high":     ["gpt-4o", "gpt-4.1", "gpt-4-turbo", "o3"],
+    "openai_low":      ["gpt-4o-mini", "gpt-4.1-mini", "gpt-4.1-nano", "gpt-3.5-turbo", "o3-mini"],
+    "anthropic_high":  ["claude-opus-4-6", "claude-sonnet-4-6"],
+    "anthropic_low":   ["claude-haiku-4-5", "claude-haiku-4-5-20251001"],
+    "google_high":     ["gemini-1.5-pro"],
+    "google_low":      ["gemini-1.5-flash", "gemini-2.0-flash"],
 }
 
 DOWNGRADE_MAP: dict[str, str] = {
-    "gpt-4o": "gpt-4o-mini",
-    "gpt-4-turbo": "gpt-4o-mini",
-    "gpt-3.5-turbo": "gpt-3.5-turbo",
-    "claude-3.5-sonnet": "claude-3.5-haiku",
-    "claude-3-opus": "claude-3.5-haiku",
-    "claude-3.5-haiku": "claude-3.5-haiku",
-    "gpt-4o-mini": "gpt-4o-mini",
+    # OpenAI → cheaper OpenAI
+    "gpt-4o":           "gpt-4o-mini",
+    "gpt-4.1":          "gpt-4.1-mini",
+    "gpt-4.1-mini":     "gpt-4.1-nano",
+    "gpt-4-turbo":      "gpt-4o-mini",
+    "gpt-3.5-turbo":    "gpt-3.5-turbo",
+    "o3":               "o3-mini",
+    # Anthropic → cheaper Anthropic
+    "claude-opus-4-6":  "claude-sonnet-4-6",
+    "claude-sonnet-4-6":"claude-haiku-4-5",
+    "claude-haiku-4-5": "claude-haiku-4-5",
+    # Google → cheaper Google
+    "gemini-1.5-pro":   "gemini-1.5-flash",
+    "gemini-1.5-flash": "gemini-2.0-flash",
+    # Defaults for unknowns
+    "gpt-4o-mini":      "gpt-4o-mini",
+    "gpt-4.1-nano":     "gpt-4.1-nano",
 }
 
 
@@ -259,6 +283,10 @@ class ModelRouter:
     def _infer_provider(model: str) -> str:
         if model.startswith("claude"):
             return "anthropic"
+        if model.startswith("gemini"):
+            return "google"
+        if model.startswith("o3") or model.startswith("gpt"):
+            return "openai"
         return "openai"
 
     @staticmethod

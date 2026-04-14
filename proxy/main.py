@@ -181,6 +181,92 @@ async def budget_reload(request: Request):
     return JSONResponse(content={"reloaded": True})
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# Provider Key Encryption & Management
+# ═══════════════════════════════════════════════════════════════════════════
+
+ENCRYPTION_KEY = os.getenv("TOKENGUARD_SECRET_KEY", "changeme")[:32].ljust(32)
+
+def encrypt_key(raw_key: str) -> str:
+    """Encrypt a provider API key using Fernet symmetric encryption."""
+    from cryptography.fernet import Fernet
+    import base64, hashlib
+    key = base64.urlsafe_b64encode(hashlib.sha256(ENCRYPTION_KEY.encode()).digest())
+    f = Fernet(key)
+    return f.encrypt(raw_key.encode()).decode()
+
+def decrypt_key(encrypted_key: str) -> str:
+    """Decrypt a provider API key."""
+    from cryptography.fernet import Fernet
+    import base64, hashlib
+    key = base64.urlsafe_b64encode(hashlib.sha256(ENCRYPTION_KEY.encode()).digest())
+    f = Fernet(key)
+    return f.decrypt(encrypted_key.encode()).decode()
+
+def get_provider_key(tenant_id: str, provider: str) -> str | None:
+    """
+    Fetch a tenant's stored provider API key.
+    Falls back to TokenGuard's own key if tenant hasn't added theirs yet.
+    """
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT encrypted_key FROM provider_keys
+            WHERE tenant_id = %s::uuid AND provider = %s AND is_active = TRUE
+        """, (tenant_id, provider))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        if row:
+            return decrypt_key(row[0])
+    except Exception as e:
+        print(f"[ProviderKeys] DB lookup failed: {e}")
+
+    # Fallback to TokenGuard's own keys (for demo / new accounts)
+    fallbacks = {
+        "openai":    os.getenv("OPENAI_API_KEY", ""),
+        "anthropic": os.getenv("ANTHROPIC_API_KEY", ""),
+    }
+    return fallbacks.get(provider)
+
+
+async def call_anthropic(body: dict, api_key: str) -> dict:
+    import anthropic as anthropic_sdk
+    model     = body.get("model", "claude-sonnet-4-6")
+    max_tokens = body.get("max_tokens", 1024)
+    messages  = body.get("messages", [])
+
+    system_msg   = None
+    user_messages = []
+    for msg in messages:
+        if msg["role"] == "system":
+            system_msg = msg["content"]
+        else:
+            user_messages.append({"role": msg["role"], "content": msg["content"]})
+
+    kwargs = {"model": model, "max_tokens": max_tokens, "messages": user_messages}
+    if system_msg:
+        kwargs["system"] = system_msg
+
+    client   = anthropic_sdk.AsyncAnthropic(api_key=api_key)
+    response = await client.messages.create(**kwargs)
+    content  = response.content[0].text if response.content else ""
+
+    return {
+        "id":      f"chatcmpl-{response.id}",
+        "object":  "chat.completion",
+        "created": int(__import__("time").time()),
+        "model":   response.model,
+        "choices": [{"index": 0, "message": {"role": "assistant", "content": content},
+                     "finish_reason": response.stop_reason or "stop", "logprobs": None}],
+        "usage":   {"prompt_tokens": response.usage.input_tokens,
+                    "completion_tokens": response.usage.output_tokens,
+                    "total_tokens": response.usage.input_tokens + response.usage.output_tokens},
+        "provider": "anthropic",
+    }
+
+
 @app.post("/v1/chat/completions")
 async def proxy_completion(request: Request):
     client_id = authenticate(request)
@@ -248,20 +334,37 @@ async def proxy_completion(request: Request):
             }
         )
 
-    try:
-        async with httpx.AsyncClient(timeout=300) as client:
-            response = await client.post(
-                "https://api.openai.com/v1/chat/completions",
-                json=body,
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY', '')}"
-                }
-            )
-    except httpx.ConnectError:
-        raise HTTPException(status_code=503, detail="Cannot reach OpenAI API")
+    routed_model = body.get("model", "unknown")
+    is_claude    = routed_model.startswith("claude-")
+    provider     = "anthropic" if is_claude else "openai"
 
-    result = response.json()
+    # Fetch THIS tenant's provider key (Model B — they pay their own AI bills)
+    provider_api_key = get_provider_key(client_id, provider)
+    if not provider_api_key:
+        return JSONResponse(status_code=402, content={
+            "error": "NO_PROVIDER_KEY",
+            "message": f"No {provider} API key configured. Add your key in Settings → Provider Keys.",
+            "provider": provider,
+        })
+
+    try:
+        if is_claude:
+            result = await call_anthropic(body, api_key=provider_api_key)
+        else:
+            async with httpx.AsyncClient(timeout=300) as http_client:
+                response = await http_client.post(
+                    "https://api.openai.com/v1/chat/completions",
+                    json=body,
+                    headers={
+                        "Content-Type":  "application/json",
+                        "Authorization": f"Bearer {provider_api_key}",
+                    }
+                )
+            result = response.json()
+    except httpx.ConnectError:
+        raise HTTPException(status_code=503, detail="Cannot reach AI provider API")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"AI provider error: {str(e)}")
     latency_ms = round((time.time() - start_time) * 1000)
     usage = result.get("usage", {})
     input_tokens = usage.get("prompt_tokens", 0)
@@ -598,6 +701,87 @@ async def reactivate_tenant_key(tenant_id: str, key_id: str, request: Request):
         if not row:
             return JSONResponse(status_code=404, content={"error": "Key not found"})
         return JSONResponse(content={"reactivated": True, "label": row[0]})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.post("/api/tenants/{tenant_id}/provider-keys")
+async def save_provider_key(tenant_id: str, request: Request):
+    """Save or update a tenant's provider API key (encrypted)."""
+    authenticate(request)
+    body     = await request.json()
+    provider = body.get("provider", "").lower()
+    raw_key  = body.get("api_key", "").strip()
+
+    if provider not in ("openai", "anthropic", "google"):
+        return JSONResponse(status_code=400, content={"error": "Invalid provider"})
+    if not raw_key:
+        return JSONResponse(status_code=400, content={"error": "api_key is required"})
+
+    encrypted  = encrypt_key(raw_key)
+    preview    = raw_key[:12] + "..." + raw_key[-4:]
+
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur  = conn.cursor()
+        cur.execute("""
+            INSERT INTO provider_keys (tenant_id, provider, encrypted_key, key_preview)
+            VALUES (%s::uuid, %s, %s, %s)
+            ON CONFLICT (tenant_id, provider)
+            DO UPDATE SET encrypted_key = EXCLUDED.encrypted_key,
+                          key_preview   = EXCLUDED.key_preview,
+                          is_active     = TRUE,
+                          updated_at    = now()
+            RETURNING id
+        """, (tenant_id, provider, encrypted, preview))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return JSONResponse(content={"saved": True, "provider": provider, "preview": preview})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.get("/api/tenants/{tenant_id}/provider-keys")
+async def get_provider_keys_list(tenant_id: str, request: Request):
+    """List which providers have keys configured (never returns raw keys)."""
+    authenticate(request)
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur  = conn.cursor()
+        cur.execute("""
+            SELECT provider, key_preview, is_active, updated_at
+            FROM provider_keys
+            WHERE tenant_id = %s::uuid
+            ORDER BY provider
+        """, (tenant_id,))
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return JSONResponse(content={"keys": [
+            {"provider": r[0], "preview": r[1],
+             "is_active": r[2], "updated_at": r[3].isoformat() if r[3] else None}
+            for r in rows
+        ]})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.delete("/api/tenants/{tenant_id}/provider-keys/{provider}")
+async def delete_provider_key(tenant_id: str, provider: str, request: Request):
+    """Remove a provider key."""
+    authenticate(request)
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur  = conn.cursor()
+        cur.execute("""
+            UPDATE provider_keys SET is_active = FALSE
+            WHERE tenant_id = %s::uuid AND provider = %s
+        """, (tenant_id, provider))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return JSONResponse(content={"removed": True, "provider": provider})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 

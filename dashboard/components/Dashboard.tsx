@@ -1103,10 +1103,176 @@ function EmployeeKeyManager() {
   );
 }
 
+function ProviderKeysCard() {
+  const [keys, setKeys] = useState<Record<string, any>>({});
+  const [saving, setSaving] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<string | null>(null);
+  const [inputs, setInputs] = useState<Record<string, string>>({
+    openai: "", anthropic: "", google: ""
+  });
+  const [saved, setSaved] = useState<Record<string, boolean>>({});
+
+  const providers = [
+    { id: "openai",    name: "OpenAI",    icon: "⬡", placeholder: "sk-proj-...", color: "#10A37F" },
+    { id: "anthropic", name: "Anthropic", icon: "◈", placeholder: "sk-ant-...",  color: "#D97706" },
+    { id: "google",    name: "Google",    icon: "◉", placeholder: "AIza...",     color: "#4285F4" },
+  ];
+
+  const load = async () => {
+    try {
+      const res  = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/provider-keys`, { headers: HEADERS });
+      const data = await res.json();
+      const map: Record<string, any> = {};
+      (data.keys || []).forEach((k: any) => { map[k.provider] = k; });
+      setKeys(map);
+    } catch (e) { console.error(e); }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const save = async (provider: string) => {
+    const raw = inputs[provider].trim();
+    if (!raw) return;
+    setSaving(provider);
+    try {
+      await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/provider-keys`, {
+        method:  "POST",
+        headers: { ...HEADERS, "Content-Type": "application/json" },
+        body:    JSON.stringify({ provider, api_key: raw }),
+      });
+      setInputs(v => ({ ...v, [provider]: "" }));
+      setSaved(v => ({ ...v, [provider]: true }));
+      setTimeout(() => setSaved(v => ({ ...v, [provider]: false })), 2000);
+      await load();
+    } catch (e) { console.error(e); }
+    setSaving(null);
+  };
+
+  const remove = async (provider: string) => {
+    setRemoving(provider);
+    try {
+      await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/provider-keys/${provider}`, {
+        method: "DELETE", headers: HEADERS,
+      });
+      await load();
+    } catch (e) { console.error(e); }
+    setRemoving(null);
+  };
+
+  const inputStyle: React.CSSProperties = {
+    background:   COLORS.bgAccent,
+    border:       `1px solid ${COLORS.border}`,
+    borderRadius: 8,
+    color:        COLORS.text,
+    fontSize:     13,
+    padding:      "9px 12px",
+    outline:      "none",
+    flex:         1,
+    fontFamily:   "monospace",
+  };
+
+  return (
+    <Card>
+      <CardBody>
+        <SectionHeader
+          title="Provider API Keys"
+          subtitle="Your keys — you pay OpenAI/Anthropic directly"
+        />
+
+        <div style={{
+          background: COLORS.bgAccent,
+          border:     `1px solid ${COLORS.borderLight}`,
+          borderRadius: 8, padding: "10px 14px",
+          marginBottom: 20, fontSize: 13, color: COLORS.textMuted,
+          lineHeight: 1.5,
+        }}>
+          💡 TokenGuard uses your own API keys to make calls — you keep your existing
+          OpenAI and Anthropic accounts and pay them directly. We never see your bills.
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {providers.map(p => {
+            const configured = keys[p.id];
+            return (
+              <div
+                key={p.id}
+                style={{
+                  background:   configured ? `${p.color}08` : COLORS.bgAccent,
+                  border:       `1px solid ${configured ? p.color + "40" : COLORS.border}`,
+                  borderRadius: 10, padding: "14px 16px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 18, color: p.color }}>{p.icon}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>{p.name}</span>
+                    {configured && (
+                      <Badge color={`${p.color}20`} textColor={p.color}>
+                        ✓ Connected — {configured.preview}
+                      </Badge>
+                    )}
+                    {!configured && (
+                      <Badge color={COLORS.bgCard} textColor={COLORS.textDim}>
+                        Not configured
+                      </Badge>
+                    )}
+                  </div>
+                  {configured && (
+                    <button
+                      onClick={() => remove(p.id)}
+                      disabled={removing === p.id}
+                      style={{
+                        background: "none",
+                        border:     `1px solid ${COLORS.red}40`,
+                        borderRadius: 6, cursor: "pointer",
+                        color: COLORS.red, fontSize: 11,
+                        padding: "3px 10px",
+                      }}
+                    >
+                      {removing === p.id ? "..." : "Remove"}
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    style={inputStyle}
+                    type="password"
+                    placeholder={configured ? "Enter new key to replace..." : p.placeholder}
+                    value={inputs[p.id]}
+                    onChange={e => setInputs(v => ({ ...v, [p.id]: e.target.value }))}
+                    onKeyDown={e => e.key === "Enter" && save(p.id)}
+                  />
+                  <button
+                    onClick={() => save(p.id)}
+                    disabled={!inputs[p.id].trim() || saving === p.id}
+                    style={{
+                      background:   saved[p.id] ? COLORS.greenDim : inputs[p.id].trim() ? p.color : COLORS.bgCard,
+                      border:       `1px solid ${saved[p.id] ? COLORS.green : inputs[p.id].trim() ? p.color : COLORS.border}`,
+                      borderRadius: 8, cursor: inputs[p.id].trim() ? "pointer" : "default",
+                      color:        saved[p.id] ? COLORS.green : inputs[p.id].trim() ? "#fff" : COLORS.textDim,
+                      fontSize:     13, fontWeight: 600,
+                      padding:      "9px 18px", whiteSpace: "nowrap",
+                      opacity:      !inputs[p.id].trim() ? 0.5 : 1,
+                    }}
+                  >
+                    {saving === p.id ? "Saving..." : saved[p.id] ? "Saved!" : configured ? "Update" : "Save"}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
+
 function SettingsPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <MasterKeyCard />
+      <ProviderKeysCard />
       <EmployeeKeyManager />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <Card>
