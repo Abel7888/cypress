@@ -170,20 +170,35 @@ async def budget_status(request: Request):
 async def budget_reset(request: Request):
     client_id = authenticate(request)
     reset_budget(client_id, "budget-001")
-    # Write a reset_at timestamp to Postgres so ClickHouse queries filter from here
+
+    # If admin key used, reset ALL real tenants (not client-default)
+    # If tenant key used, reset just that tenant
     try:
         conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
         cur = conn.cursor()
-        cur.execute("""
-            INSERT INTO budget_resets (tenant_id, reset_at)
-            VALUES (%s::uuid, now())
-        """, (client_id,))
+
+        if client_id == "client-default":
+            # Admin key — fetch all real tenant UUIDs and reset them all
+            cur.execute("SELECT id FROM tenants")
+            tenant_ids = [str(row[0]) for row in cur.fetchall()]
+            print(f"[Reset] Admin reset — targeting {len(tenant_ids)} tenants")
+        else:
+            tenant_ids = [client_id]
+
+        for tid in tenant_ids:
+            cur.execute("""
+                INSERT INTO budget_resets (tenant_id, reset_at)
+                VALUES (%s::uuid, now())
+            """, (tid,))
+            reset_budget(tid, f"budget-{tid}")
+            print(f"[Reset] Wrote reset_at for tenant {tid}")
+
         conn.commit()
         cur.close()
         conn.close()
-        print(f"[Reset] Wrote reset_at for tenant {client_id}")
     except Exception as e:
         print(f"[Reset] DB reset_at failed: {e}")
+
     return JSONResponse(content={"reset": True, "budget_id": "budget-001"})
 
 
