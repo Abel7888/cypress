@@ -85,10 +85,16 @@ function Badge({ children, color, textColor }: { children: React.ReactNode; colo
 
 function ProgressBar({ value, max = 100 }: { value: number; max?: number }) {
   const pct = Math.min((value / max) * 100, 100);
-  const color = pct > 90 ? COLORS.red : pct > 70 ? COLORS.amber : COLORS.primary;
+  const color = pct >= 100 ? "#ef4444" : pct > 70 ? "#f59e0b" : "#22c55e";
   return (
-    <div style={{ background: COLORS.bgAccent, borderRadius: 999, height: 6, overflow: "hidden" }}>
-      <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 999, transition: "width 0.5s ease" }} />
+    <div style={{ background: "#1e293b", borderRadius: 6, height: 8, overflow: "hidden", width: "100%" }}>
+      <div style={{
+        width: `${pct}%`,
+        height: "100%",
+        background: color,
+        borderRadius: 6,
+        transition: "width 0.6s ease-in-out, background 0.4s ease",
+      }} />
     </div>
   );
 }
@@ -546,18 +552,20 @@ function BudgetsPage() {
         const data = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/users`, { headers: HEADERS }).then(r => r.json());
         const users = data.users || [];
         // Simulate per-user budget bars based on their spend
-        const budgets = users.map((u: any) => ({
-          name: u.employee,
-          spent: u.cost_usd || 0,
-          limit: 0.05,
-          status: u.status,
-          blocked: u.blocked_calls > 0,
-        }));
+        const budgets = users
+          .filter((u: any) => u.employee && u.employee !== "unknown" && u.employee !== "")
+          .map((u: any) => ({
+            name: u.employee,
+            spent: u.cost_usd || 0,
+            limit: 0.15,
+            status: u.status,
+            blocked: u.blocked_calls > 0,
+          }));
         setUserBudgets(budgets);
       } catch (e) { console.error(e); }
     }
     loadUserBudgets();
-    const interval = setInterval(loadUserBudgets, 10000);
+    const interval = setInterval(loadUserBudgets, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -567,7 +575,25 @@ function BudgetsPage() {
       {/* Per-Employee Budget Bars */}
       <Card>
         <CardBody>
-          <SectionHeader title="Budget by Employee" subtitle="Daily spend caps per team member" />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <SectionHeader title="Budget by Employee" subtitle="Daily spend caps per team member" />
+            <button
+              onClick={async () => {
+                await fetch(`${API_BASE}/budget/reset`, { method: "POST", headers: HEADERS });
+                await fetch(`${API_BASE}/budget/reload`, { method: "POST", headers: HEADERS });
+              }}
+              style={{
+                background: "#1e293b",
+                color: "#94a3b8",
+                border: "1px solid #334155",
+                borderRadius: 8,
+                padding: "6px 14px",
+                fontSize: 12,
+                cursor: "pointer",
+              }}>
+              Reset Budgets
+            </button>
+          </div>
           {userBudgets.length === 0 ? (
             <div style={{ color: COLORS.textDim, fontSize: 12 }}>Loading employee budgets...</div>
           ) : (

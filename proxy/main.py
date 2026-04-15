@@ -45,7 +45,7 @@ def load_tenant_budgets():
                 tenant_id=str(tenant_id),
                 name=f"{tenant_name} Daily Cap",
                 period=BudgetPeriod.DAILY,
-                limit_usd=0.05,
+                limit_usd=0.15,
                 alert_thresholds=[50, 80, 95],
                 action_on_limit=BudgetAction.BLOCK
             )
@@ -170,6 +170,19 @@ async def budget_status(request: Request):
 async def budget_reset(request: Request):
     client_id = authenticate(request)
     reset_budget(client_id, "budget-001")
+    # Also zero out cost_usd in clickhouse/postgres so dashboard bars reset
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE api_keys SET cost_usd = 0, total_calls = 0, blocked_calls = 0
+            WHERE tenant_id = %s::uuid
+        """, (client_id,))
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"[Reset] DB clear failed: {e}")
     return JSONResponse(content={"reset": True, "budget_id": "budget-001"})
 
 
