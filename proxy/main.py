@@ -170,19 +170,20 @@ async def budget_status(request: Request):
 async def budget_reset(request: Request):
     client_id = authenticate(request)
     reset_budget(client_id, "budget-001")
-    # Also zero out cost_usd in clickhouse/postgres so dashboard bars reset
+    # Write a reset_at timestamp to Postgres so ClickHouse queries filter from here
     try:
         conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
         cur = conn.cursor()
         cur.execute("""
-            UPDATE api_keys SET cost_usd = 0, total_calls = 0, blocked_calls = 0
-            WHERE tenant_id = %s::uuid
+            INSERT INTO budget_resets (tenant_id, reset_at)
+            VALUES (%s::uuid, now())
         """, (client_id,))
         conn.commit()
         cur.close()
         conn.close()
+        print(f"[Reset] Wrote reset_at for tenant {client_id}")
     except Exception as e:
-        print(f"[Reset] DB clear failed: {e}")
+        print(f"[Reset] DB reset_at failed: {e}")
     return JSONResponse(content={"reset": True, "budget_id": "budget-001"})
 
 
@@ -813,7 +814,29 @@ async def get_user_breakdown(tenant_id: str, request: Request):
         secure=True
     )
 
-    result = ch.query("""
+    # Get last reset timestamp for this tenant
+    reset_at = None
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT reset_at FROM budget_resets
+            WHERE tenant_id = %s::uuid
+            ORDER BY reset_at DESC
+            LIMIT 1
+        """, (tenant_id,))
+        row = cur.fetchone()
+        if row:
+            reset_at = row[0]
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"[Users] Could not fetch reset_at: {e}")
+
+    since = reset_at.strftime("%Y-%m-%d %H:%M:%S") if reset_at else None
+    time_filter = "AND created_at >= {since:String}" if since else "AND created_at >= now() - INTERVAL 30 DAY"
+
+    result = ch.query(f"""
         SELECT
             agent_id,
             count() as total_calls,
@@ -823,11 +846,11 @@ async def get_user_breakdown(tenant_id: str, request: Request):
             countIf(blocked = 1) as blocked_calls,
             avg(latency_ms) as avg_latency_ms
         FROM tokenguard.events
-        WHERE client_id = {client_id:String}
-        AND created_at >= now() - INTERVAL 30 DAY
+        WHERE client_id = {{client_id:String}}
+        {time_filter}
         GROUP BY agent_id
         ORDER BY total_cost DESC
-    """, parameters={"client_id": tenant_id})
+    """, parameters={"client_id": tenant_id, **({"since": since} if since else {})})
 
     users = []
     for row in result.result_rows:
