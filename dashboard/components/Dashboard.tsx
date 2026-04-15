@@ -532,6 +532,7 @@ function CostAnalysisPage() {
 function BudgetsPage() {
   const [status, setStatus] = useState<any[]>([]);
   const [userBudgets, setUserBudgets] = useState<any[]>([]);
+  const [userBudgetsLoaded, setUserBudgetsLoaded] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -562,6 +563,7 @@ function BudgetsPage() {
             blocked: u.blocked_calls > 0,
           }));
         setUserBudgets(budgets);
+        setUserBudgetsLoaded(true);
       } catch (e) { console.error(e); }
     }
     loadUserBudgets();
@@ -579,6 +581,8 @@ function BudgetsPage() {
             <SectionHeader title="Budget by Employee" subtitle="Daily spend caps per team member" />
             <button
               onClick={async () => {
+                setUserBudgetsLoaded(false);
+                setUserBudgets([]);
                 await fetch(`${API_BASE}/budget/reset`, { method: "POST", headers: HEADERS });
                 await fetch(`${API_BASE}/budget/reload`, { method: "POST", headers: HEADERS });
               }}
@@ -594,8 +598,10 @@ function BudgetsPage() {
               Reset Budgets
             </button>
           </div>
-          {userBudgets.length === 0 ? (
+          {!userBudgetsLoaded ? (
             <div style={{ color: COLORS.textDim, fontSize: 12 }}>Loading employee budgets...</div>
+          ) : userBudgets.length === 0 ? (
+            <div style={{ color: COLORS.textDim, fontSize: 12 }}>No spend yet — budgets reset</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {userBudgets.map((u, i) => {
