@@ -1047,6 +1047,17 @@ function EmployeeKeyManager() {
                 onKeyDown={e => e.key === "Enter" && createKey()}
               />
             </div>
+            <div>
+              <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 4 }}>Budget</div>
+              <input
+                style={inputStyle}
+                placeholder="Daily budget ($)"
+                value={newBudget}
+                onChange={e => setNewBudget(e.target.value)}
+                type="number"
+                min="1"
+              />
+            </div>
             <button
               onClick={createKey}
               disabled={!newName.trim() || actionLoading === "creating"}
