@@ -867,6 +867,9 @@ function EmployeeKeyManager() {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [newRole, setNewRole] = useState("");
+  const [newBudget, setNewBudget] = useState("50");
+  const [editBudgetId, setEditBudgetId] = useState<string | null>(null);
+  const [editBudgetVal, setEditBudgetVal] = useState("");
   const [newKey, setNewKey] = useState<string | null>(null);
   const [newKeyCopied, setNewKeyCopied] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -892,7 +895,7 @@ function EmployeeKeyManager() {
       const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/users`, {
         method: "POST",
         headers: { ...HEADERS, "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName.trim(), role: newRole.trim() }),
+        body: JSON.stringify({ name: newName.trim(), role: newRole.trim(), budget_usd: parseFloat(newBudget) || 50 }),
       });
       const data = await res.json();
       setNewKey(data.api_key);
@@ -921,6 +924,22 @@ function EmployeeKeyManager() {
       await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/keys/${keyId}/reactivate`, {
         method: "POST", headers: HEADERS,
       });
+      await load();
+    } catch (e) { console.error(e); }
+    setActionLoading(null);
+  };
+
+  const updateBudget = async (keyId: string) => {
+    if (!editBudgetVal) return;
+    setActionLoading("budget-" + keyId);
+    try {
+      await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/keys/${keyId}/budget`, {
+        method: "PATCH",
+        headers: { ...HEADERS, "Content-Type": "application/json" },
+        body: JSON.stringify({ budget_usd: parseFloat(editBudgetVal) }),
+      });
+      setEditBudgetId(null);
+      setEditBudgetVal("");
       await load();
     } catch (e) { console.error(e); }
     setActionLoading(null);
@@ -1005,7 +1024,7 @@ function EmployeeKeyManager() {
             border: `1px solid ${COLORS.borderLight}`,
             borderRadius: 8, padding: 14,
             marginBottom: 16,
-            display: "grid", gridTemplateColumns: "1fr 1fr auto auto",
+            display: "grid", gridTemplateColumns: "1fr 1fr 120px auto auto",
             gap: 10, alignItems: "end",
           }}>
             <div>
@@ -1068,10 +1087,10 @@ function EmployeeKeyManager() {
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <div style={{
               display: "grid",
-              gridTemplateColumns: "1fr 160px 120px 80px 120px",
+              gridTemplateColumns: "1fr 160px 120px 80px 100px 140px",
               gap: 12, padding: "0 4px",
             }}>
-              {["Employee", "Key Preview", "Created", "Status", "Actions"].map(h => (
+              {["Employee", "Key Preview", "Created", "Status", "Budget", "Actions"].map(h => (
                 <div key={h} style={{ fontSize: 11, color: COLORS.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   {h}
                 </div>
@@ -1083,7 +1102,7 @@ function EmployeeKeyManager() {
                 key={k.id}
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 160px 120px 80px 120px",
+                  gridTemplateColumns: "1fr 160px 120px 80px 100px 140px",
                   gap: 12, alignItems: "center",
                   background: COLORS.bgAccent,
                   border: `1px solid ${k.is_active ? COLORS.border : COLORS.borderLight}`,
@@ -1519,3 +1538,13 @@ export default function Dashboard() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+

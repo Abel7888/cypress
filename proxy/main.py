@@ -711,6 +711,25 @@ async def revoke_tenant_key(tenant_id: str, key_id: str, request: Request):
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
+@app.patch("/api/tenants/{tenant_id}/keys/{key_id}/budget")
+async def update_key_budget(tenant_id: str, key_id: str, request: Request):
+    """Update budget for a specific key and reload it live."""
+    authenticate(request)
+    body = await request.json()
+    budget_usd = float(body.get("budget_usd", 0.05))
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("UPDATE api_keys SET budget_usd = %s WHERE id = %s::uuid AND tenant_id = %s::uuid",
+            (budget_usd, key_id, tenant_id))
+        conn.commit()
+        cur.close()
+        conn.close()
+        load_tenant_budgets()
+        return JSONResponse(content={"updated": True, "key_id": key_id, "budget_usd": budget_usd})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 @app.post("/api/tenants/{tenant_id}/keys/{key_id}/reactivate")
 async def reactivate_tenant_key(tenant_id: str, key_id: str, request: Request):
     """Reactivate a previously revoked API key."""
@@ -1115,6 +1134,7 @@ async def debug_env():
         "db_url_set": db_url != "NOT SET",
         "all_env_keys": list(os.environ.keys()),
     })
+
 
 
 
