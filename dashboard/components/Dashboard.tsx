@@ -38,6 +38,11 @@ const API_BASE = "https://cypress-production-1cc5.up.railway.app";
 const API_KEY = "lMNUO5f2xEAmxq8lXA9ODmCi-pxCr-9hL99fyw3VlWw";
 const TENANT_ID = "6f96c565-2284-4092-93c4-62252a1c1d59";
 const HEADERS = { Authorization: `Bearer ${API_KEY}` };
+const DEMO_EMPLOYEES = [
+  { name: "Sarah (Engineering)", key: "tg-d06616108a81726611cb49c0ef73f8c96f4eba3b15806e43" },
+  { name: "Jamie (Blocked)",     key: "tg-9587f9fa1cbc7091e59c3c46dd5d541931b148916bd6c2f4" },
+  { name: "Marcus (Sales)",      key: "tg-532afe26d2cdd4f6428cc2bfe5a8ade9cc998acc121aeaf8" },
+];
 
 // ─── COMPONENTS ──────────────────────────────────────────────────────────────
 
@@ -585,6 +590,14 @@ function BudgetsPage() {
                 setUserBudgets([]);
                 await fetch(`${API_BASE}/budget/reset`, { method: "POST", headers: HEADERS });
                 await fetch(`${API_BASE}/budget/reload`, { method: "POST", headers: HEADERS });
+                // Re-seed all 3 employees so they reappear immediately
+                await Promise.all(DEMO_EMPLOYEES.map(emp =>
+                  fetch(`${API_BASE}/v1/chat/completions`, {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${emp.key}`, "Content-Type": "application/json", "X-Agent-ID": emp.name },
+                    body: JSON.stringify({ model: "gpt-4o", max_tokens: 10, messages: [{ role: "user", content: "hi" }] })
+                  })
+                ));
               }}
               style={{
                 background: "#1e293b",
