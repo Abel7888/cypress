@@ -92,7 +92,7 @@ def get_tenant_from_key(api_key: str):
         row = cur.fetchone()
         cur.close()
         conn.close()
-        return row
+        return row  # (tenant_id, tenant_name, key_id, budget_usd)
     except Exception as e:
         print(f"[Auth] DB lookup failed: {e}")
         return None
@@ -110,9 +110,9 @@ def authenticate(request: Request):
     if api_key.startswith("tg-"):
         tenant = get_tenant_from_key(api_key)
         if tenant:
-            tenant_id, tenant_name = tenant
-            print(f"[Auth] Authenticated tenant: {tenant_name} (ID: {tenant_id})")
-            return str(tenant_id)
+            tenant_id, tenant_name, key_id, budget_usd = tenant
+            print(f"[Auth] Authenticated: {tenant_name} key={key_id} budget=${budget_usd}")
+            return str(key_id)
         else:
             raise HTTPException(status_code=403, detail="Invalid API key")
     
@@ -623,6 +623,7 @@ async def create_tenant_user(tenant_id: str, request: Request):
     body = await request.json()
     name = body.get("name", "user")
     role = body.get("role", "")
+    budget_usd = float(body.get("budget_usd", 0.05))
 
     import secrets
     api_key = "tg-" + secrets.token_hex(24)
@@ -633,8 +634,8 @@ async def create_tenant_user(tenant_id: str, request: Request):
         conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO api_keys (tenant_id, key, label) VALUES (%s::uuid, %s, %s) RETURNING id",
-            (tenant_id, key_hash, label)
+            "INSERT INTO api_keys (tenant_id, key, label, budget_usd) VALUES (%s::uuid, %s, %s, %s) RETURNING id",
+            (tenant_id, key_hash, label, budget_usd)
         )
         key_id = cur.fetchone()[0]
         conn.commit()
@@ -1114,3 +1115,9 @@ async def debug_env():
         "db_url_set": db_url != "NOT SET",
         "all_env_keys": list(os.environ.keys()),
     })
+
+
+
+
+
+
