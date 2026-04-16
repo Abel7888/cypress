@@ -34,23 +34,28 @@ def load_tenant_budgets():
     try:
         conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
         cur = conn.cursor()
-        cur.execute("SELECT id, name FROM tenants")
-        tenants = cur.fetchall()
+        cur.execute("""
+            SELECT ak.id, ak.label, ak.budget_usd, t.name
+            FROM api_keys ak
+            JOIN tenants t ON t.id = ak.tenant_id
+            WHERE ak.is_active = TRUE AND ak.budget_usd > 0
+        """)
+        keys = cur.fetchall()
         cur.close()
         conn.close()
 
-        for tenant_id, tenant_name in tenants:
-            tenant_budget = BudgetDefinition(
-                budget_id=f"budget-{tenant_id}",
-                tenant_id=str(tenant_id),
-                name=f"{tenant_name} Daily Cap",
+        for key_id, label, budget_usd, tenant_name in keys:
+            key_budget = BudgetDefinition(
+                budget_id=f"budget-{key_id}",
+                tenant_id=str(key_id),
+                name=f"{label} Daily Cap",
                 period=BudgetPeriod.DAILY,
-                limit_usd=0.008,
+                limit_usd=float(budget_usd),
                 alert_thresholds=[50, 80, 95],
                 action_on_limit=BudgetAction.BLOCK
             )
-            load_budgets(str(tenant_id), [tenant_budget])
-            print(f"[Budget] Loaded budget for tenant: {tenant_name}")
+            load_budgets(str(key_id), [key_budget])
+            print(f"[Budget] Loaded budget for: {label} (${budget_usd})")
 
     except Exception as e:
         print(f"[Budget] Could not load from Postgres, using default: {e}")
@@ -84,7 +89,7 @@ def get_tenant_from_key(api_key: str):
         conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
         cur = conn.cursor()
         cur.execute("""
-            SELECT t.id, t.name 
+            SELECT t.id, t.name, ak.id, ak.budget_usd 
             FROM api_keys ak
             JOIN tenants t ON t.id = ak.tenant_id
             WHERE ak.key = %s AND ak.is_active = TRUE
@@ -1134,6 +1139,12 @@ async def debug_env():
         "db_url_set": db_url != "NOT SET",
         "all_env_keys": list(os.environ.keys()),
     })
+
+
+
+
+
+
 
 
 
