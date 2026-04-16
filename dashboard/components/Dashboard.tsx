@@ -1138,6 +1138,19 @@ function EmployeeKeyManager() {
                     {k.is_active ? "Active" : "Revoked"}
                   </Badge>
                 </div>
+                <div style={{ fontSize: 12, color: COLORS.primary, cursor: "pointer", borderBottom: `1px dashed ${COLORS.primary}` }}
+                  onClick={() => { setEditBudgetId(k.id); setEditBudgetVal(k.budget_usd ? String(k.budget_usd) : "50"); }}>
+                  {editBudgetId === k.id ? (
+                    <>
+                      <input type="number" value={editBudgetVal} onChange={e => setEditBudgetVal(e.target.value)}
+                        style={{ width: 60, background: COLORS.bgAccent, border: `1px solid ${COLORS.primary}`, borderRadius: 6, color: COLORS.text, fontSize: 12, padding: "3px 6px" }}
+                        autoFocus onKeyDown={e => e.key === "Enter" && updateBudget(k.id)} />
+                      <button onClick={() => updateBudget(k.id)} style={{ marginLeft: 4, background: COLORS.primary, border: "none", borderRadius: 6, cursor: "pointer", color: "#fff", fontSize: 11, padding: "3px 8px" }}>Save</button>
+                    </>
+                  ) : (
+                    `$${k.budget_usd ? Number(k.budget_usd).toFixed(2) : "—"}` 
+                  )}
+                </div>
                 <div style={{ display: "flex", gap: 6 }}>
                   {k.is_active ? (
                     <button
