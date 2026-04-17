@@ -669,7 +669,8 @@ async def list_tenant_keys(tenant_id: str, request: Request):
                 label,
                 is_active,
                 created_at,
-                LEFT(key, 8) as key_prefix
+                LEFT(key, 8) as key_prefix,
+                budget_usd
             FROM api_keys
             WHERE tenant_id = %s::uuid
             ORDER BY created_at DESC
@@ -679,13 +680,14 @@ async def list_tenant_keys(tenant_id: str, request: Request):
         conn.close()
         keys = []
         for row in rows:
-            key_id, label, is_active, created_at, key_prefix = row
+            key_id, label, is_active, created_at, key_prefix, budget_usd = row
             keys.append({
                 "id": str(key_id),
                 "label": label or "Unnamed",
                 "is_active": is_active,
                 "created_at": created_at.isoformat() if created_at else None,
                 "key_preview": f"tg-{key_prefix}...{label[:3].lower() if label else 'key'}",
+                "budget_usd": float(budget_usd) if budget_usd else 0.01,
             })
         return JSONResponse(content={"keys": keys, "total": len(keys)})
     except Exception as e:
@@ -1139,6 +1141,8 @@ async def debug_env():
         "db_url_set": db_url != "NOT SET",
         "all_env_keys": list(os.environ.keys()),
     })
+
+
 
 
 
