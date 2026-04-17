@@ -1165,10 +1165,17 @@ function EmployeeKeyManager() {
                       <button onClick={() => updateBudget(k.id)} style={{ marginLeft: 4, background: COLORS.primary, border: "none", borderRadius: 6, cursor: "pointer", color: "#fff", fontSize: 11, padding: "3px 8px" }}>Save</button>
                     </>
                   ) : (
-                    `$${k.budget_usd ? Number(k.budget_usd).toFixed(2) : "—"}` 
+                    <span>${k.budget_usd ? Number(k.budget_usd).toFixed(2) : "—"}</span>
                   )}
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
+                  <button
+                    onClick={() => seedKey(k.id)}
+                    disabled={seedStatus[k.id] === "seeding"}
+                    style={{ background: "none", border: `1px solid ${COLORS.primary}40`, borderRadius: 6, cursor: "pointer", color: COLORS.primary, fontSize: 11, padding: "3px 10px" }}
+                  >
+                    {seedStatus[k.id] === "seeding" ? "..." : seedStatus[k.id] === "done" ? "✓" : seedStatus[k.id] === "error" ? "✗" : "Seed"}
+                  </button>
                   {k.is_active ? (
                     <button
                       onClick={() => revokeKey(k.id)}
@@ -1579,6 +1586,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
