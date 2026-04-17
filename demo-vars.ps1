@@ -3,7 +3,7 @@ $TENANT_ID = "6f96c565-2284-4092-93c4-62252a1c1d59"
 $ADMIN_KEY = "lMNUO5f2xEAmxq8lXA9ODmCi-pxCr-9hL99fyw3VlWw"
 $ADMIN     = @{'Authorization'="Bearer $ADMIN_KEY"; 'Content-Type'='application/json'}
 
-$SARAH  = "tg-437fd93f03009f389f1c9394afadd583946a9b5c05c64077"
+$SARAH  = "tg-d06616108a81726611cb49c0ef73f8c96f4eba3b15806e43"
 $JAMIE  = "tg-9587f9fa1cbc7091e59c3c46dd5d541931b148916bd6c2f4"
 $MARCUS = "tg-532afe26d2cdd4f6428cc2bfe5a8ade9cc998acc121aeaf8"
 
@@ -16,3 +16,4 @@ $b2 = '{"model":"gpt-4o","messages":[{"role":"user","content":"Analyze our compe
 $b3 = '{"model":"gpt-4o","messages":[{"role":"user","content":"Write a full marketing strategy for Q3"}],"max_tokens":500}'
 $claude = '{"model":"claude-sonnet-4-6","messages":[{"role":"user","content":"What is machine learning?"}],"max_tokens":100}'
 $gpt    = '{"model":"gpt-4o","messages":[{"role":"user","content":"What is machine learning?"}],"max_tokens":100}'
+

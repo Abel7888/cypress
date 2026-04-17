@@ -117,7 +117,7 @@ def authenticate(request: Request):
         if tenant:
             tenant_id, tenant_name, key_id, budget_usd = tenant
             print(f"[Auth] Authenticated: {tenant_name} key={key_id} budget=${budget_usd}")
-            return str(key_id)
+            return str(tenant_id)
         else:
             raise HTTPException(status_code=403, detail="Invalid API key")
     
