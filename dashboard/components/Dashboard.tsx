@@ -873,6 +873,7 @@ function EmployeeKeyManager() {
   const [newKey, setNewKey] = useState<string | null>(null);
   const [newKeyCopied, setNewKeyCopied] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [seedStatus, setSeedStatus] = useState<Record<string, string>>({});
 
   const load = async () => {
     setLoading(true);
@@ -943,6 +944,22 @@ function EmployeeKeyManager() {
       await load();
     } catch (e) { console.error(e); }
     setActionLoading(null);
+  };
+
+  const seedKey = async (keyId: string) => {
+    setSeedStatus(s => ({ ...s, [keyId]: "seeding" }));
+    try {
+      const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/keys/${keyId}/seed`, {
+        method: "POST", headers: HEADERS,
+      });
+      const data = await res.json();
+      setSeedStatus(s => ({ ...s, [keyId]: data.seeded ? "done" : "error" }));
+      setTimeout(() => setSeedStatus(s => ({ ...s, [keyId]: "" })), 3000);
+      await load();
+    } catch (e) {
+      setSeedStatus(s => ({ ...s, [keyId]: "error" }));
+      setTimeout(() => setSeedStatus(s => ({ ...s, [keyId]: "" })), 3000);
+    }
   };
 
   const copyKey = (key: string) => {
@@ -1562,6 +1579,9 @@ export default function Dashboard() {
     </div>
   );
 }
+
+
+
 
 
 
