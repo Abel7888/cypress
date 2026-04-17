@@ -737,6 +737,24 @@ async def update_key_budget(tenant_id: str, key_id: str, request: Request):
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+@app.post("/api/tenants/{tenant_id}/keys/{key_id}/seed")
+async def seed_key_usage(tenant_id: str, key_id: str, request: Request):
+    """Fire a small real LLM call billed to this key budget bucket for seeding spend data."""
+    authenticate(request)
+    try:
+        import openai as _openai
+        _client = _openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        resp = await _client.chat.completions.create(
+            model="gpt-4o-mini",
+            max_tokens=30,
+            messages=[{"role": "user", "content": "Say hi in one word."}]
+        )
+        cost = calculate_cost("gpt-4o-mini", resp.usage.prompt_tokens, resp.usage.completion_tokens)
+        record_spend(str(key_id), cost)
+        return JSONResponse(content={"seeded": True, "key_id": key_id, "cost": cost})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 @app.post("/api/tenants/{tenant_id}/keys/{key_id}/reactivate")
 async def reactivate_tenant_key(tenant_id: str, key_id: str, request: Request):
     """Reactivate a previously revoked API key."""
@@ -1141,6 +1159,7 @@ async def debug_env():
         "db_url_set": db_url != "NOT SET",
         "all_env_keys": list(os.environ.keys()),
     })
+
 
 
 
