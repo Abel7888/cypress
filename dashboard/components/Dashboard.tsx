@@ -534,6 +534,100 @@ function CostAnalysisPage() {
 
 // ─── BUDGETS PAGE WITH PER-EMPLOYEE BARS ─────────────────────────────────────
 
+function DemoControlPanel() {
+  const [selected, setSelected] = useState(DEMO_EMPLOYEES[0]);
+  const [firing, setFiring] = useState(false);
+  const [log, setLog] = useState<string[]>([]);
+  const [seeding, setSeeding] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  const fireCall = async () => {
+    setFiring(true);
+    const prompts = [
+      "Write a detailed project plan for a product launch",
+      "Analyze our competitive landscape in SaaS",
+      "Write a full marketing strategy for Q3",
+      "Explain deep learning architecture in detail",
+    ];
+    const prompt = prompts[Math.floor(Math.random() * prompts.length)];
+    try {
+      const res = await fetch(`${API_BASE}/v1/chat/completions`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${selected.key}`, "Content-Type": "application/json", "X-Agent-ID": selected.name },
+        body: JSON.stringify({ model: "gpt-4o", max_tokens: 100, messages: [{ role: "user", content: prompt }] }),
+      });
+      const data = await res.json();
+      if (data.error === "BUDGET_CAP_EXCEEDED") {
+        setLog(l => [`🔴 ${selected.name} — BLOCKED! Budget exhausted.`, ...l.slice(0, 4)]);
+      } else {
+        const cost = data.usage ? `$${((data.usage.total_tokens || 0) * 0.000005).toFixed(6)}` : "";
+        setLog(l => [`✅ ${selected.name} — call complete ${cost}`, ...l.slice(0, 4)]);
+      }
+    } catch (e) {
+      setLog(l => [`❌ ${selected.name} — error`, ...l.slice(0, 4)]);
+    }
+    setFiring(false);
+  };
+
+  const seedAll = async () => {
+    setSeeding(true);
+    setLog(l => ["🌱 Seeding all employees...", ...l.slice(0, 4)]);
+    await Promise.all(DEMO_EMPLOYEES.map(emp =>
+      fetch(`${API_BASE}/v1/chat/completions`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${emp.key}`, "Content-Type": "application/json", "X-Agent-ID": emp.name },
+        body: JSON.stringify({ model: "gpt-4o", max_tokens: 10, messages: [{ role: "user", content: "hi" }] }),
+      })
+    ));
+    setLog(l => ["✅ All employees seeded — bars should appear", ...l.slice(0, 4)]);
+    setSeeding(false);
+  };
+
+  const resetAll = async () => {
+    setResetting(true);
+    setLog(l => ["🔄 Resetting all budgets...", ...l.slice(0, 4)]);
+    await fetch(`${API_BASE}/budget/reset`, { method: "POST", headers: HEADERS });
+    await fetch(`${API_BASE}/budget/reload`, { method: "POST", headers: HEADERS });
+    setLog(l => ["✅ Budgets reset — bars cleared", ...l.slice(0, 4)]);
+    setResetting(false);
+  };
+
+  const btnStyle = (color: string): React.CSSProperties => ({
+    background: "none", border: `1px solid ${color}40`, borderRadius: 8,
+    cursor: "pointer", color, fontSize: 12, padding: "7px 16px", fontWeight: 600,
+  });
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+        <select
+          value={selected.name}
+          onChange={e => setSelected(DEMO_EMPLOYEES.find(emp => emp.name === e.target.value) || DEMO_EMPLOYEES[0])}
+          style={{ background: COLORS.bgAccent, border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.text, fontSize: 13, padding: "7px 12px", cursor: "pointer" }}
+        >
+          {DEMO_EMPLOYEES.map(emp => <option key={emp.name} value={emp.name}>{emp.name}</option>)}
+        </select>
+        <button onClick={fireCall} disabled={firing} style={btnStyle(COLORS.primary)}>
+          {firing ? "Firing..." : "🚀 Fire Call"}
+        </button>
+        <button onClick={seedAll} disabled={seeding} style={btnStyle(COLORS.green)}>
+          {seeding ? "Seeding..." : "🌱 Seed All"}
+        </button>
+        <button onClick={resetAll} disabled={resetting} style={btnStyle(COLORS.red)}>
+          {resetting ? "Resetting..." : "🔄 Reset Budgets"}
+        </button>
+      </div>
+      {log.length > 0 && (
+        <div style={{ background: COLORS.bgAccent, borderRadius: 8, padding: "10px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
+          {log.map((l, i) => (
+            <div key={i} style={{ fontSize: 12, color: i === 0 ? COLORS.text : COLORS.textMuted, fontFamily: "monospace" }}>{l}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BudgetsPage() {
   const [status, setStatus] = useState<any[]>([]);
   const [userBudgets, setUserBudgets] = useState<any[]>([]);
@@ -641,6 +735,14 @@ function BudgetsPage() {
               })}
             </div>
           )}
+        </CardBody>
+      </Card>
+
+      {/* Demo Control Panel */}
+      <Card>
+        <CardBody>
+          <SectionHeader title="Demo Controls" subtitle="Fire test calls and watch bars move live" />
+          <DemoControlPanel />
         </CardBody>
       </Card>
 
