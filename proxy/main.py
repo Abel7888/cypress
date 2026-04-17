@@ -35,7 +35,7 @@ def load_tenant_budgets():
         conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
         cur = conn.cursor()
         cur.execute("""
-            SELECT ak.id, ak.label, ak.budget_usd, t.name
+            SELECT ak.id, ak.label, ak.budget_usd, t.name, t.id
             FROM api_keys ak
             JOIN tenants t ON t.id = ak.tenant_id
             WHERE ak.is_active = TRUE AND ak.budget_usd > 0
@@ -44,17 +44,17 @@ def load_tenant_budgets():
         cur.close()
         conn.close()
 
-        for key_id, label, budget_usd, tenant_name in keys:
+        for key_id, label, budget_usd, tenant_name, tenant_id in keys:
             key_budget = BudgetDefinition(
-                budget_id=f"budget-{key_id}",
-                tenant_id=str(key_id),
+                budget_id=f"budget-{tenant_id}",
+                tenant_id=str(tenant_id),
                 name=f"{label} Daily Cap",
                 period=BudgetPeriod.DAILY,
                 limit_usd=float(budget_usd),
                 alert_thresholds=[50, 80, 95],
                 action_on_limit=BudgetAction.BLOCK
             )
-            load_budgets(str(key_id), [key_budget])
+            load_budgets(str(tenant_id), [key_budget])
             print(f"[Budget] Loaded budget for: {label} (${budget_usd})")
 
     except Exception as e:
