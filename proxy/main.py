@@ -739,19 +739,35 @@ async def update_key_budget(tenant_id: str, key_id: str, request: Request):
 
 @app.post("/api/tenants/{tenant_id}/keys/{key_id}/seed")
 async def seed_key_usage(tenant_id: str, key_id: str, request: Request):
-    """Fire a small real LLM call billed to this key budget bucket for seeding spend data."""
+    """Insert a usage row into ClickHouse so employee appears on budget screen."""
     authenticate(request)
     try:
-        import openai as _openai
-        _client = _openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        resp = await _client.chat.completions.create(
-            model="gpt-4o-mini",
-            max_tokens=30,
-            messages=[{"role": "user", "content": "Say hi in one word."}]
-        )
-        cost = calculate_cost("gpt-4o-mini", resp.usage.prompt_tokens, resp.usage.completion_tokens)
-        record_spend(str(key_id), cost)
-        return JSONResponse(content={"seeded": True, "key_id": key_id, "cost": cost})
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("SELECT label FROM api_keys WHERE id = %s::uuid AND tenant_id = %s::uuid", (key_id, tenant_id))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        if not row:
+            return JSONResponse(status_code=404, content={"error": "Key not found"})
+        label = row[0]
+        from logger import log_event
+        log_event({
+            "client_id": str(tenant_id),
+            "agent_id": label,
+            "workflow_id": "seed",
+            "model_requested": "gpt-4o-mini",
+            "model_used": "gpt-4o-mini",
+            "input_tokens": 10,
+            "output_tokens": 10,
+            "cost_usd": 0.0015,
+            "latency_ms": 100,
+            "was_routed": 0,
+            "cache_hit": 0,
+            "blocked": 0,
+        })
+        record_spend(str(tenant_id), 0.0015)
+        return JSONResponse(content={"seeded": True, "key_id": key_id, "label": label})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
@@ -1159,6 +1175,10 @@ async def debug_env():
         "db_url_set": db_url != "NOT SET",
         "all_env_keys": list(os.environ.keys()),
     })
+
+
+
+
 
 
 
