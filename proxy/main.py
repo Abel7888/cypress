@@ -1114,6 +1114,41 @@ async def dashboard_models(request: Request):
     return JSONResponse(content=models)
 
 
+@app.get("/api/dashboard/agent-recent")
+async def agent_recent(request: Request, agent_id: str, limit: int = 8):
+    """Get recent calls for a specific agent from ClickHouse."""
+    authenticate(request)
+    try:
+        import clickhouse_connect
+        ch = clickhouse_connect.get_client(
+            host=os.getenv("CLICKHOUSE_HOST"),
+            port=int(os.getenv("CLICKHOUSE_PORT", 8443)),
+            username=os.getenv("CLICKHOUSE_USER", "default"),
+            password=os.getenv("CLICKHOUSE_PASSWORD"),
+            secure=True
+        )
+        result = ch.query(
+            """SELECT timestamp, model_requested, model_used, cost_usd,
+                      was_routed, cache_hit, blocked, latency_ms
+               FROM tokenguard.events
+               WHERE agent_id = {agent_id:String}
+               ORDER BY timestamp DESC
+               LIMIT {limit:Int32}""",
+            parameters={"agent_id": agent_id, "limit": limit}
+        )
+        return JSONResponse(content=[{
+            "timestamp": str(r[0]),
+            "model_requested": r[1],
+            "model_used": r[2],
+            "cost_usd": float(r[3]),
+            "was_routed": bool(r[4]),
+            "cache_hit": bool(r[5]),
+            "blocked": bool(r[6]),
+            "latency_ms": int(r[7]),
+        } for r in result.result_rows])
+    except Exception as e:
+        return JSONResponse(content=[])
+
 @app.get("/api/dashboard/agents")
 async def dashboard_agents(request: Request):
     client_id = authenticate(request)
@@ -1175,6 +1210,7 @@ async def debug_env():
         "db_url_set": db_url != "NOT SET",
         "all_env_keys": list(os.environ.keys()),
     })
+
 
 
 
