@@ -57,7 +57,7 @@ DOWNGRADE_MAP: dict[str, str] = {
     "gpt-3.5-turbo":    "gpt-3.5-turbo",
     "o3":               "o3-mini",
     # Anthropic → cheaper Anthropic
-    "claude-opus-4-6":  "claude-sonnet-4-6",
+    "claude-opus-4-6":  "claude-haiku-4-5",
     "claude-sonnet-4-6":"claude-haiku-4-5",
     "claude-haiku-4-5": "claude-haiku-4-5",
     # Google → cheaper Google
