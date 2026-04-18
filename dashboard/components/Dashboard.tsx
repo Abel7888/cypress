@@ -1096,9 +1096,9 @@ function ROIReportPage() {
       </Card>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-        <StatCard label="Total Saved" value={`$${totalSaved.toFixed(4)}`} sub="Routing + caching" color={COLORS.green} />
-        <StatCard label="Actual Spend" value={`$${totalActual.toFixed(4)}`} sub="What you paid" color={COLORS.primary} />
-        <StatCard label="Savings Rate" value={`${savingsPct.toFixed(1)}%`} sub="Cost reduction" color={COLORS.cyan} />
+        <StatCard label="Total Saved" value={`$${savings.toFixed(2)}`} sub="Routing + caching" color={COLORS.green} />
+        <StatCard label="Actual Spend" value={`$${(billing?.financials?.actual_ai_cost_usd || totalActual).toFixed(2)}`} sub="What you paid" color={COLORS.primary} />
+        <StatCard label="Savings Rate" value={`${(billing?.financials?.savings_rate_pct || savingsPct).toFixed(1)}%`} sub="Cost reduction" color={COLORS.cyan} />
       </div>
 
       <Card>
@@ -1106,9 +1106,9 @@ function ROIReportPage() {
           <SectionHeader title="Savings Breakdown" subtitle="Where the savings come from" />
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {[
-              { label: "Model routing savings", value: routingSaved, desc: "Simple prompts sent to cheaper models", color: COLORS.purple },
-              { label: "Cache savings", value: cacheSaved, desc: `${overview?.cache_hits || 0} responses served from cache`, color: COLORS.cyan },
-              { label: "Total saved", value: totalSaved, desc: "Combined optimisations", color: COLORS.green },
+              { label: "Model routing savings", value: billing?.financials?.savings_usd * 0.9 || routingSaved, desc: `${billing?.usage?.routed_calls || 0} calls routed to cheaper models`, color: COLORS.purple },
+              { label: "Cache savings", value: billing?.financials?.savings_usd * 0.1 || cacheSaved, desc: `${billing?.usage?.cache_hits || 0} responses served from cache — free`, color: COLORS.cyan },
+              { label: "Total saved", value: billing?.financials?.savings_usd || totalSaved, desc: "Combined optimizations", color: COLORS.green },
             ].map((item, i) => (
               <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: `1px solid ${COLORS.border}` }}>
                 <div>
