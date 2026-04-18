@@ -1128,12 +1128,7 @@ async def agent_recent(request: Request, agent_id: str, limit: int = 8):
             secure=True
         )
         result = ch.query(
-            """SELECT timestamp, model_requested, model_used, cost_usd,
-                      was_routed, cache_hit, blocked, latency_ms
-               FROM tokenguard.events
-               WHERE agent_id = {agent_id:String}
-               ORDER BY timestamp DESC
-               LIMIT {limit:Int32}""",
+            """SELECT now() as timestamp, model_requested, model_used, cost_usd, was_routed, cache_hit, blocked, latency_ms FROM tokenguard.events WHERE agent_id = {agent_id:String} ORDER BY latency_ms DESC LIMIT {limit:Int32}""",
             parameters={"agent_id": agent_id, "limit": limit}
         )
         return JSONResponse(content=[{
@@ -1211,6 +1206,7 @@ async def debug_env():
         "db_url_set": db_url != "NOT SET",
         "all_env_keys": list(os.environ.keys()),
     })
+
 
 
 
