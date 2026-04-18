@@ -366,6 +366,54 @@ function OverviewPage() {
 // ─── COST ANALYSIS WITH PER-USER DROPDOWN ────────────────────────────────────
 
 function CostAnalysisPage() {
+  const [playgroundPrompt, setPlaygroundPrompt] = useState("");
+  const [playgroundModel, setPlaygroundModel] = useState("claude-opus-4-6");
+  const [playgroundLoading, setPlaygroundLoading] = useState(false);
+  const [playgroundResult, setPlaygroundResult] = useState<any>(null);
+
+  const MODEL_COSTS: Record<string, number> = {
+    "claude-opus-4-6": 75.0e-6,
+    "claude-sonnet-4-6": 15.0e-6,
+    "claude-haiku-4-5": 4.0e-6,
+    "claude-haiku-4-5-20251001": 4.0e-6,
+    "gpt-4o": 10.0e-6,
+    "gpt-4o-mini": 0.60e-6,
+  };
+
+  const runPlayground = async () => {
+    if (!playgroundPrompt.trim()) return;
+    setPlaygroundLoading(true);
+    setPlaygroundResult(null);
+    try {
+      const res = await fetch(`${API_BASE}/v1/chat/completions`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${DEMO_EMPLOYEES[0].key}`, "Content-Type": "application/json", "X-Agent-ID": "playground" },
+        body: JSON.stringify({ model: playgroundModel, max_tokens: 300, messages: [{ role: "user", content: playgroundPrompt }] }),
+      });
+      const data = await res.json();
+      const routedModel = data.model || playgroundModel;
+      const wasRouted = routedModel !== playgroundModel;
+      const totalTokens = data.usage?.total_tokens || 100;
+      const originalCost = (MODEL_COSTS[playgroundModel] || 10e-6) * totalTokens;
+      const actualCost = (MODEL_COSTS[routedModel] || 10e-6) * totalTokens;
+      const saved = originalCost - actualCost;
+      const savingsPct = originalCost > 0 ? Math.round((saved / originalCost) * 100) : 0;
+      const answer = data.choices?.[0]?.message?.content || "";
+      setPlaygroundResult({
+        was_routed: wasRouted,
+        original_model: playgroundModel,
+        routed_model: routedModel,
+        original_cost: originalCost.toFixed(6),
+        actual_cost: actualCost.toFixed(6),
+        saved: saved.toFixed(6),
+        savings_pct: savingsPct,
+        answer,
+        tokens: totalTokens,
+      });
+    } catch (e) { console.error(e); }
+    setPlaygroundLoading(false);
+  };
+
   const [agents, setAgents] = useState<any[]>([]);
   const [models, setModels] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<string>("all");
@@ -526,6 +574,113 @@ function CostAnalysisPage() {
               <ProgressBar value={m.percentage || 0} max={100} />
             </div>
           ))}
+        </CardBody>
+      </Card>
+
+      {/* ⚡ Routing Playground */}
+      <Card>
+        <CardBody>
+          <div style={{ marginBottom: 16 }}>
+            <SectionHeader title="⚡ Routing Playground" subtitle="Type any prompt — see exactly how TokenGuard routes it and what you save" />
+            <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+              {[
+                { label: "💡 Simple", prompt: "What is machine learning?", model: "claude-opus-4-6" },
+                { label: "📝 Medium", prompt: "What are the key differences between REST and GraphQL?", model: "gpt-4o" },
+                { label: "🧠 Complex", prompt: "Write a comprehensive multi-region fault-tolerant distributed system architecture with step by step implementation plan", model: "claude-opus-4-6" },
+              ].map((ex, i) => (
+                <button key={i}
+                  onClick={() => { setPlaygroundPrompt(ex.prompt); setPlaygroundModel(ex.model); setPlaygroundResult(null); }}
+                  style={{ background: COLORS.bgAccent, border: `1px solid ${COLORS.border}`, borderRadius: 8, cursor: "pointer", color: COLORS.textDim, fontSize: 11, padding: "5px 14px" }}>
+                  {ex.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, alignItems: "start" }}>
+              <textarea
+                value={playgroundPrompt}
+                onChange={e => setPlaygroundPrompt(e.target.value)}
+                placeholder="Type a prompt — or pick an example above..."
+                rows={3}
+                style={{ background: COLORS.bgAccent, border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.text, fontSize: 13, padding: "10px 12px", outline: "none", resize: "vertical", fontFamily: "inherit", width: "100%" }}
+              />
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 160 }}>
+                <select value={playgroundModel} onChange={e => setPlaygroundModel(e.target.value)}
+                  style={{ background: COLORS.bgAccent, border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.text, fontSize: 12, padding: "8px 10px", cursor: "pointer" }}>
+                  <option value="claude-opus-4-6">claude-opus-4-6</option>
+                  <option value="claude-sonnet-4-6">claude-sonnet-4-6</option>
+                  <option value="gpt-4o">gpt-4o</option>
+                  <option value="gpt-4o-mini">gpt-4o-mini</option>
+                </select>
+                <button onClick={runPlayground} disabled={playgroundLoading}
+                  style={{ background: COLORS.primary, border: "none", borderRadius: 8, cursor: "pointer", color: "#fff", fontSize: 13, padding: "10px 16px", fontWeight: 700, opacity: playgroundLoading ? 0.7 : 1 }}>
+                  {playgroundLoading ? "Routing..." : "▶ Send"}
+                </button>
+              </div>
+            </div>
+
+            {playgroundResult && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {/* Routing Decision */}
+                <div style={{
+                  background: playgroundResult.was_routed ? `${COLORS.green}12` : `${COLORS.primary}12`,
+                  border: `1px solid ${playgroundResult.was_routed ? COLORS.green : COLORS.primary}40`,
+                  borderRadius: 10, padding: "14px 16px",
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span style={{ fontSize: 22 }}>{playgroundResult.was_routed ? "⚡" : "🧠"}</span>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>
+                          {playgroundResult.was_routed ? "Routed to cheaper model — same quality answer" : "Kept on premium model — complexity required it"}
+                        </div>
+                        <div style={{ fontSize: 11, color: COLORS.textDim, marginTop: 3 }}>
+                          {playgroundResult.was_routed
+                            ? `Simple task detected · ${playgroundResult.tokens} tokens · no premium model needed` 
+                            : `Complex task detected · ${playgroundResult.tokens} tokens · full power applied`}
+                        </div>
+                      </div>
+                    </div>
+                    {playgroundResult.was_routed && (
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 24, fontWeight: 800, color: COLORS.green, fontFamily: "monospace" }}>{playgroundResult.savings_pct}% cheaper</div>
+                        <div style={{ fontSize: 11, color: COLORS.textDim }}>vs requested model</div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 32px 1fr 32px 1fr", gap: 8, alignItems: "center" }}>
+                    <div style={{ background: COLORS.bg, borderRadius: 8, padding: "10px 12px", textAlign: "center" }}>
+                      <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>Requested</div>
+                      <div style={{ fontSize: 12, fontFamily: "monospace", color: COLORS.red, fontWeight: 600 }}>{playgroundResult.original_model}</div>
+                      <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>${playgroundResult.original_cost}</div>
+                    </div>
+                    <div style={{ fontSize: 18, color: COLORS.textDim, textAlign: "center" }}>→</div>
+                    <div style={{ background: COLORS.bg, borderRadius: 8, padding: "10px 12px", textAlign: "center" }}>
+                      <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>Served</div>
+                      <div style={{ fontSize: 12, fontFamily: "monospace", color: COLORS.green, fontWeight: 600 }}>{playgroundResult.routed_model}</div>
+                      <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>${playgroundResult.actual_cost}</div>
+                    </div>
+                    <div style={{ fontSize: 18, color: COLORS.textDim, textAlign: "center" }}>=</div>
+                    <div style={{ background: playgroundResult.was_routed ? `${COLORS.green}20` : COLORS.bg, borderRadius: 8, padding: "10px 12px", textAlign: "center" }}>
+                      <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>You Saved</div>
+                      <div style={{ fontSize: 16, fontFamily: "monospace", fontWeight: 800, color: playgroundResult.was_routed ? COLORS.green : COLORS.textMuted }}>
+                        {playgroundResult.was_routed ? `$${playgroundResult.saved}` : "$0.000000"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Answer */}
+                <div style={{ background: COLORS.bgAccent, borderRadius: 10, padding: "14px 16px" }}>
+                  <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>Response from {playgroundResult.routed_model}</div>
+                  <div style={{ fontSize: 13, color: COLORS.text, lineHeight: 1.7 }}>{playgroundResult.answer}</div>
+                </div>
+              </div>
+            )}
+          </div>
         </CardBody>
       </Card>
     </div>
