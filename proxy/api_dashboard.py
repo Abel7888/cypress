@@ -141,12 +141,11 @@ async def get_agent_recent(request: Request, agent_id: str, limit: int = 8):
             SELECT timestamp, model_requested, model_used, cost_usd,
                    was_routed, cache_hit, blocked, latency_ms
             FROM tokenguard.events
-            WHERE client_id = {tenant_id:String}
-              AND agent_id = {agent_id:String}
+            WHERE agent_id = {agent_id:String}
             ORDER BY timestamp DESC
             LIMIT {limit:Int32}
             """,
-            parameters={"tenant_id": tenant_id, "agent_id": agent_id, "limit": limit}
+            parameters={"agent_id": agent_id, "limit": limit}
         )
         rows = []
         for r in result.result_rows:
