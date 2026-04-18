@@ -365,6 +365,64 @@ function OverviewPage() {
 
 // ─── COST ANALYSIS WITH PER-USER DROPDOWN ────────────────────────────────────
 
+function RecentCallsPanel({ agentId, tenantId }: { agentId: string; tenantId: string }) {
+  const [calls, setCalls] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      try {
+        const data = await fetch(
+          `${API_BASE}/api/dashboard/agent-recent?agent_id=${encodeURIComponent(agentId)}&limit=8`,
+          { headers: HEADERS }
+        ).then(r => r.json());
+        setCalls(Array.isArray(data) ? data : []);
+      } catch (e) { setCalls([]); }
+      setLoading(false);
+    }
+    load();
+  }, [agentId]);
+
+  if (loading) return <div style={{ color: COLORS.textDim, fontSize: 12 }}>Loading calls...</div>;
+  if (calls.length === 0) return <div style={{ color: COLORS.textDim, fontSize: 12 }}>No recent calls found.</div>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      {calls.map((c, i) => {
+        const isBlocked = c.blocked;
+        const isRouted = c.was_routed;
+        const isCached = c.cache_hit;
+        const color = isBlocked ? COLORS.red : isRouted ? COLORS.green : isCached ? COLORS.cyan : COLORS.textMuted;
+        const icon = isBlocked ? "🔴" : isRouted ? "⚡" : isCached ? "💾" : "✓";
+        const label = isBlocked ? "blocked" : isRouted ? "routed" : isCached ? "cached" : "direct";
+        const time = new Date(c.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        return (
+          <div key={i} style={{
+            display: "grid", gridTemplateColumns: "40px 1fr auto auto",
+            gap: 8, alignItems: "center",
+            background: COLORS.bgAccent, borderRadius: 8, padding: "8px 12px",
+            border: `1px solid ${isBlocked ? COLORS.red + "30" : COLORS.border}`,
+          }}>
+            <div style={{ fontSize: 11, color: COLORS.textDim, fontFamily: "monospace" }}>{time}</div>
+            <div style={{ fontSize: 11, color: COLORS.text, fontFamily: "monospace" }}>
+              {isRouted ? (
+                <span>{c.model_requested} <span style={{ color: COLORS.textDim }}>→</span> <span style={{ color: COLORS.green }}>{c.model_used}</span></span>
+              ) : (
+                <span style={{ color: isBlocked ? COLORS.red : COLORS.text }}>{c.model_requested}</span>
+              )}
+            </div>
+            <div style={{ fontSize: 11, color: color, fontFamily: "monospace" }}>
+              {isBlocked ? "—" : `$${c.cost_usd.toFixed(6)}`}
+            </div>
+            <div style={{ fontSize: 11, color: color }}>{icon} {label}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function CostAnalysisPage() {
   const [playgroundPrompt, setPlaygroundPrompt] = useState("");
   const [playgroundModel, setPlaygroundModel] = useState("claude-opus-4-6");
@@ -513,25 +571,70 @@ function CostAnalysisPage() {
             </div>
           )}
 
-          {/* Selected user detail */}
-          {selectedUser !== "all" && filteredUsers.length > 0 && (
-            <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${COLORS.border}` }}>
-              <div style={{ fontSize: 12, color: COLORS.textDim, marginBottom: 12 }}>Detailed breakdown — {selectedUser}</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-                {[
-                  { label: "Total Calls", value: filteredUsers[0]?.api_calls || 0, color: COLORS.cyan },
-                  { label: "Actual Cost", value: `$${(filteredUsers[0]?.cost_usd || 0).toFixed(6)}`, color: COLORS.primary },
-                  { label: "Savings", value: `$${(filteredUsers[0]?.savings_usd || 0).toFixed(6)}`, color: COLORS.green },
-                  { label: "Blocked Calls", value: filteredUsers[0]?.blocked_calls || 0, color: COLORS.red },
-                ].map((stat, i) => (
-                  <div key={i} style={{ background: COLORS.bgAccent, borderRadius: 8, padding: 12 }}>
-                    <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{stat.label}</div>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: stat.color, fontFamily: "monospace" }}>{stat.value}</div>
+          {/* Selected user detail panel */}
+          {selectedUser !== "all" && filteredUsers.length > 0 && (() => {
+            const u = filteredUsers[0];
+            const statusColor = u.status === "blocked" ? COLORS.red : u.blocked_calls > 0 ? COLORS.amber : COLORS.green;
+            const statusLabel = u.status === "blocked" ? "Blocked" : u.blocked_calls > 0 ? "Warning" : "Healthy";
+            const savingsPct = u.estimated_cost_without_tokenguard > 0
+              ? Math.round((u.savings_usd / u.estimated_cost_without_tokenguard) * 100) : 0;
+            return (
+              <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${COLORS.border}` }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+
+                  {/* Left — ROI + Activity */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {/* Header */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text, fontFamily: "monospace" }}>{u.employee}</div>
+                      <Badge color={`${statusColor}20`} textColor={statusColor}>{statusLabel}</Badge>
+                    </div>
+
+                    {/* ROI Card */}
+                    <div style={{ background: `${COLORS.green}10`, border: `1px solid ${COLORS.green}30`, borderRadius: 10, padding: 14 }}>
+                      <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.06em" }}>💰 ROI — What TokenGuard saved</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                        <div>
+                          <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 3 }}>Actual Cost</div>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.primary, fontFamily: "monospace" }}>${(u.cost_usd || 0).toFixed(4)}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 3 }}>Without Us</div>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.red, fontFamily: "monospace" }}>${(u.estimated_cost_without_tokenguard || 0).toFixed(4)}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 3 }}>You Saved</div>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.green, fontFamily: "monospace" }}>${(u.savings_usd || 0).toFixed(4)}</div>
+                          <div style={{ fontSize: 11, color: COLORS.green }}>{savingsPct}% cheaper</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Activity Stats */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+                      {[
+                        { label: "Total Calls", value: u.api_calls || 0, color: COLORS.cyan },
+                        { label: "Routed", value: u.routed_calls || 0, color: COLORS.purple },
+                        { label: "Cached", value: u.cache_hits || 0, color: COLORS.green },
+                        { label: "Blocked", value: u.blocked_calls || 0, color: u.blocked_calls > 0 ? COLORS.red : COLORS.textMuted },
+                      ].map((s, i) => (
+                        <div key={i} style={{ background: COLORS.bgAccent, borderRadius: 8, padding: "10px 12px", textAlign: "center" }}>
+                          <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>{s.label}</div>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: s.color, fontFamily: "monospace" }}>{s.value}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
+
+                  {/* Right — Recent Calls Timeline */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.text }}>Recent Calls</div>
+                    <RecentCallsPanel agentId={selectedUser} tenantId={TENANT_ID} />
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </CardBody>
       </Card>
 

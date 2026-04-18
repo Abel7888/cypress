@@ -123,6 +123,47 @@ async def get_agents(request: Request, days: int = 30) -> list[AgentBreakdown]:
         raise HTTPException(status_code=500, detail=f"Failed to fetch agents: {e}")
 
 
+@router.get("/agent-recent")
+async def get_agent_recent(request: Request, agent_id: str, limit: int = 8):
+    """Get recent calls for a specific agent."""
+    tenant_id = getattr(request.state, "tenant_id", "unknown")
+    try:
+        import clickhouse_connect, os
+        client = clickhouse_connect.get_client(
+            host=os.getenv("CLICKHOUSE_HOST"),
+            port=int(os.getenv("CLICKHOUSE_PORT", 8443)),
+            username=os.getenv("CLICKHOUSE_USER", "default"),
+            password=os.getenv("CLICKHOUSE_PASSWORD"),
+            secure=True
+        )
+        result = client.query(
+            """
+            SELECT timestamp, model_requested, model_used, cost_usd,
+                   was_routed, cache_hit, blocked, latency_ms
+            FROM tokenguard.events
+            WHERE client_id = {tenant_id:String}
+              AND agent_id = {agent_id:String}
+            ORDER BY timestamp DESC
+            LIMIT {limit:Int32}
+            """,
+            parameters={"tenant_id": tenant_id, "agent_id": agent_id, "limit": limit}
+        )
+        rows = []
+        for r in result.result_rows:
+            rows.append({
+                "timestamp": str(r[0]),
+                "model_requested": r[1],
+                "model_used": r[2],
+                "cost_usd": float(r[3]),
+                "was_routed": bool(r[4]),
+                "cache_hit": bool(r[5]),
+                "blocked": bool(r[6]),
+                "latency_ms": int(r[7]),
+            })
+        return rows
+    except Exception as e:
+        return []
+
 @router.get("/recommendations")
 async def get_recommendations(request: Request):
     """Get cost-saving recommendations."""
