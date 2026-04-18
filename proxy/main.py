@@ -1147,7 +1147,8 @@ async def agent_recent(request: Request, agent_id: str, limit: int = 8):
             "latency_ms": int(r[7]),
         } for r in result.result_rows])
     except Exception as e:
-        return JSONResponse(content=[])
+        print(f"[AgentRecent] Error: {e}")
+        return JSONResponse(content={"error": str(e)})
 
 @app.get("/api/dashboard/agents")
 async def dashboard_agents(request: Request):
