@@ -915,7 +915,7 @@ function BudgetsPage() {
           .map((u: any) => ({
             name: u.employee,
             spent: u.cost_usd || 0,
-            limit: 0.01,
+            limit: u.budget_usd || 0.01,
             status: u.status,
             blocked: u.blocked_calls > 0,
           }));
@@ -1946,6 +1946,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
