@@ -145,8 +145,9 @@ export default function OnboardingPage() {
     <div style={{
       minHeight: "100vh", background: C.bg,
       display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center",
-      padding: "40px 24px", fontFamily: "system-ui, sans-serif",
+      alignItems: "center", justifyContent: "flex-start",
+      padding: "32px 24px 60px", fontFamily: "system-ui, sans-serif",
+      overflowY: "auto",
     }}>
 
       {/* Logo */}
@@ -186,8 +187,8 @@ export default function OnboardingPage() {
       {/* Card */}
       <div style={{
         background: C.bgCard, border: `1px solid ${C.border}`,
-        borderRadius: 20, padding: "48px 56px",
-        width: "100%", maxWidth: 860,
+        borderRadius: 20, padding: "40px 48px",
+        width: "100%", maxWidth: 900,
         boxSizing: "border-box" as const,
       }}>
 
@@ -485,8 +486,12 @@ export default function OnboardingPage() {
       </div>
 
       {/* Footer */}
-      <div style={{ marginTop: 24, fontSize: 13, color: C.textDim, textAlign: "center" }}>
-        Questions? Email <span style={{ color: C.primary }}>support@tokenguard.io</span>
+      <div style={{ marginTop: 24, fontSize: 13, color: C.textDim, textAlign: "center", display: "flex", flexDirection: "column", gap: 8 }}>
+        <div>Questions? Email <span style={{ color: C.primary }}>support@tokenguard.io</span></div>
+        <button onClick={() => { setStep(0); setCompany(""); setAdminName(""); setAdminEmail(""); setEmployees([{ name: "", role: "", budget: "50" }]); setMasterKey(""); setTenantId(""); setError(""); setTestStatus("idle"); }}
+          style={{ background: "none", border: "none", cursor: "pointer", color: C.textDim, fontSize: 12, textDecoration: "underline" }}>
+          ↺ Start over
+        </button>
       </div>
     </div>
   );
