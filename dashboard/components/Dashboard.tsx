@@ -801,13 +801,11 @@ function DemoControlPanel() {
 
   const fireCall = async () => {
     setFiring(true);
-    const prompts = [
-      "Write a detailed project plan for a product launch",
-      "Analyze our competitive landscape in SaaS",
-      "Write a full marketing strategy for Q3",
-      "Explain deep learning architecture in detail",
-    ];
-    const prompt = prompts[Math.floor(Math.random() * prompts.length)];
+    const topics = ["quantum computing", "blockchain technology", "neural networks", "cloud architecture", "data pipelines", "API security", "microservices", "DevOps practices", "machine learning", "distributed systems"];
+    const styles = ["explain briefly", "give me an overview of", "summarize", "what is", "describe"];
+    const topic = topics[Math.floor(Math.random() * topics.length)];
+    const style = styles[Math.floor(Math.random() * styles.length)];
+    const prompt = `${style} ${topic} — request #${Date.now()}`;
     try {
       const res = await fetch(`${API_BASE}/v1/chat/completions`, {
         method: "POST",
