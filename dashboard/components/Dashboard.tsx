@@ -40,7 +40,7 @@ const TENANT_ID = "6f96c565-2284-4092-93c4-62252a1c1d59";
 const HEADERS = { Authorization: `Bearer ${API_KEY}` };
 const DEMO_EMPLOYEES = [
   { name: "Sarah (Engineering)", key: "tg-d06616108a81726611cb49c0ef73f8c96f4eba3b15806e43" },
-  { name: "Jamie (Blocked)",     key: "tg-9587f9fa1cbc7091e59c3c46dd5d541931b148916bd6c2f4" },
+  { name: "Jamie (Marketing)",     key: "tg-9587f9fa1cbc7091e59c3c46dd5d541931b148916bd6c2f4" },
   { name: "Marcus (Sales)",      key: "tg-532afe26d2cdd4f6428cc2bfe5a8ade9cc998acc121aeaf8" },
 ];
 
@@ -1944,6 +1944,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
 
 
 
