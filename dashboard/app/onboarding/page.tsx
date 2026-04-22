@@ -1,7 +1,6 @@
-"use client";
-import { useEffect } from "react";
+﻿"use client";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState } from "react";
 
 const API_BASE = "https://cypress-production-1cc5.up.railway.app";
 const ADMIN_KEY = "lMNUO5f2xEAmxq8lXA9ODmCi-pxCr-9hL99fyw3VlWw";
@@ -122,7 +121,7 @@ function OnboardingPage() {
         setError(data.error || "Failed to create account");
       }
     } catch (e) {
-      setError("Connection error — check proxy is running");
+      setError("Connection error â€” check proxy is running");
     }
     setCreating(false);
   };
@@ -163,7 +162,7 @@ function OnboardingPage() {
 
       {/* Logo */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 40 }}>
-        <div style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg, ${C.primary}, ${C.purple})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>🛡️</div>
+        <div style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg, ${C.primary}, ${C.purple})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>ðŸ›¡ï¸</div>
         <div>
           <div style={{ fontSize: 20, fontWeight: 800, color: C.text, letterSpacing: "-0.02em" }}>TokenGuard</div>
           <div style={{ fontSize: 11, color: C.textDim, letterSpacing: "0.06em" }}>AI COST CONTROL</div>
@@ -184,7 +183,7 @@ function OnboardingPage() {
                 color: i <= step ? "#fff" : C.textDim,
                 transition: "all 0.3s",
               }}>
-                {i < step ? "✓" : i + 1}
+                {i < step ? "âœ“" : i + 1}
               </div>
               <span style={{ fontSize: 11, color: i === step ? C.text : C.textDim, whiteSpace: "nowrap" }}>{s}</span>
             </div>
@@ -203,7 +202,7 @@ function OnboardingPage() {
         boxSizing: "border-box" as const,
       }}>
 
-        {/* STEP 0 — WELCOME */}
+        {/* STEP 0 â€” WELCOME */}
         {step === 0 && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -216,7 +215,7 @@ function OnboardingPage() {
                 </div>
               </div>
               <button style={{ ...btn(), fontSize: 16, padding: "15px 32px" }} onClick={() => setStep(1)}>
-                Get started →
+                Get started â†’
               </button>
               <div style={{ fontSize: 13, color: C.textDim }}>
                 Questions? Email <span style={{ color: C.primary }}>support@tokenguard.io</span>
@@ -224,10 +223,10 @@ function OnboardingPage() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[
-                { icon: "⚡", title: "One line of code", desc: "No SDK, no rewriting prompts — just change the base URL" },
-                { icon: "🛡️", title: "Budget caps per employee", desc: "Blocks before the bill arrives — not after" },
-                { icon: "💰", title: "Save 30–70% automatically", desc: "Intelligent routing to cheaper models on simple tasks" },
-                { icon: "📊", title: "Full visibility", desc: "See exactly who spent what, down to the API call" },
+                { icon: "âš¡", title: "One line of code", desc: "No SDK, no rewriting prompts â€” just change the base URL" },
+                { icon: "ðŸ›¡ï¸", title: "Budget caps per employee", desc: "Blocks before the bill arrives â€” not after" },
+                { icon: "ðŸ’°", title: "Save 30â€“70% automatically", desc: "Intelligent routing to cheaper models on simple tasks" },
+                { icon: "ðŸ“Š", title: "Full visibility", desc: "See exactly who spent what, down to the API call" },
               ].map((f, i) => (
                 <div key={i} style={{ display: "flex", gap: 14, padding: "14px 16px", background: C.bgAccent, borderRadius: 12, alignItems: "flex-start" }}>
                   <span style={{ fontSize: 20, flexShrink: 0 }}>{f.icon}</span>
@@ -241,7 +240,7 @@ function OnboardingPage() {
           </div>
         )}
 
-        {/* STEP 1 — SETUP */}
+        {/* STEP 1 â€” SETUP */}
         {step === 1 && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -281,16 +280,16 @@ function OnboardingPage() {
               {error && <div style={{ fontSize: 13, color: C.red, padding: "10px 14px", background: "#1a0808", borderRadius: 8 }}>{error}</div>}
               <div style={{ display: "flex", gap: 10 }}>
                 <button style={btn("ghost")} onClick={() => setStep(0)}>Back</button>
-                <button style={{ ...btn(), flex: 1, opacity: !company.trim() ? 0.5 : 1 }} onClick={() => company.trim() && setStep(2)}>Continue →</button>
+                <button style={{ ...btn(), flex: 1, opacity: !company.trim() ? 0.5 : 1 }} onClick={() => company.trim() && setStep(2)}>Continue â†’</button>
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 16, justifyContent: "center" }}>
               <div style={{ fontSize: 13, color: C.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>What happens next</div>
               {[
-                { icon: "🔑", title: "Master key generated", desc: "One admin key to manage your entire team" },
-                { icon: "👥", title: "Add your team", desc: "Create individual keys with custom budgets per person" },
-                { icon: "⚡", title: "One line change", desc: "Your devs update the base URL — they're live in minutes" },
-                { icon: "📊", title: "Dashboard ready", desc: "See every dollar spent in real time from day one" },
+                { icon: "ðŸ”‘", title: "Master key generated", desc: "One admin key to manage your entire team" },
+                { icon: "ðŸ‘¥", title: "Add your team", desc: "Create individual keys with custom budgets per person" },
+                { icon: "âš¡", title: "One line change", desc: "Your devs update the base URL â€” they're live in minutes" },
+                { icon: "ðŸ“Š", title: "Dashboard ready", desc: "See every dollar spent in real time from day one" },
               ].map((f, i) => (
                 <div key={i} style={{ display: "flex", gap: 14, padding: "14px 16px", background: C.bgAccent, borderRadius: 12 }}>
                   <span style={{ fontSize: 18 }}>{f.icon}</span>
@@ -304,7 +303,7 @@ function OnboardingPage() {
           </div>
         )}
 
-        {/* STEP 2 — YOUR TEAM */}
+        {/* STEP 2 â€” YOUR TEAM */}
         {step === 2 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "start" }}>
@@ -315,9 +314,9 @@ function OnboardingPage() {
                 </div>
                 <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 10 }}>
                   {[
-                    { icon: "🛡️", text: "Each person gets their own spending limit" },
-                    { icon: "🔴", text: "Blocked automatically when they hit their cap" },
-                    { icon: "✏️", text: "Change budgets anytime from the dashboard" },
+                    { icon: "ðŸ›¡ï¸", text: "Each person gets their own spending limit" },
+                    { icon: "ðŸ”´", text: "Blocked automatically when they hit their cap" },
+                    { icon: "âœï¸", text: "Change budgets anytime from the dashboard" },
                   ].map((f, i) => (
                     <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, color: C.textMuted }}>
                       <span>{f.icon}</span><span>{f.text}</span>
@@ -339,7 +338,7 @@ function OnboardingPage() {
                       <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: C.textMuted, fontSize: 13 }}>$</span>
                       <input style={inp({ padding: "9px 12px 9px 22px", fontSize: 13 })} type="number" min="1" value={emp.budget} onChange={e => updateEmployee(i, "budget", e.target.value)} />
                     </div>
-                    <button onClick={() => removeEmployee(i)} style={{ background: "none", border: "none", cursor: "pointer", color: C.textDim, fontSize: 18, padding: 0 }}>×</button>
+                    <button onClick={() => removeEmployee(i)} style={{ background: "none", border: "none", cursor: "pointer", color: C.textDim, fontSize: 18, padding: 0 }}>Ã—</button>
                   </div>
                 ))}
                 <button onClick={addEmployee} style={{ background: "none", border: `1px dashed ${C.border}`, borderRadius: 10, cursor: "pointer", color: C.textMuted, fontSize: 13, padding: "10px 0", marginTop: 4 }}>
@@ -351,22 +350,22 @@ function OnboardingPage() {
             <div style={{ display: "flex", gap: 10, borderTop: `1px solid ${C.border}`, paddingTop: 24 }}>
               <button style={btn("ghost")} onClick={() => setStep(1)}>Back</button>
               <button style={{ ...btn(), flex: 1, opacity: creating ? 0.7 : 1 }} onClick={createTenant} disabled={creating}>
-                {creating ? "Creating your account..." : "Create account & continue →"}
+                {creating ? "Creating your account..." : "Create account & continue â†’"}
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 3 — YOUR KEYS */}
+        {/* STEP 3 â€” YOUR KEYS */}
         {step === 3 && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div>
-                <div style={{ fontSize: 30, fontWeight: 800, color: C.text, marginBottom: 8 }}>Your account is ready 🎉</div>
-                <div style={{ fontSize: 15, color: C.textMuted }}>Copy your master API key — shown once only.</div>
+                <div style={{ fontSize: 30, fontWeight: 800, color: C.text, marginBottom: 8 }}>Your account is ready ðŸŽ‰</div>
+                <div style={{ fontSize: 15, color: C.textMuted }}>Copy your master API key â€” shown once only.</div>
               </div>
               <div style={{ background: C.bgAccent, border: `1px solid ${C.green}`, borderRadius: 12, padding: 20 }}>
-                <div style={{ fontSize: 11, color: C.green, fontWeight: 700, marginBottom: 10, letterSpacing: "0.04em" }}>✓ MASTER API KEY — COPY NOW</div>
+                <div style={{ fontSize: 11, color: C.green, fontWeight: 700, marginBottom: 10, letterSpacing: "0.04em" }}>âœ“ MASTER API KEY â€” COPY NOW</div>
                 <code style={{ display: "block", fontFamily: "monospace", fontSize: 12, color: C.text, wordBreak: "break-all", lineHeight: 1.6, marginBottom: 12 }}>
                   {masterKey}
                 </code>
@@ -377,14 +376,14 @@ function OnboardingPage() {
                   color: masterKeyCopied ? C.green : C.primary,
                   fontSize: 13, padding: "9px 20px", fontWeight: 600, width: "100%",
                 }}>
-                  {masterKeyCopied ? "✓ Copied!" : "Copy Master Key"}
+                  {masterKeyCopied ? "âœ“ Copied!" : "Copy Master Key"}
                 </button>
               </div>
               <div style={{ background: C.bgAccent, border: `1px solid ${C.border}`, borderRadius: 12, padding: 16 }}>
                 <div style={{ fontSize: 11, color: C.textDim, fontWeight: 600, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>Account Details</div>
                 {[
                   { label: "Company", value: company },
-                  { label: "Plan", value: "Starter — $199/mo" },
+                  { label: "Plan", value: "Starter â€” $199/mo" },
                   { label: "Employees added", value: `${employees.filter(e => e.name.trim()).length} keys created` },
                   { label: "Tenant ID", value: tenantId },
                 ].map((r, i) => (
@@ -394,15 +393,15 @@ function OnboardingPage() {
                   </div>
                 ))}
               </div>
-              <button style={{ ...btn(), width: "100%" }} onClick={() => setStep(4)}>Continue to integration →</button>
+              <button style={{ ...btn(), width: "100%" }} onClick={() => setStep(4)}>Continue to integration â†’</button>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12, justifyContent: "center" }}>
               <div style={{ fontSize: 13, color: C.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>What was just created</div>
               {[
-                { icon: "🔑", title: "Master key", desc: "Full admin access — manage all employees and budgets" },
-                { icon: "👥", title: `${employees.filter(e => e.name.trim()).length} employee keys`, desc: "Individual keys with daily budget caps — ready to use" },
-                { icon: "🛡️", title: "Budget enforcement", desc: "Active immediately — nobody can overspend" },
-                { icon: "📊", title: "Dashboard access", desc: "See every call, every dollar, in real time" },
+                { icon: "ðŸ”‘", title: "Master key", desc: "Full admin access â€” manage all employees and budgets" },
+                { icon: "ðŸ‘¥", title: `${employees.filter(e => e.name.trim()).length} employee keys`, desc: "Individual keys with daily budget caps â€” ready to use" },
+                { icon: "ðŸ›¡ï¸", title: "Budget enforcement", desc: "Active immediately â€” nobody can overspend" },
+                { icon: "ðŸ“Š", title: "Dashboard access", desc: "See every call, every dollar, in real time" },
               ].map((f, i) => (
                 <div key={i} style={{ display: "flex", gap: 14, padding: "16px", background: C.bgAccent, borderRadius: 12 }}>
                   <span style={{ fontSize: 22 }}>{f.icon}</span>
@@ -416,7 +415,7 @@ function OnboardingPage() {
           </div>
         )}
 
-        {/* STEP 4 — GO LIVE */}
+        {/* STEP 4 â€” GO LIVE */}
         {step === 4 && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -433,7 +432,7 @@ function OnboardingPage() {
                     {'  '}api_key=<span style={{ color: "#86EFAC" }}>"sk-your-openai-key"</span>
                   </div>
                   <div style={{ color: "#9CA3AF" }}>)</div>
-                  <div style={{ marginTop: 16, color: "#6B7FA3" }}># AFTER — two lines changed</div>
+                  <div style={{ marginTop: 16, color: "#6B7FA3" }}># AFTER â€” two lines changed</div>
                   <div style={{ color: "#9CA3AF" }}>client = OpenAI(</div>
                   <div style={{ background: "#0d2d1a", color: "#86EFAC", padding: "2px 8px", borderRadius: 4 }}>
                     {'  '}api_key=<span style={{ color: "#86EFAC" }}>"{masterKey || "tg-your-key-here"}"</span>,
@@ -456,7 +455,7 @@ function OnboardingPage() {
                 )}
                 {testStatus === "success" && (
                   <div style={{ background: C.greenDim, border: `1px solid ${C.green}`, borderRadius: 10, padding: "14px 18px", display: "flex", alignItems: "center", gap: 12 }}>
-                    <span style={{ fontSize: 22 }}>✅</span>
+                    <span style={{ fontSize: 22 }}>âœ…</span>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: C.green }}>Connected successfully</div>
                       <div style={{ fontSize: 13, color: C.textMuted }}>Your API calls are now routing through TokenGuard.</div>
@@ -472,16 +471,16 @@ function OnboardingPage() {
                 )}
               </div>
               <button onClick={() => window.location.href = "/"} style={{ ...btn(testStatus === "success" ? "green" : "primary"), width: "100%", fontSize: 16, padding: "15px 0" }}>
-                {testStatus === "success" ? "Go to dashboard →" : "Skip to dashboard →"}
+                {testStatus === "success" ? "Go to dashboard â†’" : "Skip to dashboard â†’"}
               </button>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12, justifyContent: "center" }}>
               <div style={{ fontSize: 13, color: C.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>You're protected from day one</div>
               {[
-                { icon: "⚡", title: "Every call goes through TokenGuard", desc: "Routing, caching, and budget checks happen automatically" },
-                { icon: "🛡️", title: "Budgets enforced immediately", desc: "Nobody on your team can spend over their limit" },
-                { icon: "💰", title: "Savings start now", desc: "Simple prompts are already being routed to cheaper models" },
-                { icon: "📊", title: "Full visibility from call #1", desc: "Every employee, every model, every dollar tracked" },
+                { icon: "âš¡", title: "Every call goes through TokenGuard", desc: "Routing, caching, and budget checks happen automatically" },
+                { icon: "ðŸ›¡ï¸", title: "Budgets enforced immediately", desc: "Nobody on your team can spend over their limit" },
+                { icon: "ðŸ’°", title: "Savings start now", desc: "Simple prompts are already being routed to cheaper models" },
+                { icon: "ðŸ“Š", title: "Full visibility from call #1", desc: "Every employee, every model, every dollar tracked" },
               ].map((f, i) => (
                 <div key={i} style={{ display: "flex", gap: 14, padding: "16px", background: C.bgAccent, borderRadius: 12 }}>
                   <span style={{ fontSize: 22 }}>{f.icon}</span>
@@ -501,7 +500,7 @@ function OnboardingPage() {
         <div>Questions? Email <span style={{ color: C.primary }}>support@tokenguard.io</span></div>
         <button onClick={() => { setStep(0); setCompany(""); setAdminName(""); setAdminEmail(""); setEmployees([{ name: "", role: "", budget: "50" }]); setMasterKey(""); setTenantId(""); setError(""); setTestStatus("idle"); }}
           style={{ background: "none", border: "none", cursor: "pointer", color: C.textDim, fontSize: 12, textDecoration: "underline" }}>
-          ↺ Start over
+          â†º Start over
         </button>
       </div>
     </div>
@@ -515,3 +514,5 @@ function OnboardingPage() {
 export default function OnboardingPageWrapper() {
   return <Suspense fallback={null}><OnboardingPage /></Suspense>;
 }
+
+

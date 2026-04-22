@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import Link from "next/link";
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -65,11 +65,11 @@ function SignUpInner() {
         window.location.href = data.url;
         return;
       }
-      // Fallback — if Stripe not configured, go straight to onboarding
+      // Fallback â€” if Stripe not configured, go straight to onboarding
       setNotice("Stripe not configured yet. Proceeding to onboarding (demo mode)...");
       setTimeout(() => (window.location.href = "/onboarding"), 800);
     } catch {
-      setNotice("Couldn't reach payments — proceeding to onboarding.");
+      setNotice("Couldn't reach payments â€” proceeding to onboarding.");
       setTimeout(() => (window.location.href = "/onboarding"), 800);
     }
     setLoading(false);
@@ -129,7 +129,7 @@ function SignUpInner() {
                 borderRadius: 10, padding: "14px 0", fontSize: 15, fontWeight: 700,
                 cursor: "pointer", marginTop: 10, opacity: loading ? 0.7 : 1,
               }}>
-                {loading ? "Creating account..." : `Continue to payment — $${selected.price}/mo →`}
+                {loading ? "Creating account..." : `Continue to payment â€” $${selected.price}/mo â†’`}
               </button>
 
               <div style={{ fontSize: 12, color: C.textFaint, textAlign: "center", marginTop: 4 }}>
@@ -154,7 +154,7 @@ function SignUpInner() {
               {Object.entries(PLAN_INFO).map(([key, p]) => (
                 <label key={key} style={{
                   display: "block", cursor: "pointer",
-                  background: plan === key ? C.bgAccent2 : C.bgAccent,
+                  background: plan === key ? C.bgAccent : C.bgAccent,
                   border: `2px solid ${plan === key ? C.primary : C.border}`,
                   borderRadius: 12, padding: "14px 16px",
                 }}>
@@ -185,7 +185,7 @@ function SignUpInner() {
                 "Cancel anytime",
               ].map((f, i) => (
                 <div key={i} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: C.textMuted, padding: "4px 0" }}>
-                  <span style={{ color: C.green }}>✓</span>
+                  <span style={{ color: C.green }}>âœ“</span>
                   <span>{f}</span>
                 </div>
               ))}
@@ -198,7 +198,7 @@ function SignUpInner() {
         </div>
 
         <div style={{ textAlign: "center", fontSize: 12, color: C.textFaint, marginTop: 24 }}>
-          <Link href="/" style={{ color: C.textFaint, textDecoration: "none" }}>← Back to home</Link>
+          <Link href="/" style={{ color: C.textFaint, textDecoration: "none" }}>â† Back to home</Link>
         </div>
       </div>
     </div>
@@ -223,4 +223,5 @@ const labelStyle: React.CSSProperties = {
   display: "block", fontSize: 11, color: C.textMuted, fontWeight: 600,
   letterSpacing: "0.06em", marginBottom: 6,
 };
+
 

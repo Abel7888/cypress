@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     const origin = req.headers.get("origin") || req.nextUrl.origin;
     const priceId = PLAN_PRICE_IDS[plan];
 
-    const lineItem: Stripe.Checkout.SessionCreateParams.LineItem = priceId
+    const lineItem: any = priceId
       ? { price: priceId, quantity: 1 }
       : {
           quantity: 1,
@@ -66,5 +66,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: e?.message || "Checkout failed" }, { status: 500 });
   }
 }
+
 
 
