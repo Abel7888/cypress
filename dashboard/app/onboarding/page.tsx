@@ -116,6 +116,9 @@ function OnboardingPage() {
             }),
           })
         ));
+        localStorage.setItem("tg_tenant_id", data.tenant_id);
+        localStorage.setItem("tg_api_key", keyData.api_key || "");
+        localStorage.setItem("tg_company", company.trim());
         setStep(3);
       } else {
         setError(data.error || "Failed to create account");
@@ -514,5 +517,6 @@ function OnboardingPage() {
 export default function OnboardingPageWrapper() {
   return <Suspense fallback={null}><OnboardingPage /></Suspense>;
 }
+
 
 

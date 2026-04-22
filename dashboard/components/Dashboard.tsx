@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect, useRef } from "react";
 
 const COLORS = {
@@ -35,8 +35,8 @@ function getModelColor(model: string): string {
 }
 
 const API_BASE = "https://cypress-production-1cc5.up.railway.app";
-const API_KEY = "lMNUO5f2xEAmxq8lXA9ODmCi-pxCr-9hL99fyw3VlWw";
-const TENANT_ID = "6f96c565-2284-4092-93c4-62252a1c1d59";
+const API_KEY = (typeof window !== "undefined" && localStorage.getItem("tg_api_key")) || "lMNUO5f2xEAmxq8lXA9ODmCi-pxCr-9hL99fyw3VlWw";
+const TENANT_ID = (typeof window !== "undefined" && localStorage.getItem("tg_tenant_id")) || "6f96c565-2284-4092-93c4-62252a1c1d59";
 const HEADERS = { Authorization: `Bearer ${API_KEY}` };
 const DEMO_EMPLOYEES = [
   { name: "Sarah (Engineering)", key: "tg-d06616108a81726611cb49c0ef73f8c96f4eba3b15806e43" },
@@ -44,7 +44,7 @@ const DEMO_EMPLOYEES = [
   { name: "Marcus (Sales)",      key: "tg-532afe26d2cdd4f6428cc2bfe5a8ade9cc998acc121aeaf8" },
 ];
 
-// ─── COMPONENTS ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ COMPONENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function Card({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
@@ -147,7 +147,7 @@ function AreaChartSVG({ data, dataKey, color, height = 80 }: {
   );
 }
 
-// ─── SAVINGS SUMMARY CARD ────────────────────────────────────────────────────
+// â”€â”€â”€ SAVINGS SUMMARY CARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function SavingsSummaryCard({ overview }: { overview: any }) {
   if (!overview) return null;
@@ -192,7 +192,7 @@ function SavingsSummaryCard({ overview }: { overview: any }) {
   );
 }
 
-// ─── ACTIVITY FEED ───────────────────────────────────────────────────────────
+// â”€â”€â”€ ACTIVITY FEED â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ActivityFeed() {
   const [events, setEvents] = useState<any[]>([]);
@@ -227,15 +227,15 @@ function ActivityFeed() {
   }, []);
 
   const typeConfig: Record<string, any> = {
-    call: { label: "API Call", color: COLORS.primary, icon: "→" },
-    cache: { label: "Cache HIT", color: COLORS.green, icon: "✓" },
-    blocked: { label: "BLOCKED", color: COLORS.red, icon: "✕" },
+    call: { label: "API Call", color: COLORS.primary, icon: "â†’" },
+    cache: { label: "Cache HIT", color: COLORS.green, icon: "âœ“" },
+    blocked: { label: "BLOCKED", color: COLORS.red, icon: "âœ•" },
   };
 
   return (
     <Card>
       <CardBody>
-        <SectionHeader title="Live Activity Feed" subtitle="Last 15 seconds — auto-refreshing" />
+        <SectionHeader title="Live Activity Feed" subtitle="Last 15 seconds â€” auto-refreshing" />
         {events.length === 0 ? (
           <div style={{ color: COLORS.textDim, fontSize: 12 }}>Waiting for activity...</div>
         ) : (
@@ -267,7 +267,7 @@ function ActivityFeed() {
   );
 }
 
-// ─── PAGES ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ PAGES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function OverviewPage() {
   const [overview, setOverview] = useState<any>(null);
@@ -300,7 +300,7 @@ function OverviewPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* Savings Summary Card — shown first */}
+      {/* Savings Summary Card â€” shown first */}
       <SavingsSummaryCard overview={overview} />
 
       {/* Stat Cards */}
@@ -363,7 +363,7 @@ function OverviewPage() {
   );
 }
 
-// ─── COST ANALYSIS WITH PER-USER DROPDOWN ────────────────────────────────────
+// â”€â”€â”€ COST ANALYSIS WITH PER-USER DROPDOWN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function RecentCallsPanel({ agentId, tenantId }: { agentId: string; tenantId: string }) {
   const [calls, setCalls] = useState<any[]>([]);
@@ -394,7 +394,7 @@ function RecentCallsPanel({ agentId, tenantId }: { agentId: string; tenantId: st
         const isRouted = c.was_routed;
         const isCached = c.cache_hit;
         const color = isBlocked ? COLORS.red : isRouted ? COLORS.green : isCached ? COLORS.cyan : COLORS.textMuted;
-        const icon = isBlocked ? "🔴" : isRouted ? "⚡" : isCached ? "💾" : "✓";
+        const icon = isBlocked ? "ðŸ”´" : isRouted ? "âš¡" : isCached ? "ðŸ’¾" : "âœ“";
         const label = isBlocked ? "blocked" : isRouted ? "routed" : isCached ? "cached" : "direct";
         const time = new Date(c.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
         return (
@@ -407,13 +407,13 @@ function RecentCallsPanel({ agentId, tenantId }: { agentId: string; tenantId: st
             <div style={{ fontSize: 11, color: COLORS.textDim, fontFamily: "monospace" }}>{time}</div>
             <div style={{ fontSize: 11, color: COLORS.text, fontFamily: "monospace" }}>
               {isRouted ? (
-                <span>{c.model_requested} <span style={{ color: COLORS.textDim }}>→</span> <span style={{ color: COLORS.green }}>{c.model_used}</span></span>
+                <span>{c.model_requested} <span style={{ color: COLORS.textDim }}>â†’</span> <span style={{ color: COLORS.green }}>{c.model_used}</span></span>
               ) : (
                 <span style={{ color: isBlocked ? COLORS.red : COLORS.text }}>{c.model_requested}</span>
               )}
             </div>
             <div style={{ fontSize: 11, color: color, fontFamily: "monospace" }}>
-              {isBlocked ? "—" : `$${c.cost_usd.toFixed(6)}`}
+              {isBlocked ? "â€”" : `$${c.cost_usd.toFixed(6)}`}
             </div>
             <div style={{ fontSize: 11, color: color }}>{icon} {label}</div>
           </div>
@@ -582,7 +582,7 @@ function CostAnalysisPage() {
               <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${COLORS.border}` }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
 
-                  {/* Left — ROI + Activity */}
+                  {/* Left â€” ROI + Activity */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     {/* Header */}
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -592,7 +592,7 @@ function CostAnalysisPage() {
 
                     {/* ROI Card */}
                     <div style={{ background: `${COLORS.green}10`, border: `1px solid ${COLORS.green}30`, borderRadius: 10, padding: 14 }}>
-                      <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.06em" }}>💰 ROI — What TokenGuard saved</div>
+                      <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.06em" }}>ðŸ’° ROI â€” What TokenGuard saved</div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                         <div>
                           <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 3 }}>Actual Cost</div>
@@ -626,7 +626,7 @@ function CostAnalysisPage() {
                     </div>
                   </div>
 
-                  {/* Right — Recent Calls Timeline */}
+                  {/* Right â€” Recent Calls Timeline */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.text }}>Recent Calls</div>
                     <RecentCallsPanel agentId={selectedUser} tenantId={TENANT_ID} />
@@ -680,16 +680,16 @@ function CostAnalysisPage() {
         </CardBody>
       </Card>
 
-      {/* ⚡ Routing Playground */}
+      {/* âš¡ Routing Playground */}
       <Card>
         <CardBody>
           <div style={{ marginBottom: 16 }}>
-            <SectionHeader title="⚡ Routing Playground" subtitle="Type any prompt — see exactly how TokenGuard routes it and what you save" />
+            <SectionHeader title="âš¡ Routing Playground" subtitle="Type any prompt â€” see exactly how TokenGuard routes it and what you save" />
             <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
               {[
-                { label: "💡 Simple", prompt: "What is machine learning?", model: "claude-opus-4-6" },
-                { label: "📝 Medium", prompt: "What are the key differences between REST and GraphQL?", model: "gpt-4o" },
-                { label: "🧠 Complex", prompt: "Write a comprehensive multi-region fault-tolerant distributed system architecture with step by step implementation plan", model: "claude-opus-4-6" },
+                { label: "ðŸ’¡ Simple", prompt: "What is machine learning?", model: "claude-opus-4-6" },
+                { label: "ðŸ“ Medium", prompt: "What are the key differences between REST and GraphQL?", model: "gpt-4o" },
+                { label: "ðŸ§  Complex", prompt: "Write a comprehensive multi-region fault-tolerant distributed system architecture with step by step implementation plan", model: "claude-opus-4-6" },
               ].map((ex, i) => (
                 <button key={i}
                   onClick={() => { setPlaygroundPrompt(ex.prompt); setPlaygroundModel(ex.model); setPlaygroundResult(null); }}
@@ -705,7 +705,7 @@ function CostAnalysisPage() {
               <textarea
                 value={playgroundPrompt}
                 onChange={e => setPlaygroundPrompt(e.target.value)}
-                placeholder="Type a prompt — or pick an example above..."
+                placeholder="Type a prompt â€” or pick an example above..."
                 rows={3}
                 style={{ background: COLORS.bgAccent, border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.text, fontSize: 13, padding: "10px 12px", outline: "none", resize: "vertical", fontFamily: "inherit", width: "100%" }}
               />
@@ -719,7 +719,7 @@ function CostAnalysisPage() {
                 </select>
                 <button onClick={runPlayground} disabled={playgroundLoading}
                   style={{ background: COLORS.primary, border: "none", borderRadius: 8, cursor: "pointer", color: "#fff", fontSize: 13, padding: "10px 16px", fontWeight: 700, opacity: playgroundLoading ? 0.7 : 1 }}>
-                  {playgroundLoading ? "Routing..." : "▶ Send"}
+                  {playgroundLoading ? "Routing..." : "â–¶ Send"}
                 </button>
               </div>
             </div>
@@ -734,15 +734,15 @@ function CostAnalysisPage() {
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 22 }}>{playgroundResult.was_routed ? "⚡" : "🧠"}</span>
+                      <span style={{ fontSize: 22 }}>{playgroundResult.was_routed ? "âš¡" : "ðŸ§ "}</span>
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>
-                          {playgroundResult.was_routed ? "Routed to cheaper model — same quality answer" : "Kept on premium model — complexity required it"}
+                          {playgroundResult.was_routed ? "Routed to cheaper model â€” same quality answer" : "Kept on premium model â€” complexity required it"}
                         </div>
                         <div style={{ fontSize: 11, color: COLORS.textDim, marginTop: 3 }}>
                           {playgroundResult.was_routed
-                            ? `Simple task detected · ${playgroundResult.tokens} tokens · no premium model needed` 
-                            : `Complex task detected · ${playgroundResult.tokens} tokens · full power applied`}
+                            ? `Simple task detected Â· ${playgroundResult.tokens} tokens Â· no premium model needed` 
+                            : `Complex task detected Â· ${playgroundResult.tokens} tokens Â· full power applied`}
                         </div>
                       </div>
                     </div>
@@ -760,7 +760,7 @@ function CostAnalysisPage() {
                       <div style={{ fontSize: 12, fontFamily: "monospace", color: COLORS.red, fontWeight: 600 }}>{playgroundResult.original_model}</div>
                       <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>${playgroundResult.original_cost}</div>
                     </div>
-                    <div style={{ fontSize: 18, color: COLORS.textDim, textAlign: "center" }}>→</div>
+                    <div style={{ fontSize: 18, color: COLORS.textDim, textAlign: "center" }}>â†’</div>
                     <div style={{ background: COLORS.bg, borderRadius: 8, padding: "10px 12px", textAlign: "center" }}>
                       <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>Served</div>
                       <div style={{ fontSize: 12, fontFamily: "monospace", color: COLORS.green, fontWeight: 600 }}>{playgroundResult.routed_model}</div>
@@ -790,7 +790,7 @@ function CostAnalysisPage() {
   );
 }
 
-// ─── BUDGETS PAGE WITH PER-EMPLOYEE BARS ─────────────────────────────────────
+// â”€â”€â”€ BUDGETS PAGE WITH PER-EMPLOYEE BARS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function DemoControlPanel() {
   const [selected, setSelected] = useState(DEMO_EMPLOYEES[0]);
@@ -805,7 +805,7 @@ function DemoControlPanel() {
     const styles = ["explain briefly", "give me an overview of", "summarize", "what is", "describe"];
     const topic = topics[Math.floor(Math.random() * topics.length)];
     const style = styles[Math.floor(Math.random() * styles.length)];
-    const prompt = `${style} ${topic} — request #${Date.now()}`;
+    const prompt = `${style} ${topic} â€” request #${Date.now()}`;
     try {
       const res = await fetch(`${API_BASE}/v1/chat/completions`, {
         method: "POST",
@@ -814,20 +814,20 @@ function DemoControlPanel() {
       });
       const data = await res.json();
       if (data.error === "BUDGET_CAP_EXCEEDED") {
-        setLog(l => [`🔴 ${selected.name} — BLOCKED! Budget exhausted.`, ...l.slice(0, 4)]);
+        setLog(l => [`ðŸ”´ ${selected.name} â€” BLOCKED! Budget exhausted.`, ...l.slice(0, 4)]);
       } else {
         const cost = data.usage ? `$${((data.usage.total_tokens || 0) * 0.000005).toFixed(6)}` : "";
-        setLog(l => [`✅ ${selected.name} — call complete ${cost}`, ...l.slice(0, 4)]);
+        setLog(l => [`âœ… ${selected.name} â€” call complete ${cost}`, ...l.slice(0, 4)]);
       }
     } catch (e) {
-      setLog(l => [`❌ ${selected.name} — error`, ...l.slice(0, 4)]);
+      setLog(l => [`âŒ ${selected.name} â€” error`, ...l.slice(0, 4)]);
     }
     setFiring(false);
   };
 
   const seedAll = async () => {
     setSeeding(true);
-    setLog(l => ["🌱 Seeding all employees...", ...l.slice(0, 4)]);
+    setLog(l => ["ðŸŒ± Seeding all employees...", ...l.slice(0, 4)]);
     await Promise.all(DEMO_EMPLOYEES.map(emp =>
       fetch(`${API_BASE}/v1/chat/completions`, {
         method: "POST",
@@ -835,16 +835,16 @@ function DemoControlPanel() {
         body: JSON.stringify({ model: "gpt-4o", max_tokens: 10, messages: [{ role: "user", content: "hi" }] }),
       })
     ));
-    setLog(l => ["✅ All employees seeded — bars should appear", ...l.slice(0, 4)]);
+    setLog(l => ["âœ… All employees seeded â€” bars should appear", ...l.slice(0, 4)]);
     setSeeding(false);
   };
 
   const resetAll = async () => {
     setResetting(true);
-    setLog(l => ["🔄 Resetting all budgets...", ...l.slice(0, 4)]);
+    setLog(l => ["ðŸ”„ Resetting all budgets...", ...l.slice(0, 4)]);
     await fetch(`${API_BASE}/budget/reset`, { method: "POST", headers: HEADERS });
     await fetch(`${API_BASE}/budget/reload`, { method: "POST", headers: HEADERS });
-    setLog(l => ["✅ Budgets reset — bars cleared", ...l.slice(0, 4)]);
+    setLog(l => ["âœ… Budgets reset â€” bars cleared", ...l.slice(0, 4)]);
     setResetting(false);
   };
 
@@ -864,13 +864,13 @@ function DemoControlPanel() {
           {DEMO_EMPLOYEES.map(emp => <option key={emp.name} value={emp.name}>{emp.name}</option>)}
         </select>
         <button onClick={fireCall} disabled={firing} style={btnStyle(COLORS.primary)}>
-          {firing ? "Firing..." : "🚀 Fire Call"}
+          {firing ? "Firing..." : "ðŸš€ Fire Call"}
         </button>
         <button onClick={seedAll} disabled={seeding} style={btnStyle(COLORS.green)}>
-          {seeding ? "Seeding..." : "🌱 Seed All"}
+          {seeding ? "Seeding..." : "ðŸŒ± Seed All"}
         </button>
         <button onClick={resetAll} disabled={resetting} style={btnStyle(COLORS.red)}>
-          {resetting ? "Resetting..." : "🔄 Reset Budgets"}
+          {resetting ? "Resetting..." : "ðŸ”„ Reset Budgets"}
         </button>
       </div>
       {log.length > 0 && (
@@ -964,7 +964,7 @@ function BudgetsPage() {
           {!userBudgetsLoaded ? (
             <div style={{ color: COLORS.textDim, fontSize: 12 }}>Loading employee budgets...</div>
           ) : userBudgets.length === 0 ? (
-            <div style={{ color: COLORS.textDim, fontSize: 12 }}>No spend yet — budgets reset</div>
+            <div style={{ color: COLORS.textDim, fontSize: 12 }}>No spend yet â€” budgets reset</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {userBudgets.map((u, i) => {
@@ -976,7 +976,7 @@ function BudgetsPage() {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text, fontFamily: "monospace" }}>{u.name}</div>
-                        <div style={{ fontSize: 11, color: COLORS.textDim, marginTop: 2 }}>Daily cap — resets midnight</div>
+                        <div style={{ fontSize: 11, color: COLORS.textDim, marginTop: 2 }}>Daily cap â€” resets midnight</div>
                       </div>
                       <Badge color={`${color}20`} textColor={color}>{statusLabel}</Badge>
                     </div>
@@ -1013,7 +1013,7 @@ function BudgetsPage() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>{b.name}</div>
-                  <div style={{ fontSize: 11, color: COLORS.textDim, marginTop: 2 }}>{b.period} cap — resets {b.period_key}</div>
+                  <div style={{ fontSize: 11, color: COLORS.textDim, marginTop: 2 }}>{b.period} cap â€” resets {b.period_key}</div>
                 </div>
                 <Badge
                   color={b.pct_used > 90 ? `${COLORS.red}20` : b.pct_used > 70 ? `${COLORS.amber}20` : COLORS.greenDim}
@@ -1036,7 +1036,7 @@ function BudgetsPage() {
   );
 }
 
-// ─── ROI REPORT ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ ROI REPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ROIReportPage() {
   const [overview, setOverview] = useState<any>(null);
@@ -1070,7 +1070,7 @@ function ROIReportPage() {
       <Card style={{ background: `linear-gradient(135deg, #0D1220 0%, #0a1628 100%)`, border: `1px solid ${COLORS.green}40` }}>
         <CardBody>
           <div style={{ fontSize: 11, color: COLORS.green, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 20 }}>
-            Monthly ROI Report — {new Date().toLocaleString("en-US", { month: "long", year: "numeric" })}
+            Monthly ROI Report â€” {new Date().toLocaleString("en-US", { month: "long", year: "numeric" })}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
             {[
@@ -1087,7 +1087,7 @@ function ROIReportPage() {
             ))}
           </div>
           <div style={{ marginTop: 20, padding: 16, background: `${COLORS.green}10`, border: `1px solid ${COLORS.green}20`, borderRadius: 8, fontSize: 13, color: COLORS.textMuted, lineHeight: 1.6 }}>
-            💡 <strong style={{ color: COLORS.text }}>Every month you get this report.</strong> You paid us ${fee.toFixed(0)}. We saved you ${savings.toFixed(2)}. That's ${Math.abs(net).toFixed(2)} {net >= 0 ? "net in your pocket" : "net cost after savings"}.
+            ðŸ’¡ <strong style={{ color: COLORS.text }}>Every month you get this report.</strong> You paid us ${fee.toFixed(0)}. We saved you ${savings.toFixed(2)}. That's ${Math.abs(net).toFixed(2)} {net >= 0 ? "net in your pocket" : "net cost after savings"}.
             If we're not saving you more than we cost, you should cancel. <strong style={{ color: COLORS.green }}>We've never had a client cancel.</strong>
           </div>
         </CardBody>
@@ -1105,7 +1105,7 @@ function ROIReportPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {[
               { label: "Model routing savings", value: billing?.financials?.savings_usd * 0.9 || routingSaved, desc: `${billing?.usage?.routed_calls || 0} calls routed to cheaper models`, color: COLORS.purple },
-              { label: "Cache savings", value: billing?.financials?.savings_usd * 0.1 || cacheSaved, desc: `${billing?.usage?.cache_hits || 0} responses served from cache — free`, color: COLORS.cyan },
+              { label: "Cache savings", value: billing?.financials?.savings_usd * 0.1 || cacheSaved, desc: `${billing?.usage?.cache_hits || 0} responses served from cache â€” free`, color: COLORS.cyan },
               { label: "Total saved", value: billing?.financials?.savings_usd || totalSaved, desc: "Combined optimizations", color: COLORS.green },
             ].map((item, i) => (
               <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: `1px solid ${COLORS.border}` }}>
@@ -1160,7 +1160,7 @@ function MasterKeyCard() {
       <CardBody>
         <SectionHeader
           title="Master API Key"
-          subtitle="Full admin access — never share this"
+          subtitle="Full admin access â€” never share this"
         />
         <div style={{
           background: COLORS.bgAccent,
@@ -1179,7 +1179,7 @@ function MasterKeyCard() {
             flex: 1,
             letterSpacing: visible ? "0" : "0.15em",
           }}>
-            {visible ? masterKey : "•".repeat(44)}
+            {visible ? masterKey : "â€¢".repeat(44)}
           </span>
           <button
             onClick={() => setVisible(v => !v)}
@@ -1210,7 +1210,7 @@ function MasterKeyCard() {
             { label: "View billing", color: COLORS.green },
           ].map((b, i) => (
             <Badge key={i} color={COLORS.greenDim} textColor={COLORS.green}>
-              ✓ {b.label}
+              âœ“ {b.label}
             </Badge>
           ))}
         </div>
@@ -1365,7 +1365,7 @@ function EmployeeKeyManager() {
             flexDirection: "column", gap: 8,
           }}>
             <div style={{ fontSize: 12, color: COLORS.green, fontWeight: 600 }}>
-              ✓ New key created — copy it now, it won't be shown again
+              âœ“ New key created â€” copy it now, it won't be shown again
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <code style={{ fontSize: 12, color: COLORS.text, flex: 1, fontFamily: "monospace", wordBreak: "break-all" }}>
@@ -1387,7 +1387,7 @@ function EmployeeKeyManager() {
                 onClick={() => setNewKey(null)}
                 style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.textMuted, fontSize: 16 }}
               >
-                ×
+                Ã—
               </button>
             </div>
           </div>
@@ -1467,7 +1467,7 @@ function EmployeeKeyManager() {
           </div>
         ) : keys.length === 0 ? (
           <div style={{ color: COLORS.textMuted, fontSize: 13, textAlign: "center", padding: 24 }}>
-            No employee keys yet — click Add Employee to create one
+            No employee keys yet â€” click Add Employee to create one
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1503,7 +1503,7 @@ function EmployeeKeyManager() {
                   {k.key_preview}
                 </div>
                 <div style={{ fontSize: 12, color: COLORS.textDim }}>
-                  {k.created_at ? new Date(k.created_at).toLocaleDateString() : "—"}
+                  {k.created_at ? new Date(k.created_at).toLocaleDateString() : "â€”"}
                 </div>
                 <div>
                   <Badge
@@ -1523,7 +1523,7 @@ function EmployeeKeyManager() {
                       <button onClick={() => updateBudget(k.id)} style={{ marginLeft: 4, background: COLORS.primary, border: "none", borderRadius: 6, cursor: "pointer", color: "#fff", fontSize: 11, padding: "3px 8px" }}>Save</button>
                     </>
                   ) : (
-                    <span>${k.budget_usd ? Number(k.budget_usd).toFixed(2) : "—"}</span>
+                    <span>${k.budget_usd ? Number(k.budget_usd).toFixed(2) : "â€”"}</span>
                   )}
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
@@ -1532,7 +1532,7 @@ function EmployeeKeyManager() {
                     disabled={seedStatus[k.id] === "seeding"}
                     style={{ background: "none", border: `1px solid ${COLORS.primary}40`, borderRadius: 6, cursor: "pointer", color: COLORS.primary, fontSize: 11, padding: "3px 10px" }}
                   >
-                    {seedStatus[k.id] === "seeding" ? "..." : seedStatus[k.id] === "done" ? "✓" : seedStatus[k.id] === "error" ? "✗" : "Seed"}
+                    {seedStatus[k.id] === "seeding" ? "..." : seedStatus[k.id] === "done" ? "âœ“" : seedStatus[k.id] === "error" ? "âœ—" : "Seed"}
                   </button>
                   {k.is_active ? (
                     <button
@@ -1583,9 +1583,9 @@ function ProviderKeysCard() {
   const [saved, setSaved] = useState<Record<string, boolean>>({});
 
   const providers = [
-    { id: "openai",    name: "OpenAI",    icon: "⬡", placeholder: "sk-proj-...", color: "#10A37F" },
-    { id: "anthropic", name: "Anthropic", icon: "◈", placeholder: "sk-ant-...",  color: "#D97706" },
-    { id: "google",    name: "Google",    icon: "◉", placeholder: "AIza...",     color: "#4285F4" },
+    { id: "openai",    name: "OpenAI",    icon: "â¬¡", placeholder: "sk-proj-...", color: "#10A37F" },
+    { id: "anthropic", name: "Anthropic", icon: "â—ˆ", placeholder: "sk-ant-...",  color: "#D97706" },
+    { id: "google",    name: "Google",    icon: "â—‰", placeholder: "AIza...",     color: "#4285F4" },
   ];
 
   const load = async () => {
@@ -1646,7 +1646,7 @@ function ProviderKeysCard() {
       <CardBody>
         <SectionHeader
           title="Provider API Keys"
-          subtitle="Your keys — you pay OpenAI/Anthropic directly"
+          subtitle="Your keys â€” you pay OpenAI/Anthropic directly"
         />
 
         <div style={{
@@ -1656,7 +1656,7 @@ function ProviderKeysCard() {
           marginBottom: 20, fontSize: 13, color: COLORS.textMuted,
           lineHeight: 1.5,
         }}>
-          💡 TokenGuard uses your own API keys to make calls — you keep your existing
+          ðŸ’¡ TokenGuard uses your own API keys to make calls â€” you keep your existing
           OpenAI and Anthropic accounts and pay them directly. We never see your bills.
         </div>
 
@@ -1678,7 +1678,7 @@ function ProviderKeysCard() {
                     <span style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>{p.name}</span>
                     {configured && (
                       <Badge color={`${p.color}20`} textColor={p.color}>
-                        ✓ Connected — {configured.preview}
+                        âœ“ Connected â€” {configured.preview}
                       </Badge>
                     )}
                     {!configured && (
@@ -1754,7 +1754,7 @@ function SettingsPage() {
                 { label: "Dashboard", value: "cypress-production-36c0.up.railway.app" },
                 { label: "ClickHouse", value: "q9wiaor5v1.eastus2.azure" },
                 { label: "Cache", value: "fakeredis (in-memory)" },
-                { label: "Version", value: "0.9.0 — Week 9" },
+                { label: "Version", value: "0.9.0 â€” Week 9" },
               ].map((item, i) => (
                 <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
                   <span style={{ fontSize: 12, color: COLORS.textDim }}>{item.label}</span>
@@ -1770,8 +1770,8 @@ function SettingsPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[
                 { label: "Auto routing", status: "Enabled" },
-                { label: "Simple → gpt-4o-mini", status: "Active" },
-                { label: "Complex → gpt-4o", status: "Active" },
+                { label: "Simple â†’ gpt-4o-mini", status: "Active" },
+                { label: "Complex â†’ gpt-4o", status: "Active" },
                 { label: "Keyword detection", status: "Active" },
                 { label: "Budget enforcement", status: "Active" },
               ].map((item, i) => (
@@ -1788,14 +1788,14 @@ function SettingsPage() {
   );
 }
 
-// ─── SIDEBAR ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ SIDEBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const NAV = [
-  { id: "overview", label: "Overview", icon: "⚡" },
-  { id: "cost-analysis", label: "Cost Analysis", icon: "📊" },
-  { id: "budgets", label: "Budgets", icon: "🛡️" },
-  { id: "roi-report", label: "ROI Report", icon: "📈" },
-  { id: "settings", label: "Settings", icon: "⚙️" },
+  { id: "overview", label: "Overview", icon: "âš¡" },
+  { id: "cost-analysis", label: "Cost Analysis", icon: "ðŸ“Š" },
+  { id: "budgets", label: "Budgets", icon: "ðŸ›¡ï¸" },
+  { id: "roi-report", label: "ROI Report", icon: "ðŸ“ˆ" },
+  { id: "settings", label: "Settings", icon: "âš™ï¸" },
 ];
 
 function Sidebar({ active, onNav }: { active: string; onNav: (id: string) => void }) {
@@ -1812,7 +1812,7 @@ function Sidebar({ active, onNav }: { active: string; onNav: (id: string) => voi
       <div style={{ padding: "20px 20px 16px", borderBottom: `1px solid ${COLORS.border}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.purple})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
-            🛡️
+            ðŸ›¡ï¸
           </div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 800, color: COLORS.text, letterSpacing: "-0.02em" }}>TokenGuard</div>
@@ -1866,7 +1866,7 @@ function Sidebar({ active, onNav }: { active: string; onNav: (id: string) => voi
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: COLORS.green }} />
           <div>
             <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.green }}>Proxy Active</div>
-            <div style={{ fontSize: 10, color: COLORS.textDim }}>Railway — Production</div>
+            <div style={{ fontSize: 10, color: COLORS.textDim }}>Railway â€” Production</div>
           </div>
         </div>
         <div style={{ marginTop: 8, padding: "0 4px", display: "flex", justifyContent: "space-between" }}>
@@ -1878,7 +1878,7 @@ function Sidebar({ active, onNav }: { active: string; onNav: (id: string) => voi
   );
 }
 
-// ─── APP ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ APP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const PAGE_META: Record<string, { title: string; subtitle: string }> = {
   "overview": { title: "Overview", subtitle: "Real-time AI cost monitoring" },
@@ -1944,6 +1944,8 @@ export default function Dashboard() {
     </div>
   );
 }
+
+
 
 
 
