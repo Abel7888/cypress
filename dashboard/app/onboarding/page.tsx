@@ -1,4 +1,6 @@
 "use client";
+import { useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
 const API_BASE = "https://cypress-production-1cc5.up.railway.app";
@@ -26,7 +28,16 @@ const STEPS = ["Welcome", "Setup", "Your Team", "Your Keys", "Go Live"];
 
 interface Employee { name: string; role: string; budget: string; }
 
-export default function OnboardingPage() {
+function OnboardingPage() {
+  const params = useSearchParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    const sessionId = params.get("session_id");
+    if (!sessionId) {
+      router.replace("/signup?plan=starter");
+    }
+  }, []);
   const [step, setStep] = useState(0);
   const [company, setCompany] = useState("");
   const [adminName, setAdminName] = useState("");
@@ -373,7 +384,7 @@ export default function OnboardingPage() {
                 <div style={{ fontSize: 11, color: C.textDim, fontWeight: 600, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>Account Details</div>
                 {[
                   { label: "Company", value: company },
-                  { label: "Plan", value: "Starter — $299/mo" },
+                  { label: "Plan", value: "Starter — $199/mo" },
                   { label: "Employees added", value: `${employees.filter(e => e.name.trim()).length} keys created` },
                   { label: "Tenant ID", value: tenantId },
                 ].map((r, i) => (
@@ -495,4 +506,12 @@ export default function OnboardingPage() {
       </div>
     </div>
   );
+}
+
+
+
+
+
+export default function OnboardingPageWrapper() {
+  return <Suspense fallback={null}><OnboardingPage /></Suspense>;
 }

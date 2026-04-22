@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "TokenGuard — AI Cost Control",
-  description: "Smart proxy for AI cost optimization, budget enforcement, and usage analytics",
+  title: "Cypress TokenGuard — Stop surprise AI bills",
+  description: "Govern AI spend across your team. Real-time budget blocking, intelligent routing, and per-employee visibility.",
 };
 
 export default function RootLayout({
@@ -15,11 +15,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className={inter.className}>
-        <div className="flex h-screen overflow-hidden">
-          {children}
-        </div>
+    <html lang="en">
+      <body className={inter.className} style={{ margin: 0, background: "#FFFFFF", color: "#0A1F3D" }}>
+        {children}
       </body>
     </html>
   );
