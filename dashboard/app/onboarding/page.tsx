@@ -2,9 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-const API_BASE = "https://";
-const ADMIN_KEY = "lMNUO5f2xEAmxq8lXA9ODmCi-pxCr-9hL99fyw3VlWw";
-const HEADERS = { Authorization: `Bearer ${ADMIN_KEY}`, "Content-Type": "application/json" };
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
 
 const C = {
   bg: "#080C14",
@@ -31,17 +29,13 @@ function OnboardingPage() {
   const params = useSearchParams();
   const router = useRouter();
 
-  useEffect(() => {
-    const sessionId = params.get("session_id");
-    if (!sessionId) {
-      router.replace("/signup?plan=starter");
-    }
-  }, []);
   const [step, setStep] = useState(0);
+  const [verified, setVerified] = useState(false);
+  const [verifying, setVerifying] = useState(true);
   const [company, setCompany] = useState("");
   const [adminName, setAdminName] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
-  const [seats, setSeats] = useState(10);
+  const [seats] = useState(10);
   const [employees, setEmployees] = useState<Employee[]>([
     { name: "", role: "", budget: "50" },
   ]);
@@ -51,6 +45,33 @@ function OnboardingPage() {
   const [creating, setCreating] = useState(false);
   const [testStatus, setTestStatus] = useState<"idle" | "testing" | "success" | "failed">("idle");
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("openai");
+
+  // Verify Stripe payment on load
+  useEffect(() => {
+    async function verifyPayment() {
+      const sessionId = params.get("session_id");
+      if (!sessionId) {
+        router.replace("/signup?plan=starter");
+        return;
+      }
+      try {
+        const res = await fetch(`/api/verify-session?session_id=${sessionId}`);
+        const data = await res.json();
+        if (data.valid) {
+          setVerified(true);
+          if (data.email) setAdminEmail(data.email);
+          if (data.name) setAdminName(data.name);
+        } else {
+          router.replace("/signup?plan=starter&error=payment_required");
+        }
+      } catch {
+        router.replace("/signup?plan=starter&error=payment_required");
+      }
+      setVerifying(false);
+    }
+    verifyPayment();
+  }, []);
 
   const inp = (extra: React.CSSProperties = {}): React.CSSProperties => ({
     background: C.bgAccent,
@@ -77,7 +98,10 @@ function OnboardingPage() {
     ...extra,
   });
 
-  const addEmployee = () => setEmployees(e => [...e, { name: "", role: "", budget: "50" }]);
+  const addEmployee = () => {
+    if (employees.length >= seats) return;
+    setEmployees(e => [...e, { name: "", role: "", budget: "50" }]);
+  };
   const removeEmployee = (i: number) => setEmployees(e => e.filter((_, idx) => idx !== i));
   const updateEmployee = (i: number, field: keyof Employee, val: string) =>
     setEmployees(e => e.map((emp, idx) => idx === i ? { ...emp, [field]: val } : emp));
@@ -87,18 +111,28 @@ function OnboardingPage() {
     setCreating(true);
     setError("");
     try {
-      const res = await fetch(`${API_BASE}/api/tenants`, {
+      // Create tenant
+      const res = await fetch(`/api/onboarding`, {
         method: "POST",
-        headers: HEADERS,
-        body: JSON.stringify({ name: company.trim(), plan: "starter" }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "create_tenant", company: company.trim() }),
       });
       const data = await res.json();
+
       if (data.tenant_id) {
         setTenantId(data.tenant_id);
-        const keyRes = await fetch(`${API_BASE}/api/tenants/${data.tenant_id}/users`, {
+
+        // Create admin key
+        const keyRes = await fetch(`/api/onboarding`, {
           method: "POST",
-          headers: HEADERS,
-          body: JSON.stringify({ name: adminName || "Admin", role: "Admin", budget_usd: 100 }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "create_user",
+            tenantId: data.tenant_id,
+            name: adminName || "Admin",
+            role: "Admin",
+            budget_usd: 100,
+          }),
         });
         const keyData = await keyRes.json();
         setMasterKey(keyData.api_key || "");
@@ -106,16 +140,19 @@ function OnboardingPage() {
         // Create employee keys
         const validEmps = employees.filter(e => e.name.trim());
         await Promise.all(validEmps.map(emp =>
-          fetch(`${API_BASE}/api/tenants/${data.tenant_id}/users`, {
+          fetch(`/api/onboarding`, {
             method: "POST",
-            headers: HEADERS,
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+              action: "create_user",
+              tenantId: data.tenant_id,
               name: emp.name.trim(),
               role: emp.role.trim(),
               budget_usd: parseFloat(emp.budget) || 50,
             }),
           })
         ));
+
         localStorage.setItem("tg_tenant_id", data.tenant_id);
         localStorage.setItem("tg_api_key", keyData.api_key || "");
         localStorage.setItem("tg_company", company.trim());
@@ -124,7 +161,7 @@ function OnboardingPage() {
         setError(data.error || "Failed to create account");
       }
     } catch (e) {
-      setError("Connection error — check proxy is running");
+      setError("Connection error — please try again");
     }
     setCreating(false);
   };
@@ -152,6 +189,51 @@ function OnboardingPage() {
     navigator.clipboard.writeText(masterKey);
     setMasterKeyCopied(true);
     setTimeout(() => setMasterKeyCopied(false), 2000);
+  };
+
+  // Loading state while verifying payment
+  if (verifying) {
+    return (
+      <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "system-ui, sans-serif" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 40, marginBottom: 16 }}>🛡️</div>
+          <div style={{ fontSize: 18, color: C.text, marginBottom: 8 }}>Verifying your payment...</div>
+          <div style={{ fontSize: 14, color: C.textMuted }}>Just a moment</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!verified) return null;
+
+  const integrationTabs = [
+    { id: "openai", label: "OpenAI SDK" },
+    { id: "anthropic", label: "Anthropic SDK" },
+    { id: "python", label: "Python requests" },
+    { id: "node", label: "Node.js fetch" },
+  ];
+
+  const integrationCode: Record<string, { file: string; before: string; after: string }> = {
+    openai: {
+      file: "your_app.py",
+      before: `client = OpenAI(\n  api_key="sk-your-openai-key"\n)`,
+      after: `client = OpenAI(\n  api_key="${masterKey || "tg-your-key-here"}",\n  base_url="${API_BASE}/v1"\n)`,
+    },
+    anthropic: {
+      file: "your_app.py",
+      before: `client = Anthropic(\n  api_key="sk-ant-your-key"\n)`,
+      after: `client = Anthropic(\n  api_key="${masterKey || "tg-your-key-here"}",\n  base_url="${API_BASE}"\n)`,
+    },
+    python: {
+      file: "your_app.py",
+      before: `requests.post(\n  "https://api.openai.com/v1/chat/completions",\n  headers={"Authorization": "Bearer sk-your-key"}\n)`,
+      after: `requests.post(\n  "${API_BASE}/v1/chat/completions",\n  headers={"Authorization": "Bearer ${masterKey || "tg-your-key-here"}"}\n)`,
+    },
+    node: {
+      file: "your_app.js",
+      before: `fetch("https://api.openai.com/v1/chat/completions", {\n  headers: { Authorization: "Bearer sk-your-key" }\n})`,
+      after: `fetch("${API_BASE}/v1/chat/completions", {\n  headers: { Authorization: "Bearer ${masterKey || "tg-your-key-here"}" }\n})`,
+    },
   };
 
   return (
@@ -249,7 +331,7 @@ function OnboardingPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               <div>
                 <div style={{ fontSize: 30, fontWeight: 800, color: C.text, marginBottom: 8 }}>Set up your account</div>
-                <div style={{ fontSize: 15, color: C.textMuted }}>Takes 30 seconds. No credit card yet.</div>
+                <div style={{ fontSize: 15, color: C.textMuted }}>Takes 30 seconds.</div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <div>
@@ -264,20 +346,9 @@ function OnboardingPage() {
                   <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 6, fontWeight: 600, letterSpacing: "0.04em" }}>WORK EMAIL</div>
                   <input style={inp()} type="email" placeholder="sarah@acme.com" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} />
                 </div>
-                <div>
-                  <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 8, fontWeight: 600, letterSpacing: "0.04em" }}>TEAM SIZE</div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {[10, 25, 50, 100].map(n => (
-                      <button key={n} onClick={() => setSeats(n)} style={{
-                        flex: 1, padding: "11px 0",
-                        background: seats === n ? C.primaryDim : C.bgAccent,
-                        border: `1px solid ${seats === n ? C.primary : C.border}`,
-                        borderRadius: 8, cursor: "pointer",
-                        color: seats === n ? C.primary : C.textMuted,
-                        fontSize: 14, fontWeight: seats === n ? 700 : 400,
-                      }}>{n}</button>
-                    ))}
-                  </div>
+                <div style={{ background: C.bgAccent, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 14, color: C.textMuted }}>Plan</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: C.primary }}>Starter — $199/mo · 10 employees</span>
                 </div>
               </div>
               {error && <div style={{ fontSize: 13, color: C.red, padding: "10px 14px", background: "#1a0808", borderRadius: 8 }}>{error}</div>}
@@ -315,7 +386,11 @@ function OnboardingPage() {
                 <div style={{ fontSize: 15, color: C.textMuted, lineHeight: 1.6 }}>
                   Give each employee their own key and daily budget. They can't spend a dollar more than you allow.
                 </div>
-                <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ marginTop: 16, padding: "12px 16px", background: C.bgAccent, border: `1px solid ${C.border}`, borderRadius: 10 }}>
+                  <span style={{ fontSize: 13, color: C.textMuted }}>Starter plan: </span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: C.primary }}>{employees.length} / {seats} employees added</span>
+                </div>
+                <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
                   {[
                     { icon: "🛡️", text: "Each person gets their own spending limit" },
                     { icon: "🔴", text: "Blocked automatically when they hit their cap" },
@@ -344,9 +419,11 @@ function OnboardingPage() {
                     <button onClick={() => removeEmployee(i)} style={{ background: "none", border: "none", cursor: "pointer", color: C.textDim, fontSize: 18, padding: 0 }}>×</button>
                   </div>
                 ))}
-                <button onClick={addEmployee} style={{ background: "none", border: `1px dashed ${C.border}`, borderRadius: 10, cursor: "pointer", color: C.textMuted, fontSize: 13, padding: "10px 0", marginTop: 4 }}>
-                  + Add another employee
-                </button>
+                {employees.length < seats && (
+                  <button onClick={addEmployee} style={{ background: "none", border: `1px dashed ${C.border}`, borderRadius: 10, cursor: "pointer", color: C.textMuted, fontSize: 13, padding: "10px 0", marginTop: 4 }}>
+                    + Add another employee ({seats - employees.length} remaining)
+                  </button>
+                )}
               </div>
             </div>
             {error && <div style={{ fontSize: 13, color: C.red, padding: "10px 14px", background: "#1a0808", borderRadius: 8 }}>{error}</div>}
@@ -424,28 +501,37 @@ function OnboardingPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               <div>
                 <div style={{ fontSize: 30, fontWeight: 800, color: C.text, marginBottom: 8 }}>One line change</div>
-                <div style={{ fontSize: 15, color: C.textMuted, lineHeight: 1.6 }}>That's all your developers need to do. Your existing OpenAI key stays the same. Everything else stays the same.</div>
+                <div style={{ fontSize: 15, color: C.textMuted, lineHeight: 1.6 }}>Pick your stack and follow the snippet. Your existing API key stays — just add your TokenGuard key and update the base URL.</div>
               </div>
+
+              {/* Tabs */}
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {integrationTabs.map(tab => (
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+                    padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
+                    background: activeTab === tab.id ? C.primaryDim : C.bgAccent,
+                    border: `1px solid ${activeTab === tab.id ? C.primary : C.border}`,
+                    color: activeTab === tab.id ? C.primary : C.textMuted,
+                  }}>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Code block */}
               <div style={{ background: "#0a0f1a", borderRadius: 12, overflow: "hidden", border: `1px solid ${C.border}` }}>
-                <div style={{ padding: "10px 16px", borderBottom: `1px solid ${C.border}`, fontSize: 12, color: C.textMuted, fontFamily: "monospace" }}>your_app.py</div>
+                <div style={{ padding: "10px 16px", borderBottom: `1px solid ${C.border}`, fontSize: 12, color: C.textMuted, fontFamily: "monospace" }}>
+                  {integrationCode[activeTab].file}
+                </div>
                 <div style={{ padding: 20, fontFamily: "monospace", fontSize: 13, lineHeight: 2 }}>
-                  <div style={{ color: "#6B7FA3" }}># BEFORE</div>
-                  <div style={{ color: "#9CA3AF" }}>client = OpenAI(</div>
-                  <div style={{ background: "#2d1010", color: "#F87171", padding: "2px 8px", borderRadius: 4 }}>
-                    {'  '}api_key=<span style={{ color: "#86EFAC" }}>"sk-your-openai-key"</span>
-                  </div>
-                  <div style={{ color: "#9CA3AF" }}>)</div>
-                  <div style={{ marginTop: 16, color: "#6B7FA3" }}># AFTER — two lines changed</div>
-                  <div style={{ color: "#9CA3AF" }}>client = OpenAI(</div>
-                  <div style={{ background: "#0d2d1a", color: "#86EFAC", padding: "2px 8px", borderRadius: 4 }}>
-                    {'  '}api_key=<span style={{ color: "#86EFAC" }}>"{masterKey || "tg-your-key-here"}"</span>,
-                  </div>
-                  <div style={{ background: "#0d2d1a", color: "#86EFAC", padding: "2px 8px", borderRadius: 4 }}>
-                    {'  '}base_url=<span style={{ color: "#86EFAC" }}>"https:///v1"</span>
-                  </div>
-                  <div style={{ color: "#9CA3AF" }}>)</div>
+                  <div style={{ color: "#6B7FA3", marginBottom: 4 }}># BEFORE</div>
+                  <pre style={{ color: "#9CA3AF", margin: 0, whiteSpace: "pre-wrap" }}>{integrationCode[activeTab].before}</pre>
+                  <div style={{ color: "#6B7FA3", margin: "16px 0 4px" }}># AFTER</div>
+                  <pre style={{ background: "#0d2d1a", color: "#86EFAC", padding: "10px", borderRadius: 8, margin: 0, whiteSpace: "pre-wrap" }}>{integrationCode[activeTab].after}</pre>
                 </div>
               </div>
+
+              {/* Test connection */}
               <div style={{ background: C.bgAccent, border: `1px solid ${C.border}`, borderRadius: 12, padding: 18 }}>
                 <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 14 }}>Verify your integration before going to the dashboard.</div>
                 {testStatus === "idle" && (
@@ -473,6 +559,7 @@ function OnboardingPage() {
                   </div>
                 )}
               </div>
+
               <button onClick={() => window.location.href = "/dashboard"} style={{ ...btn(testStatus === "success" ? "green" : "primary"), width: "100%", fontSize: 16, padding: "15px 0" }}>
                 {testStatus === "success" ? "Go to dashboard →" : "Skip to dashboard →"}
               </button>
@@ -499,24 +586,13 @@ function OnboardingPage() {
       </div>
 
       {/* Footer */}
-      <div style={{ marginTop: 24, fontSize: 13, color: C.textDim, textAlign: "center", display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ marginTop: 24, fontSize: 13, color: C.textDim, textAlign: "center" }}>
         <div>Questions? Email <span style={{ color: C.primary }}>support@tokenguard.io</span></div>
-        <button onClick={() => { setStep(0); setCompany(""); setAdminName(""); setAdminEmail(""); setEmployees([{ name: "", role: "", budget: "50" }]); setMasterKey(""); setTenantId(""); setError(""); setTestStatus("idle"); }}
-          style={{ background: "none", border: "none", cursor: "pointer", color: C.textDim, fontSize: 12, textDecoration: "underline" }}>
-          ↺ Start over
-        </button>
       </div>
     </div>
   );
 }
 
-
-
-
-
 export default function OnboardingPageWrapper() {
   return <Suspense fallback={null}><OnboardingPage /></Suspense>;
 }
-
-
-
