@@ -40,8 +40,8 @@ function SignInInner() {
     setError("");
     setLoading(true);
     if (!SUPABASE_CONFIGURED) {
-      setNotice("Auth not configured - redirecting to dashboard for demo.");
-      setTimeout(() => router.push("/dashboard"), 800);
+      setError("Authentication not configured. Contact support.");
+      setLoading(false);
       return;
     }
     const supabase = createClient();
