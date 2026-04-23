@@ -2,7 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-const API_BASE = "https://cypress-production-1cc5.up.railway.app";
+const API_BASE = "https://";
 const ADMIN_KEY = "lMNUO5f2xEAmxq8lXA9ODmCi-pxCr-9hL99fyw3VlWw";
 const HEADERS = { Authorization: `Bearer ${ADMIN_KEY}`, "Content-Type": "application/json" };
 
@@ -441,7 +441,7 @@ function OnboardingPage() {
                     {'  '}api_key=<span style={{ color: "#86EFAC" }}>"{masterKey || "tg-your-key-here"}"</span>,
                   </div>
                   <div style={{ background: "#0d2d1a", color: "#86EFAC", padding: "2px 8px", borderRadius: 4 }}>
-                    {'  '}base_url=<span style={{ color: "#86EFAC" }}>"https://cypress-production-1cc5.up.railway.app/v1"</span>
+                    {'  '}base_url=<span style={{ color: "#86EFAC" }}>"https:///v1"</span>
                   </div>
                   <div style={{ color: "#9CA3AF" }}>)</div>
                 </div>

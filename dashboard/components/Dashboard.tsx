@@ -34,9 +34,9 @@ function getModelColor(model: string): string {
   return MODEL_COLORS[model] || "#4F8EF7";
 }
 
-const API_BASE = "https://cypress-production-1cc5.up.railway.app";
-const API_KEY = (typeof window !== "undefined" && localStorage.getItem("tg_api_key")) || "lMNUO5f2xEAmxq8lXA9ODmCi-pxCr-9hL99fyw3VlWw";
-const TENANT_ID = (typeof window !== "undefined" && localStorage.getItem("tg_tenant_id")) || "6f96c565-2284-4092-93c4-62252a1c1d59";
+const API_BASE = "https://";
+const API_KEY = typeof window !== "undefined" ? localStorage.getItem("tg_api_key") : null;
+const TENANT_ID = typeof window !== "undefined" ? localStorage.getItem("tg_tenant_id") : null;
 const HEADERS = { Authorization: `Bearer ${API_KEY}` };
 const DEMO_EMPLOYEES = [
   { name: "Sarah (Engineering)", key: "tg-d06616108a81726611cb49c0ef73f8c96f4eba3b15806e43" },
@@ -1750,7 +1750,7 @@ function SettingsPage() {
             <SectionHeader title="Proxy Configuration" subtitle="Connection details" />
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[
-                { label: "Proxy URL", value: "cypress-production-1cc5.up.railway.app" },
+                { label: "Proxy URL", value: "" },
                 { label: "Dashboard", value: "cypress-production-36c0.up.railway.app" },
                 { label: "ClickHouse", value: "q9wiaor5v1.eastus2.azure" },
                 { label: "Cache", value: "fakeredis (in-memory)" },
@@ -1890,6 +1890,15 @@ const PAGE_META: Record<string, { title: string; subtitle: string }> = {
 
 export default function Dashboard() {
   const [page, setPage] = useState("overview");
+  
+  useEffect(() => {
+    const key = localStorage.getItem("tg_api_key");
+    const tenant = localStorage.getItem("tg_tenant_id");
+    if (!key || !tenant) {
+      window.location.href = "/signin";
+    }
+  }, []);
+  
   const meta = PAGE_META[page];
 
   const pages: Record<string, React.ReactNode> = {
