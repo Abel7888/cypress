@@ -65,11 +65,11 @@ function SignUpInner() {
         window.location.href = data.url;
         return;
       }
-      // Fallback â€” if Stripe not configured, go straight to onboarding
+      // Fallback — if Stripe not configured, go straight to onboarding
       setNotice("Stripe not configured yet. Proceeding to onboarding (demo mode)...");
       setTimeout(() => (window.location.href = "/onboarding"), 800);
     } catch {
-      setNotice("Couldn't reach payments â€” proceeding to onboarding.");
+      setNotice("Couldn't reach payments — proceeding to onboarding.");
       setTimeout(() => (window.location.href = "/onboarding"), 800);
     }
     setLoading(false);
@@ -129,7 +129,7 @@ function SignUpInner() {
                 borderRadius: 10, padding: "14px 0", fontSize: 15, fontWeight: 700,
                 cursor: "pointer", marginTop: 10, opacity: loading ? 0.7 : 1,
               }}>
-                {loading ? "Creating account..." : `Continue to payment â€” $${selected.price}/mo â†’`}
+                {loading ? "Creating account..." : `Continue to payment — $${selected.price}/mo →`}
               </button>
 
               <div style={{ fontSize: 12, color: C.textFaint, textAlign: "center", marginTop: 4 }}>
@@ -185,7 +185,7 @@ function SignUpInner() {
                 "Cancel anytime",
               ].map((f, i) => (
                 <div key={i} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: C.textMuted, padding: "4px 0" }}>
-                  <span style={{ color: C.green }}>âœ“</span>
+                  <span style={{ color: C.green }}>✓</span>
                   <span>{f}</span>
                 </div>
               ))}
@@ -198,7 +198,7 @@ function SignUpInner() {
         </div>
 
         <div style={{ textAlign: "center", fontSize: 12, color: C.textFaint, marginTop: 24 }}>
-          <Link href="/" style={{ color: C.textFaint, textDecoration: "none" }}>â† Back to home</Link>
+          <Link href="/" style={{ color: C.textFaint, textDecoration: "none" }}>← Back to home</Link>
         </div>
       </div>
     </div>
