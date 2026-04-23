@@ -35,8 +35,8 @@ function getModelColor(model: string): string {
 }
 
 const API_BASE = "https://cypress-production-1cc5.up.railway.app";
-const API_KEY = "lMNUO5f2xEAmxq8lXA9ODmCi-pxCr-9hL99fyw3VlWw";
-const TENANT_ID = "6f96c565-2284-4092-93c4-62252a1c1d59";
+const API_KEY = (typeof window !== "undefined" && localStorage.getItem("tg_api_key")) || "lMNUO5f2xEAmxq8lXA9ODmCi-pxCr-9hL99fyw3VlWw";
+const TENANT_ID = (typeof window !== "undefined" && localStorage.getItem("tg_tenant_id")) || "6f96c565-2284-4092-93c4-62252a1c1d59";
 const HEADERS = { Authorization: `Bearer ${API_KEY}` };
 const DEMO_EMPLOYEES = [
   { name: "Sarah (Engineering)", key: "tg-d06616108a81726611cb49c0ef73f8c96f4eba3b15806e43" },
@@ -1824,7 +1824,7 @@ function Sidebar({ active, onNav }: { active: string; onNav: (id: string) => voi
       {/* Tenant indicator */}
       <div style={{ padding: "10px 16px", borderBottom: `1px solid ${COLORS.border}`, background: `${COLORS.purple}08` }}>
         <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 2 }}>VIEWING TENANT</div>
-        <div style={{ fontSize: 12, color: COLORS.text, fontWeight: 600 }}>Acme Corp (Demo)</div>
+        <div style={{ fontSize: 12, color: COLORS.text, fontWeight: 600 }}>{typeof window !== "undefined" && localStorage.getItem("tg_company") || "Acme Corp (Demo)"}</div>
       </div>
 
       <nav style={{ flex: 1, padding: "12px 10px" }}>
