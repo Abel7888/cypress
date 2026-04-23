@@ -8,13 +8,17 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
-import fakeredis
+import redis
+import os
 import structlog
 from pydantic import BaseModel
 
 log = structlog.get_logger()
 
-_redis = fakeredis.FakeRedis(decode_responses=True)
+_redis = redis.from_url(
+    os.getenv("REDIS_URL", "redis://localhost:6379"),
+    decode_responses=True
+)
 
 _budgets_cache: dict[str, list] = {}
 _alerted_thresholds: dict[str, set] = {}

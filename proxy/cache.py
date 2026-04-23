@@ -3,9 +3,12 @@ import hashlib
 from datetime import datetime
 
 print("[Cache] Loading cache module...")
-import fakeredis
-redis_client = fakeredis.FakeRedis()
-print("[Cache] Cache ready")
+import redis
+import os
+
+redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+redis_client = redis.from_url(redis_url, decode_responses=False)
+print(f"[Cache] Connected to Redis: {redis_url[:30]}...")
 
 CACHE_TTL_SECONDS = 86400
 
