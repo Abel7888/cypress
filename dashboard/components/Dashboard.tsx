@@ -705,7 +705,7 @@ function CostAnalysisPage() {
               <textarea
                 value={playgroundPrompt}
                 onChange={e => setPlaygroundPrompt(e.target.value)}
-                placeholder="Type a prompt ΓÇö or pick an example above..."
+                placeholder="Type a prompt — or pick an example above..."
                 rows={3}
                 style={{ background: COLORS.bgAccent, border: `1px solid ${COLORS.border}`, borderRadius: 8, color: COLORS.text, fontSize: 13, padding: "10px 12px", outline: "none", resize: "vertical", fontFamily: "inherit", width: "100%" }}
               />
@@ -719,7 +719,7 @@ function CostAnalysisPage() {
                 </select>
                 <button onClick={runPlayground} disabled={playgroundLoading}
                   style={{ background: COLORS.primary, border: "none", borderRadius: 8, cursor: "pointer", color: "#fff", fontSize: 13, padding: "10px 16px", fontWeight: 700, opacity: playgroundLoading ? 0.7 : 1 }}>
-                  {playgroundLoading ? "Routing..." : "Γû╢ Send"}
+                  {playgroundLoading ? "Routing..." : "▶ Send"}
                 </button>
               </div>
             </div>
@@ -734,15 +734,15 @@ function CostAnalysisPage() {
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 22 }}>{playgroundResult.was_routed ? "ΓÜí" : "≡ƒºá"}</span>
+                      <span style={{ fontSize: 22 }}>{playgroundResult.was_routed ? "⚡" : "🚀"}</span>
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>
-                          {playgroundResult.was_routed ? "Routed to cheaper model ΓÇö same quality answer" : "Kept on premium model ΓÇö complexity required it"}
+                          {playgroundResult.was_routed ? "Routed to cheaper model — same quality answer" : "Kept on premium model — complexity required it"}
                         </div>
                         <div style={{ fontSize: 11, color: COLORS.textDim, marginTop: 3 }}>
                           {playgroundResult.was_routed
-                            ? `Simple task detected ┬╖ ${playgroundResult.tokens} tokens ┬╖ no premium model needed` 
-                            : `Complex task detected ┬╖ ${playgroundResult.tokens} tokens ┬╖ full power applied`}
+                            ? `Simple task detected • ${playgroundResult.tokens} tokens • no premium model needed` 
+                            : `Complex task detected • ${playgroundResult.tokens} tokens • full power applied`}
                         </div>
                       </div>
                     </div>
@@ -760,7 +760,7 @@ function CostAnalysisPage() {
                       <div style={{ fontSize: 12, fontFamily: "monospace", color: COLORS.red, fontWeight: 600 }}>{playgroundResult.original_model}</div>
                       <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>${playgroundResult.original_cost}</div>
                     </div>
-                    <div style={{ fontSize: 18, color: COLORS.textDim, textAlign: "center" }}>ΓåÆ</div>
+                    <div style={{ fontSize: 18, color: COLORS.textDim, textAlign: "center" }}>→</div>
                     <div style={{ background: COLORS.bg, borderRadius: 8, padding: "10px 12px", textAlign: "center" }}>
                       <div style={{ fontSize: 10, color: COLORS.textDim, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>Served</div>
                       <div style={{ fontSize: 12, fontFamily: "monospace", color: COLORS.green, fontWeight: 600 }}>{playgroundResult.routed_model}</div>
@@ -805,7 +805,7 @@ function DemoControlPanel() {
     const styles = ["explain briefly", "give me an overview of", "summarize", "what is", "describe"];
     const topic = topics[Math.floor(Math.random() * topics.length)];
     const style = styles[Math.floor(Math.random() * styles.length)];
-    const prompt = `${style} ${topic} ΓÇö request #${Date.now()}`;
+    const prompt = `${style} ${topic} — request #${Date.now()}`;
     try {
       const res = await fetch(`${API_BASE}/v1/chat/completions`, {
         method: "POST",
@@ -814,20 +814,20 @@ function DemoControlPanel() {
       });
       const data = await res.json();
       if (data.error === "BUDGET_CAP_EXCEEDED") {
-        setLog(l => [`≡ƒö┤ ${selected.name} ΓÇö BLOCKED! Budget exhausted.`, ...l.slice(0, 4)]);
+        setLog(l => [`🔥 ${selected.name} — BLOCKED! Budget exhausted.`, ...l.slice(0, 4)]);
       } else {
         const cost = data.usage ? `$${((data.usage.total_tokens || 0) * 0.000005).toFixed(6)}` : "";
-        setLog(l => [`Γ£à ${selected.name} ΓÇö call complete ${cost}`, ...l.slice(0, 4)]);
+        setLog(l => [`✅ ${selected.name} — call complete ${cost}`, ...l.slice(0, 4)]);
       }
     } catch (e) {
-      setLog(l => [`Γ¥î ${selected.name} ΓÇö error`, ...l.slice(0, 4)]);
+      setLog(l => [`✗ ${selected.name} — error`, ...l.slice(0, 4)]);
     }
     setFiring(false);
   };
 
   const seedAll = async () => {
     setSeeding(true);
-    setLog(l => ["≡ƒî▒ Seeding all employees...", ...l.slice(0, 4)]);
+    setLog(l => ["🌱 Seeding all employees...", ...l.slice(0, 4)]);
     await Promise.all(DEMO_EMPLOYEES.map(emp =>
       fetch(`${API_BASE}/v1/chat/completions`, {
         method: "POST",
@@ -835,16 +835,16 @@ function DemoControlPanel() {
         body: JSON.stringify({ model: "gpt-4o", max_tokens: 10, messages: [{ role: "user", content: "hi" }] }),
       })
     ));
-    setLog(l => ["Γ£à All employees seeded ΓÇö bars should appear", ...l.slice(0, 4)]);
+    setLog(l => ["✅ All employees seeded — bars should appear", ...l.slice(0, 4)]);
     setSeeding(false);
   };
 
   const resetAll = async () => {
     setResetting(true);
-    setLog(l => ["≡ƒöä Resetting all budgets...", ...l.slice(0, 4)]);
+    setLog(l => ["🔄 Resetting all budgets...", ...l.slice(0, 4)]);
     await fetch(`${API_BASE}/budget/reset`, { method: "POST", headers: HEADERS });
     await fetch(`${API_BASE}/budget/reload`, { method: "POST", headers: HEADERS });
-    setLog(l => ["Γ£à Budgets reset ΓÇö bars cleared", ...l.slice(0, 4)]);
+    setLog(l => ["✅ Budgets reset — bars cleared", ...l.slice(0, 4)]);
     setResetting(false);
   };
 
@@ -864,13 +864,13 @@ function DemoControlPanel() {
           {DEMO_EMPLOYEES.map(emp => <option key={emp.name} value={emp.name}>{emp.name}</option>)}
         </select>
         <button onClick={fireCall} disabled={firing} style={btnStyle(COLORS.primary)}>
-          {firing ? "Firing..." : "≡ƒÜÇ Fire Call"}
+          {firing ? "Firing..." : "🔥 Fire Call"}
         </button>
         <button onClick={seedAll} disabled={seeding} style={btnStyle(COLORS.green)}>
-          {seeding ? "Seeding..." : "≡ƒî▒ Seed All"}
+          {seeding ? "Seeding..." : "🌱 Seed All"}
         </button>
         <button onClick={resetAll} disabled={resetting} style={btnStyle(COLORS.red)}>
-          {resetting ? "Resetting..." : "≡ƒöä Reset Budgets"}
+          {resetting ? "Resetting..." : "🔄 Reset Budgets"}
         </button>
       </div>
       {log.length > 0 && (
