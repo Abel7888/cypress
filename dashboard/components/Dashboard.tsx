@@ -227,15 +227,15 @@ function ActivityFeed() {
   }, []);
 
   const typeConfig: Record<string, any> = {
-    call: { label: "API Call", color: COLORS.primary, icon: "ΓåÆ" },
-    cache: { label: "Cache HIT", color: COLORS.green, icon: "Γ£ô" },
-    blocked: { label: "BLOCKED", color: COLORS.red, icon: "Γ£ò" },
+    call: { label: "API Call", color: COLORS.primary, icon: "→" },
+    cache: { label: "Cache HIT", color: COLORS.green, icon: "✓" },
+    blocked: { label: "BLOCKED", color: COLORS.red, icon: "⚠" },
   };
 
   return (
     <Card>
       <CardBody>
-        <SectionHeader title="Live Activity Feed" subtitle="Last 15 seconds ΓÇö auto-refreshing" />
+        <SectionHeader title="Live Activity Feed" subtitle="Last 15 seconds — auto-refreshing" />
         {events.length === 0 ? (
           <div style={{ color: COLORS.textDim, fontSize: 12 }}>Waiting for activity...</div>
         ) : (
@@ -1210,7 +1210,7 @@ function MasterKeyCard() {
             { label: "View billing", color: COLORS.green },
           ].map((b, i) => (
             <Badge key={i} color={COLORS.greenDim} textColor={COLORS.green}>
-              Γ£ô {b.label}
+              ✓ {b.label}
             </Badge>
           ))}
         </div>
@@ -1365,7 +1365,7 @@ function EmployeeKeyManager() {
             flexDirection: "column", gap: 8,
           }}>
             <div style={{ fontSize: 12, color: COLORS.green, fontWeight: 600 }}>
-              Γ£ô New key created ΓÇö copy it now, it won't be shown again
+              ✓ New key created — copy it now, it won't be shown again
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <code style={{ fontSize: 12, color: COLORS.text, flex: 1, fontFamily: "monospace", wordBreak: "break-all" }}>
@@ -1583,9 +1583,9 @@ function ProviderKeysCard() {
   const [saved, setSaved] = useState<Record<string, boolean>>({});
 
   const providers = [
-    { id: "openai",    name: "OpenAI",    icon: "Γ¼í", placeholder: "sk-proj-...", color: "#10A37F" },
-    { id: "anthropic", name: "Anthropic", icon: "Γùê", placeholder: "sk-ant-...",  color: "#D97706" },
-    { id: "google",    name: "Google",    icon: "Γùë", placeholder: "AIza...",     color: "#4285F4" },
+    { id: "openai",    name: "OpenAI",    icon: "🔑", placeholder: "sk-proj-...", color: "#10A37F" },
+    { id: "anthropic", name: "Anthropic", icon: "🔑", placeholder: "sk-ant-...",  color: "#D97706" },
+    { id: "google",    name: "Google",    icon: "🔑", placeholder: "AIza...",     color: "#4285F4" },
   ];
 
   const load = async () => {
@@ -1646,7 +1646,7 @@ function ProviderKeysCard() {
       <CardBody>
         <SectionHeader
           title="Provider API Keys"
-          subtitle="Your keys ΓÇö you pay OpenAI/Anthropic directly"
+          subtitle="Your keys — you pay OpenAI/Anthropic directly"
         />
 
         <div style={{
@@ -1656,7 +1656,7 @@ function ProviderKeysCard() {
           marginBottom: 20, fontSize: 13, color: COLORS.textMuted,
           lineHeight: 1.5,
         }}>
-          ≡ƒÆí TokenGuard uses your own API keys to make calls ΓÇö you keep your existing
+          🔑 TokenGuard uses your own API keys to make calls — you keep your existing
           OpenAI and Anthropic accounts and pay them directly. We never see your bills.
         </div>
 
@@ -1678,7 +1678,7 @@ function ProviderKeysCard() {
                     <span style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>{p.name}</span>
                     {configured && (
                       <Badge color={`${p.color}20`} textColor={p.color}>
-                        Γ£ô Connected ΓÇö {configured.preview}
+                        ✓ Connected — {configured.preview}
                       </Badge>
                     )}
                     {!configured && (
@@ -1754,7 +1754,7 @@ function SettingsPage() {
                 { label: "Dashboard", value: "cypress-production-36c0.up.railway.app" },
                 { label: "ClickHouse", value: "q9wiaor5v1.eastus2.azure" },
                 { label: "Cache", value: "fakeredis (in-memory)" },
-                { label: "Version", value: "0.9.0 ΓÇö Week 9" },
+                { label: "Version", value: "0.9.0 — Week 9" },
               ].map((item, i) => (
                 <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
                   <span style={{ fontSize: 12, color: COLORS.textDim }}>{item.label}</span>
@@ -1770,8 +1770,8 @@ function SettingsPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[
                 { label: "Auto routing", status: "Enabled" },
-                { label: "Simple ΓåÆ gpt-4o-mini", status: "Active" },
-                { label: "Complex ΓåÆ gpt-4o", status: "Active" },
+                { label: "Simple → gpt-4o-mini", status: "Active" },
+                { label: "Complex → gpt-4o", status: "Active" },
                 { label: "Keyword detection", status: "Active" },
                 { label: "Budget enforcement", status: "Active" },
               ].map((item, i) => (
@@ -1791,11 +1791,11 @@ function SettingsPage() {
 // ΓöÇΓöÇΓöÇ SIDEBAR ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 
 const NAV = [
-  { id: "overview", label: "Overview", icon: "ΓÜí" },
-  { id: "cost-analysis", label: "Cost Analysis", icon: "≡ƒôè" },
-  { id: "budgets", label: "Budgets", icon: "≡ƒ¢í∩╕Å" },
-  { id: "roi-report", label: "ROI Report", icon: "≡ƒôê" },
-  { id: "settings", label: "Settings", icon: "ΓÜÖ∩╕Å" },
+  { id: "overview", label: "Overview", icon: "⚡" },
+  { id: "cost-analysis", label: "Cost Analysis", icon: "📊" },
+  { id: "budgets", label: "Budgets", icon: "💰" },
+  { id: "roi-report", label: "ROI Report", icon: "📈" },
+  { id: "settings", label: "Settings", icon: "⚙️" },
 ];
 
 function Sidebar({ active, onNav }: { active: string; onNav: (id: string) => void }) {
@@ -1812,7 +1812,7 @@ function Sidebar({ active, onNav }: { active: string; onNav: (id: string) => voi
       <div style={{ padding: "20px 20px 16px", borderBottom: `1px solid ${COLORS.border}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.purple})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
-            ≡ƒ¢í∩╕Å
+            🛡️
           </div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 800, color: COLORS.text, letterSpacing: "-0.02em" }}>TokenGuard</div>
@@ -1866,7 +1866,7 @@ function Sidebar({ active, onNav }: { active: string; onNav: (id: string) => voi
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: COLORS.green }} />
           <div>
             <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.green }}>Proxy Active</div>
-            <div style={{ fontSize: 10, color: COLORS.textDim }}>Railway ΓÇö Production</div>
+            <div style={{ fontSize: 10, color: COLORS.textDim }}>Railway — Production</div>
           </div>
         </div>
         <div style={{ marginTop: 8, padding: "0 4px", display: "flex", justifyContent: "space-between" }}>
