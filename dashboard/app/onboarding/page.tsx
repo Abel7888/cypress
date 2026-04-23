@@ -124,7 +124,7 @@ function OnboardingPage() {
         setError(data.error || "Failed to create account");
       }
     } catch (e) {
-      setError("Connection error Ã¢â‚¬â€ check proxy is running");
+      setError("Connection error — check proxy is running");
     }
     setCreating(false);
   };
@@ -165,7 +165,7 @@ function OnboardingPage() {
 
       {/* Logo */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 40 }}>
-        <div style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg, ${C.primary}, ${C.purple})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>Ã°Å¸â€ºÂ¡Ã¯Â¸Â</div>
+        <div style={{ width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg, ${C.primary}, ${C.purple})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>🛡️</div>
         <div>
           <div style={{ fontSize: 20, fontWeight: 800, color: C.text, letterSpacing: "-0.02em" }}>TokenGuard</div>
           <div style={{ fontSize: 11, color: C.textDim, letterSpacing: "0.06em" }}>AI COST CONTROL</div>
@@ -186,7 +186,7 @@ function OnboardingPage() {
                 color: i <= step ? "#fff" : C.textDim,
                 transition: "all 0.3s",
               }}>
-                {i < step ? "Ã¢Å“â€œ" : i + 1}
+                {i < step ? "✓" : i + 1}
               </div>
               <span style={{ fontSize: 11, color: i === step ? C.text : C.textDim, whiteSpace: "nowrap" }}>{s}</span>
             </div>
@@ -473,7 +473,7 @@ function OnboardingPage() {
                   </div>
                 )}
               </div>
-              <button onClick={() => window.location.href = "/"} style={{ ...btn(testStatus === "success" ? "green" : "primary"), width: "100%", fontSize: 16, padding: "15px 0" }}>
+              <button onClick={() => window.location.href = "/dashboard"} style={{ ...btn(testStatus === "success" ? "green" : "primary"), width: "100%", fontSize: 16, padding: "15px 0" }}>
                 {testStatus === "success" ? "Go to dashboard Ã¢â€ â€™" : "Skip to dashboard Ã¢â€ â€™"}
               </button>
             </div>
