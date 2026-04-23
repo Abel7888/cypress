@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       metadata: { plan, company: company || "" },
       subscription_data: { metadata: { plan, company: company || "" } },
       allow_promotion_codes: true,
-      success_url: `https://cypress-production-36c0.up.railway.app/onboarding?session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/onboarding?session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
       cancel_url: `${origin}/signup?plan=${plan}&canceled=1`,
     });
 
