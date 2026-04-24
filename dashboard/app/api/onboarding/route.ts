@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const PROXY_URL = process.env.NEXT_PUBLIC_API_BASE || "";
-const ADMIN_KEY = process.env.TOKENGUARD_ADMIN_KEY || "";
+const ADMIN_KEY = process.env.TOKENGUARD_SECRET_KEY || "";
 
 export async function POST(req: NextRequest) {
   try {
