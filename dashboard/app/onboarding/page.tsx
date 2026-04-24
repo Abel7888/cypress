@@ -121,6 +121,7 @@ function OnboardingPage() {
         body: JSON.stringify({ 
           action: "create_tenant", 
           company: company.trim(),
+          email: adminEmail,
           slack_webhook: slackWebhook,
           alert_email: alertEmail,
         }),
