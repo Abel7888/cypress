@@ -629,7 +629,7 @@ function CostAnalysisPage() {
                   {/* Right ΓÇö Recent Calls Timeline */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.text }}>Recent Calls</div>
-                    <RecentCallsPanel agentId={selectedUser} tenantId={TENANT_ID} />
+                    <RecentCallsPanel agentId={selectedUser || ""} tenantId={TENANT_ID || ""} />
                   </div>
                 </div>
               </div>
