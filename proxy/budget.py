@@ -41,7 +41,7 @@ class BudgetDefinition(BaseModel):
     name: str
     period: BudgetPeriod = BudgetPeriod.DAILY
     limit_usd: float
-    alert_thresholds: list[int] = [50, 80, 95]
+    alert_thresholds: list[int] = [70, 90, 100]
     action_on_limit: BudgetAction = BudgetAction.BLOCK
 
 
@@ -188,10 +188,43 @@ def reset_budget(tenant_id: str, budget_id: str):
 
 def _fire_alert(budget: BudgetDefinition, threshold: int, spent_usd: float, pct: float):
     now = datetime.now(timezone.utc).isoformat()
-    print("\n[Budget] ALERT -- " + budget.name)
-    print("[Budget]    Tenant  : " + budget.tenant_id)
-    print("[Budget]    Period  : " + budget.period.value + " (" + _period_key(budget.period) + ")")
-    print("[Budget]    Spent   : $" + str(round(spent_usd, 6)) + " of $" + str(budget.limit_usd))
-    print("[Budget]    Used    : " + str(round(pct, 1)) + "% (threshold: " + str(threshold) + "%)")
-    print("[Budget]    Time    : " + now + "\n")
-    
+    print(f"\n[Budget] ALERT -- {budget.name}")
+    print(f"[Budget]    Tenant  : {budget.tenant_id}")
+    print(f"[Budget]    Spent   : ${round(spent_usd, 6)} of ${budget.limit_usd}")
+    print(f"[Budget]    Used    : {round(pct, 1)}% (threshold: {threshold}%)")
+    print(f"[Budget]    Time    : {now}\n")
+
+    # Fire real alert to dashboard
+    import threading
+    def _send():
+        try:
+            import httpx
+            dashboard_url = os.getenv("DASHBOARD_URL", "")
+            slack_webhook = os.getenv("SLACK_WEBHOOK_URL", "")
+            alert_email = os.getenv("ALERT_EMAIL", "")
+
+            if not dashboard_url:
+                return
+
+            payload = {
+                "tenant_id": budget.tenant_id,
+                "employee_name": budget.name,
+                "budget_usd": budget.limit_usd,
+                "spent_usd": round(spent_usd, 6),
+                "percentage": round(pct, 1),
+                "threshold": threshold,
+                "company": budget.tenant_id,
+                "slack_webhook_url": slack_webhook or None,
+                "alert_email": alert_email or None,
+            }
+
+            httpx.post(
+                f"{dashboard_url}/api/alerts",
+                json=payload,
+                timeout=10,
+            )
+            print(f"[Budget] Alert sent for {budget.name} at {threshold}%")
+        except Exception as e:
+            print(f"[Budget] Alert send failed: {e}")
+
+    threading.Thread(target=_send, daemon=True).start()
