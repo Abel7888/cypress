@@ -35,6 +35,8 @@ function OnboardingPage() {
   const [company, setCompany] = useState("");
   const [adminName, setAdminName] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
+  const [slackWebhook, setSlackWebhook] = useState("");
+  const [alertEmail, setAlertEmail] = useState("");
   const [seats] = useState(10);
   const [employees, setEmployees] = useState<Employee[]>([
     { name: "", role: "", budget: "50" },
@@ -61,6 +63,7 @@ function OnboardingPage() {
         if (data.valid) {
           setVerified(true);
           if (data.email) setAdminEmail(data.email);
+          if (data.email) setAlertEmail(data.email);
           if (data.name) setAdminName(data.name);
         } else {
           router.replace("/signup?plan=starter&error=payment_required");
@@ -115,7 +118,12 @@ function OnboardingPage() {
       const res = await fetch(`/api/onboarding`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "create_tenant", company: company.trim() }),
+        body: JSON.stringify({ 
+          action: "create_tenant", 
+          company: company.trim(),
+          slack_webhook: slackWebhook,
+          alert_email: alertEmail,
+        }),
       });
       const data = await res.json();
 
@@ -156,6 +164,8 @@ function OnboardingPage() {
         localStorage.setItem("tg_tenant_id", data.tenant_id);
         localStorage.setItem("tg_api_key", keyData.api_key || "");
         localStorage.setItem("tg_company", company.trim());
+        localStorage.setItem("tg_slack_webhook", slackWebhook);
+        localStorage.setItem("tg_alert_email", alertEmail);
         setStep(3);
       } else {
         setError(data.error || "Failed to create account");
@@ -349,6 +359,30 @@ function OnboardingPage() {
                 <div style={{ background: C.bgAccent, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: 14, color: C.textMuted }}>Plan</span>
                   <span style={{ fontSize: 14, fontWeight: 700, color: C.primary }}>Starter — $199/mo · 10 employees</span>
+                </div>
+                <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 16, marginTop: 4 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 4 }}>🔔 Budget Alerts</div>
+                  <div style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.6, marginBottom: 12 }}>
+                    We'll notify you when someone hits 70%, 90%, and when they get blocked — before the bill arrives. Takes 30 seconds to set up.
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div>
+                      <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 6, fontWeight: 600, letterSpacing: "0.04em", display: "flex", justifyContent: "space-between" }}>
+                        <span>SLACK WEBHOOK URL</span>
+                        <a href="https://api.slack.com/messaging/webhooks" target="_blank" rel="noopener noreferrer" style={{ color: C.primary, fontSize: 11, textDecoration: "none" }}>How to get this →</a>
+                      </div>
+                      <input style={inp()} placeholder="https://hooks.slack.com/services/..." value={slackWebhook} onChange={e => setSlackWebhook(e.target.value)} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 6, fontWeight: 600, letterSpacing: "0.04em" }}>ALERT EMAIL</div>
+                      <input style={inp()} type="email" placeholder="you@company.com" value={alertEmail} onChange={e => setAlertEmail(e.target.value)} />
+                    </div>
+                    <div style={{ display: "flex", gap: 16, fontSize: 12, color: C.textMuted }}>
+                      <span>🟡 70% warning</span>
+                      <span>🟠 90% warning</span>
+                      <span>🔴 100% blocked</span>
+                    </div>
+                  </div>
                 </div>
               </div>
               {error && <div style={{ fontSize: 13, color: C.red, padding: "10px 14px", background: "#1a0808", borderRadius: 8 }}>{error}</div>}

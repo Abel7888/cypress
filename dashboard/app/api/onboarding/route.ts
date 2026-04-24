@@ -18,7 +18,12 @@ export async function POST(req: NextRequest) {
       const res = await fetch(`${PROXY_URL}/api/tenants`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ name: data.company, plan: "starter" }),
+        body: JSON.stringify({ 
+          name: data.company, 
+          plan: "starter",
+          slack_webhook: data.slack_webhook || "",
+          alert_email: data.alert_email || "",
+        }),
       });
       const result = await res.json();
       return NextResponse.json(result);
