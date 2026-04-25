@@ -34,7 +34,7 @@ function getModelColor(model: string): string {
   return MODEL_COLORS[model] || "#4F8EF7";
 }
 
-const API_BASE = "https://";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
 const API_KEY = typeof window !== "undefined" ? localStorage.getItem("tg_api_key") : null;
 const TENANT_ID = typeof window !== "undefined" ? localStorage.getItem("tg_tenant_id") : null;
 const HEADERS = { Authorization: `Bearer ${API_KEY}` };
