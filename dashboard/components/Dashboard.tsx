@@ -296,7 +296,14 @@ function OverviewPage() {
   }, []);
 
   if (loading) return <div style={{ color: COLORS.textMuted, padding: 40, fontSize: 13 }}>Loading real data from ClickHouse...</div>;
-  if (!overview) return <div style={{ color: COLORS.red, padding: 40, fontSize: 13 }}>Could not connect to proxy.</div>;
+  if (!overview) return (
+    <div style={{ color: COLORS.textMuted, padding: 40, fontSize: 13 }}>
+      No data yet — make your first API call through the proxy to see usage here.
+      <span style={{ fontSize: 11, color: COLORS.textDim, marginTop: 8, display: "block" }}>
+        Proxy: {process.env.NEXT_PUBLIC_API_BASE || "(API_BASE not set)"}
+      </span>
+    </div>
+  );
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
