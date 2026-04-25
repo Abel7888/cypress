@@ -1154,7 +1154,7 @@ function ROIReportPage() {
 function MasterKeyCard() {
   const [visible, setVisible] = useState(false);
   const [copied, setCopied] = useState(false);
-  const masterKey = "lMNUO5f2xEAmxq8lXA9ODmCi-pxCr-9hL99fyw3VlWw";
+  const masterKey = typeof window !== "undefined" ? (localStorage.getItem("tg_api_key") || "lMNUO5f2xEAmxq8lXA9ODmCi-pxCr-9hL99fyw3VlWw") : "lMNUO5f2xEAmxq8lXA9ODmCi-pxCr-9hL99fyw3VlWw";
 
   const copy = () => {
     navigator.clipboard.writeText(masterKey);
