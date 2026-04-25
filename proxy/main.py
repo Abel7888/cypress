@@ -16,15 +16,17 @@ from logger import log_event
 from router import model_router, extract_complexity, classify_complexity
 from budget import load_budgets, check_budget, record_spend, get_budget_status, reset_budget, BudgetDefinition, BudgetPeriod, BudgetAction
 from billing import create_checkout_session, handle_webhook, PLANS, cancel_subscription
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="TokenGuard Proxy", version="0.2.0")
 
-from fastapi.middleware.cors import CORSMiddleware
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=[
+        "https://cypress-production-36c0.up.railway.app",
+        "http://localhost:3000",
+    ],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

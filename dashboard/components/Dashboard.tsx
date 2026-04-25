@@ -1186,7 +1186,7 @@ function MasterKeyCard() {
             flex: 1,
             letterSpacing: visible ? "0" : "0.15em",
           }}>
-            {visible ? masterKey : "ΓÇó".repeat(44)}
+            {visible ? masterKey : "•".repeat(44)}
           </span>
           <button
             onClick={() => setVisible(v => !v)}
