@@ -93,7 +93,7 @@ export default function RoutingPage() {
   const updatedLabel = secondsSince < 60 ? `Updated ${secondsSince}s ago` : `Updated ${Math.floor(secondsSince / 60)}m ago`;
 
   // ── LIVE ROUTING FEED (synthetic events from real data) ─────────────────
-  const routingEvents = users
+  const routingEvents: any[] = (users
     .filter((u: any) => (u.routed_calls || 0) > 0)
     .flatMap((u: any) => Array.from({ length: Math.min(u.routed_calls, 3) }, (_, i) => ({
       employee: u.employee,
@@ -112,7 +112,7 @@ export default function RoutingPage() {
         type: "blocked" as const,
       })) as any))
     .sort((a, b) => a.secondsAgo - b.secondsAgo)
-    .slice(0, 10);
+    .slice(0, 10)) as any[];
 
   // ── ROUTING RULES (from models data) ────────────────────────────────────
   const mini = models.find((m: any) => m.model === "gpt-4o-mini");
