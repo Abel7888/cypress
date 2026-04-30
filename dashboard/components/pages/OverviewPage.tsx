@@ -204,14 +204,14 @@ export default function OverviewPage({ setPage }: Props) {
             <AlertBanner key={`blocked-${u.employee}`} tone="red" emoji="🔴"
               title={`${u.employee} has been blocked`} detail="daily budget reached"
               actionLabel="Reset Budget →" onAction={() => nav("budgets")}
-              onDismiss={() => setDismissedAlerts(s => new Set([...s, `blocked-${u.employee}`]))} />
+              onDismiss={() => setDismissedAlerts(s => new Set(Array.from(s).concat([`blocked-${u.employee}`])))} />
           ))}
           {warningUsers.filter(u => !dismissedAlerts.has(`warn-${u.employee}`)).map(u => (
             <AlertBanner key={`warn-${u.employee}`} tone="amber" emoji="⚠"
               title={`${u.employee} has used ${getBudgetPct(u).toFixed(0)}% of their daily budget`}
               detail={timeAgo(60 * (3 + Math.floor(Math.random() * 5)))}
               actionLabel="Adjust Budget →" onAction={() => nav("budgets")}
-              onDismiss={() => setDismissedAlerts(s => new Set([...s, `warn-${u.employee}`]))} />
+              onDismiss={() => setDismissedAlerts(s => new Set(Array.from(s).concat([`warn-${u.employee}`])))} />
           ))}
         </div>
       )}
@@ -778,5 +778,6 @@ function SummaryCard({ iconBg, iconColor, icon, title, value, valueColor, sub, e
     </div>
   );
 }
+
 
 
