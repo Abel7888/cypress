@@ -1,0 +1,30 @@
+﻿OverviewPage.tsx — Full Dashboard with Demo Data
+================================================
+
+CHANGES MADE:
+1. Added DEMO_FALLBACK_DATA constants (lines 19-56):
+   - DEMO_OVERVIEW: 45,230 requests, $127.45 cost, 8,940 cache hits, 19.8% hit rate
+   - DEMO_TRENDS: 28 days of cost data (04-01 to 04-28)
+   - DEMO_USERS: 8 employees with realistic usage patterns
+   - DEMO_MODELS: 4 models with call counts and costs
+
+2. Modified loadAll() function (lines 83-115):
+   - Checks if API returns empty data
+   - Falls back to DEMO_* constants when no real data exists
+   - Also uses demo data on fetch error
+   - Ensures full dashboard always renders
+
+3. Removed empty state check (line 184):
+   - Deleted 'if (totalRequests === 0) return <EmptyState />'
+   - Removed EmptyState and Snippet components (35 lines)
+   - Full dashboard now renders immediately with demo data
+
+RESULT:
+- Dashboard always shows full UI with 8 sections
+- Demo data provides realistic numbers for testing/screenshots
+- Real data automatically replaces demo when API returns results
+- 30-second auto-refresh continues to work
+- All navigation buttons functional
+
+File: 780 lines, 50,499 bytes
+TypeScript: ✓ Clean compile, no errors

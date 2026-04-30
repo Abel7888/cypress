@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P1 — Design System</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F8FAFC;
+  --card: #FFFFFF;
+  --border: #E2E8F0;
+  --text: #0F172A;
+  --muted: #64748B;
+  --dim: #94A3B8;
+  --primary: #3B82F6;
+  --green: #10B981;
+  --amber: #F59E0B;
+  --red: #EF4444;
+  --purple: #8B5CF6;
+  --cyan: #06B6D4;
+  --font-ui: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); font-family: var(--font-ui); color: var(--text); padding: 40px; }
+h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+h2 { font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 32px 0 16px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 12px; margin-bottom: 24px; }
+.stat { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+.stat-label { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+.stat-val { font-size: 24px; font-weight: 700; font-family: var(--font-mono); margin-bottom: 4px; }
+.stat-sub { font-size: 11px; color: var(--muted); }
+.badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+.badge-green { background: #D1FAE5; color: #065F46; }
+.badge-amber { background: #FEF3C7; color: #92400E; }
+.badge-red { background: #FEE2E2; color: #991B1B; }
+.badge-blue { background: #DBEAFE; color: #1E40AF; }
+.badge-purple { background: #EDE9FE; color: #5B21B6; }
+.progress-wrap { background: #F1F5F9; border-radius: 6px; height: 8px; overflow: hidden; width: 100%; }
+.progress-fill { height: 100%; border-radius: 6px; transition: width 0.6s ease; }
+.colors { display: flex; gap: 8px; flex-wrap: wrap; }
+.color-chip { width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--border); }
+.section { margin-bottom: 40px; }
+.font-demo { margin-bottom: 16px; }
+.font-demo p { margin-bottom: 4px; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>Prompt 1 — Design System</h1>
+<p style="color:var(--muted);margin-bottom:32px">Light theme, Inter UI + JetBrains Mono numbers, semantic color system</p>
+
+<div class="section">
+  <h2>Color Palette</h2>
+  <div class="colors">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div class="color-chip" style="background:#3B82F6"></div>
+      <span style="font-size:10px;color:var(--muted)">primary</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div class="color-chip" style="background:#10B981"></div>
+      <span style="font-size:10px;color:var(--muted)">green</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div class="color-chip" style="background:#F59E0B"></div>
+      <span style="font-size:10px;color:var(--muted)">amber</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div class="color-chip" style="background:#EF4444"></div>
+      <span style="font-size:10px;color:var(--muted)">red</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div class="color-chip" style="background:#8B5CF6"></div>
+      <span style="font-size:10px;color:var(--muted)">purple</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div class="color-chip" style="background:#06B6D4"></div>
+      <span style="font-size:10px;color:var(--muted)">cyan</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div class="color-chip" style="background:#F8FAFC;"></div>
+      <span style="font-size:10px;color:var(--muted)">bg</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div class="color-chip" style="background:#FFFFFF"></div>
+      <span style="font-size:10px;color:var(--muted)">card</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Typography</h2>
+  <div class="font-demo">
+    <p>Inter — UI text</p>
+    <div style="font-family:'Inter',sans-serif">
+      <div style="font-size:24px;font-weight:700;color:var(--text)">Dashboard Overview</div>
+      <div style="font-size:15px;font-weight:500;color:var(--text)">Real-time AI cost monitoring</div>
+      <div style="font-size:13px;color:var(--muted)">Today's spend is tracking 34% under last month</div>
+      <div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em">Total spend · this month</div>
+    </div>
+  </div>
+  <div class="font-demo">
+    <p>JetBrains Mono — numbers, keys, costs</p>
+    <div style="font-family:'JetBrains Mono',monospace">
+      <div style="font-size:28px;font-weight:700;color:#10B981">+$113.40</div>
+      <div style="font-size:20px;font-weight:700;color:#3B82F6">$89.40</div>
+      <div style="font-size:14px;color:var(--muted)">tg-32d683187f06239d8471ac7321415a6f</div>
+      <div style="font-size:12px;color:var(--dim)">$0.000043 · saved 94%</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Stat Cards</h2>
+  <div class="grid">
+    <div class="stat">
+      <div class="stat-label">Total Spend</div>
+      <div class="stat-val" style="color:#3B82F6">$89.40</div>
+      <div class="stat-sub">This month</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Total Requests</div>
+      <div class="stat-val" style="color:#06B6D4">2,847</div>
+      <div class="stat-sub">API calls + cache</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Cache Hit Rate</div>
+      <div class="stat-val" style="color:#10B981">34.1%</div>
+      <div class="stat-sub">847 free responses</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Routed Calls</div>
+      <div class="stat-val" style="color:#8B5CF6">1,203</div>
+      <div class="stat-sub">to cheaper models</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Badges</h2>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <span class="badge badge-green">Healthy</span>
+    <span class="badge badge-amber">Warning</span>
+    <span class="badge badge-red">Blocked</span>
+    <span class="badge badge-blue">Active</span>
+    <span class="badge badge-purple">Routed</span>
+    <span class="badge" style="background:#F0FDF4;color:#166534">Operational</span>
+    <span class="badge" style="background:#FEF2F2;color:#991B1B">Incident</span>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Progress Bars</h2>
+  <div style="display:flex;flex-direction:column;gap:12px;max-width:400px">
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px"><span>Sarah — healthy</span><span>45%</span></div>
+      <div class="progress-wrap"><div class="progress-fill" style="width:45%;background:#10B981"></div></div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px"><span>Marcus — warning</span><span>91%</span></div>
+      <div class="progress-wrap"><div class="progress-fill" style="width:91%;background:#F59E0B"></div></div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px"><span>Jamie — blocked</span><span>100%</span></div>
+      <div class="progress-wrap"><div class="progress-fill" style="width:100%;background:#EF4444"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Card Component</h2>
+  <div class="card" style="max-width:400px">
+    <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Card Title</div>
+    <div style="font-size:11px;color:var(--dim);margin-bottom:16px">Card subtitle goes here</div>
+    <p style="font-size:13px;color:var(--muted);line-height:1.6">White background, 1px border, 12px radius, subtle shadow. Clean and enterprise-grade.</p>
+  </div>
+</div>
+
+</body>
+</html>

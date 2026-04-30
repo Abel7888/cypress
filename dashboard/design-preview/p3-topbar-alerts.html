@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>P3 — Topbar & Alert Bar</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#F8FAFC;font-family:'Inter',sans-serif}
+.topbar{height:56px;background:#fff;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:10}
+.topbar-left h1{font-size:15px;font-weight:700;color:#0F172A;margin:0}
+.topbar-left p{font-size:11px;color:#94A3B8;margin:0}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;border:none}
+.btn-blue{background:#3B82F6;color:#fff}
+.btn-outline{background:#fff;border:1px solid #E2E8F0;color:#64748B}
+.btn-ask{background:#EFF6FF;border:1px solid #BFDBFE;color:#1D4ED8;font-weight:600}
+.live-pill{display:flex;align-items:center;gap:6px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:6px;padding:5px 10px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#10B981}
+.live-label{font-size:11px;font-weight:600;color:#065F46}
+.date{font-size:11px;color:#94A3B8}
+.alert-bar{background:#FFFBEB;border-bottom:1px solid #FDE68A;padding:10px 24px;display:flex;align-items:center;gap:12px}
+.alert-bar.red{background:#FFF5F5;border-bottom-color:#FECACA}
+.alert-icon{font-size:14px;flex-shrink:0}
+.alert-text{font-size:13px;color:#92400E;flex:1}
+.alert-text strong{font-weight:600}
+.alert-actions{display:flex;gap:8px;flex-shrink:0}
+.alert-action{background:none;border:1px solid #FDE68A;border-radius:6px;color:#92400E;font-size:12px;font-weight:500;padding:4px 12px;cursor:pointer;font-family:'Inter',sans-serif}
+.alert-dismiss{background:none;border:none;color:#94A3B8;font-size:16px;cursor:pointer;padding:0 4px;line-height:1}
+.content{padding:24px;max-width:900px;margin:0 auto}
+h2{font-size:13px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;margin:32px 0 16px}
+.demo-section{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:20px;margin-bottom:20px}
+.demo-section p{font-size:13px;color:#64748B;line-height:1.6}
+.demo-section ul{font-size:13px;color:#64748B;line-height:2;padding-left:20px;margin-top:8px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>Overview</h1>
+    <p>Real-time AI cost monitoring · Acme Corp</p>
+  </div>
+  <div class="topbar-right">
+    <button class="btn btn-ask">✦ Ask</button>
+    <button class="btn btn-blue">+ Add Employee</button>
+    <button class="btn btn-outline">⬇ Export</button>
+    <button class="btn btn-outline">📋 Copy Proxy URL</button>
+    <div class="live-pill"><div class="live-dot"></div><div class="live-label">Live</div></div>
+    <div class="date">Apr 26, 2026</div>
+  </div>
+</div>
+
+<div class="alert-bar">
+  <div class="alert-icon">⚠</div>
+  <div class="alert-text"><strong>Marcus</strong> has used 91% of his daily budget — 4 minutes ago</div>
+  <div class="alert-actions">
+    <button class="alert-action">Adjust Budget →</button>
+    <button class="alert-dismiss">×</button>
+  </div>
+</div>
+
+<div class="alert-bar" style="background:#FFF5F5;border-bottom-color:#FECACA">
+  <div class="alert-icon">🔴</div>
+  <div class="alert-text" style="color:#991B1B"><strong>Jamie</strong> has been blocked — daily budget reached — 12 minutes ago</div>
+  <div class="alert-actions">
+    <button class="alert-action" style="border-color:#FECACA;color:#991B1B">Reset Budget →</button>
+    <button class="alert-dismiss">×</button>
+  </div>
+</div>
+
+<div class="content">
+  <h2>Prompt 3 — Topbar & Alert Bar</h2>
+
+  <div class="demo-section">
+    <p><strong>Topbar</strong> — white background, sticky, 56px height. Left shows page title and subtitle. Right shows:</p>
+    <ul>
+      <li>✦ Ask button — blue tint, triggers AI assistant panel</li>
+      <li>+ Add Employee — blue filled, primary action</li>
+      <li>⬇ Export — gray outline</li>
+      <li>📋 Copy Proxy URL — gray outline</li>
+      <li>Live pill — green dot, always visible</li>
+      <li>Date — muted, far right</li>
+    </ul>
+  </div>
+
+  <div class="demo-section">
+    <p><strong>Alert bar</strong> — renders between topbar and content. Amber for warning (70-99%), red for blocked (100%). Each alert is dismissible. Stacks if multiple employees need attention. Pulls from live budget state — disappears when resolved.</p>
+  </div>
+</div>
+
+</body>
+</html>

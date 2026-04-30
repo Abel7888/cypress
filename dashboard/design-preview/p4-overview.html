@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>P4 — Overview Page</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#F8FAFC;font-family:'Inter',sans-serif;color:#0F172A;padding:24px}
+.card{background:#fff;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);padding:20px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600;color:#0F172A;margin-bottom:3px}
+.card-sub{font-size:11px;color:#94A3B8;margin-bottom:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+.stat{background:#fff;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);padding:16px}
+.stat-label{font-size:10px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
+.stat-val{font-size:24px;font-weight:700;font-family:'JetBrains Mono',monospace;margin-bottom:4px}
+.stat-sub{font-size:11px;color:#64748B}
+.roi-card{background:#fff;border:1px solid #E2E8F0;border-left:4px solid #10B981;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);padding:20px;margin-bottom:16px}
+.roi-header{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.roi-title{font-size:11px;font-weight:700;color:#10B981;text-transform:uppercase;letter-spacing:0.08em}
+.roi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.roi-col{text-align:center;padding:14px;background:#F8FAFC;border-radius:10px}
+.roi-label{font-size:10px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
+.roi-val{font-size:24px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.setup-bar{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:16px}
+.setup-label{font-size:13px;font-weight:600;color:#0F172A;white-space:nowrap}
+.setup-steps{display:flex;gap:8px;flex:1;flex-wrap:wrap}
+.step-chip{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;border:1px solid #E2E8F0;cursor:pointer}
+.step-done{background:#F0FDF4;border-color:#BBF7D0;color:#065F46}
+.step-todo{background:#fff;color:#64748B}
+.forecast-strip{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:12px 16px;margin-top:12px;display:flex;justify-content:space-between;align-items:center}
+.forecast-val{font-size:15px;font-weight:700;color:#065F46;font-family:'JetBrains Mono',monospace}
+.forecast-sub{font-size:11px;color:#10B981}
+.forecast-label{font-size:12px;color:#64748B}
+.feed-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F1F5F9}
+.feed-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.feed-name{font-size:12px;font-weight:500;color:#0F172A}
+.feed-model{font-size:11px;color:#94A3B8;font-family:'JetBrains Mono',monospace}
+.feed-right{text-align:right;margin-left:auto}
+.feed-cost{font-size:11px;font-family:'JetBrains Mono',monospace}
+.feed-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px}
+svg.chart{width:100%;height:100px}
+</style>
+</head>
+<body>
+
+<div class="setup-bar">
+  <div class="setup-label">Setup 3/5 complete</div>
+  <div class="setup-steps">
+    <div class="step-chip step-done">✓ OpenAI key added</div>
+    <div class="step-chip step-done">✓ First employee created</div>
+    <div class="step-chip step-done">✓ First API call made</div>
+    <div class="step-chip step-todo">→ Set alert email</div>
+    <div class="step-chip step-todo">→ Add Slack webhook</div>
+  </div>
+</div>
+
+<div class="roi-card">
+  <div class="roi-header">
+    <div style="width:8px;height:8px;border-radius:50%;background:#10B981"></div>
+    <div class="roi-title">Monthly ROI Summary</div>
+  </div>
+  <div class="roi-grid">
+    <div class="roi-col">
+      <div class="roi-label">TokenGuard Fee</div>
+      <div class="roi-val" style="color:#94A3B8">$199</div>
+      <div style="font-size:11px;color:#94A3B8;margin-top:4px">Monthly subscription</div>
+    </div>
+    <div class="roi-col">
+      <div class="roi-label">AI Costs Saved</div>
+      <div class="roi-val" style="color:#06B6D4">$312.40</div>
+      <div style="font-size:11px;color:#64748B;margin-top:4px">Routing + caching</div>
+    </div>
+    <div class="roi-col" style="background:#F0FDF4;border:1px solid #BBF7D0">
+      <div class="roi-label" style="color:#065F46">Net in Your Pocket</div>
+      <div class="roi-val" style="color:#10B981">+$113.40</div>
+      <div style="font-size:11px;color:#10B981;margin-top:4px">This month</div>
+    </div>
+    <div class="roi-col">
+      <div class="roi-label">ROI Multiple</div>
+      <div class="roi-val" style="color:#8B5CF6">1.6x</div>
+      <div style="font-size:11px;color:#64748B;margin-top:4px">Return on investment</div>
+    </div>
+  </div>
+</div>
+
+<div class="grid4">
+  <div class="stat"><div class="stat-label">Total Spend</div><div class="stat-val" style="color:#3B82F6">$89.40</div><div class="stat-sub">This month</div></div>
+  <div class="stat"><div class="stat-label">Total Requests</div><div class="stat-val" style="color:#06B6D4">2,847</div><div class="stat-sub">API calls + cache</div></div>
+  <div class="stat"><div class="stat-label">Cache Hit Rate</div><div class="stat-val" style="color:#10B981">34.1%</div><div class="stat-sub">847 free responses</div></div>
+  <div class="stat"><div class="stat-label">Routed Calls</div><div class="stat-val" style="color:#8B5CF6">1,203</div><div class="stat-sub">to cheaper models</div></div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Spend over time</div>
+    <div class="card-sub">Daily cost in USD · 7-day trend with forecast</div>
+    <svg class="chart" viewBox="0 0 400 100" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.15"/>
+          <stop offset="100%" stop-color="#3B82F6" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="M0 80 L57 70 L114 60 L171 55 L228 45 L285 35 L342 28 L400 20 L400 100 L0 100 Z" fill="url(#g1)"/>
+      <path d="M0 80 L57 70 L114 60 L171 55 L228 45 L285 35 L342 28 L400 20" fill="none" stroke="#3B82F6" stroke-width="2"/>
+      <path d="M342 28 L400 15" fill="none" stroke="#10B981" stroke-width="1.5" stroke-dasharray="4,4"/>
+      <circle cx="342" cy="28" r="3" fill="#3B82F6"/>
+      <text x="350" y="14" font-size="9" fill="#10B981" font-family="JetBrains Mono">forecast →</text>
+    </svg>
+    <div class="forecast-strip">
+      <div>
+        <div class="forecast-label">At this pace →</div>
+        <div class="forecast-val">$127 this month</div>
+      </div>
+      <div style="text-align:right">
+        <div class="forecast-sub">↓ 34% under last month</div>
+        <div style="font-size:10px;color:#94A3B8;margin-top:2px">On track · no action needed</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Live activity</div>
+    <div class="card-sub">Last 6 calls · auto-refreshing</div>
+    <div class="feed-item">
+      <div class="feed-dot" style="background:#D1FAE5;color:#065F46">↓</div>
+      <div><div class="feed-name">Sarah</div><div class="feed-model">gpt-4o → gpt-4o-mini</div></div>
+      <div class="feed-right"><div class="feed-badge" style="background:#D1FAE5;color:#065F46">routed</div><div class="feed-cost" style="color:#10B981">$0.000043</div></div>
+    </div>
+    <div class="feed-item">
+      <div class="feed-dot" style="background:#DBEAFE;color:#1E40AF">⚡</div>
+      <div><div class="feed-name">Jamie</div><div class="feed-model">claude-haiku-4-5</div></div>
+      <div class="feed-right"><div class="feed-badge" style="background:#DBEAFE;color:#1E40AF">cached</div><div class="feed-cost" style="color:#3B82F6">$0.000000</div></div>
+    </div>
+    <div class="feed-item">
+      <div class="feed-dot" style="background:#FEE2E2;color:#991B1B">⛔</div>
+      <div><div class="feed-name">Marcus</div><div class="feed-model">gpt-4o</div></div>
+      <div class="feed-right"><div class="feed-badge" style="background:#FEE2E2;color:#991B1B">blocked</div><div class="feed-cost" style="color:#EF4444">budget</div></div>
+    </div>
+    <div class="feed-item">
+      <div class="feed-dot" style="background:#D1FAE5;color:#065F46">↓</div>
+      <div><div class="feed-name">Sarah</div><div class="feed-model">gpt-4o → gpt-4o-mini</div></div>
+      <div class="feed-right"><div class="feed-badge" style="background:#D1FAE5;color:#065F46">routed</div><div class="feed-cost" style="color:#10B981">$0.000038</div></div>
+    </div>
+    <div class="feed-item">
+      <div class="feed-dot" style="background:#EDE9FE;color:#5B21B6">→</div>
+      <div><div class="feed-name">Jamie</div><div class="feed-model">claude-sonnet-4-5</div></div>
+      <div class="feed-right"><div class="feed-badge" style="background:#EDE9FE;color:#5B21B6">direct</div><div class="feed-cost" style="color:#8B5CF6">$0.000120</div></div>
+    </div>
+    <div class="feed-item" style="border:none">
+      <div class="feed-dot" style="background:#D1FAE5;color:#065F46">↓</div>
+      <div><div class="feed-name">Sarah</div><div class="feed-model">gpt-4o → gpt-4o-mini</div></div>
+      <div class="feed-right"><div class="feed-badge" style="background:#D1FAE5;color:#065F46">routed</div><div class="feed-cost" style="color:#10B981">$0.000041</div></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

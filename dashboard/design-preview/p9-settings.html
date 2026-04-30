@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>P9 — Settings & Cleanup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#F8FAFC;font-family:'Inter',sans-serif;color:#0F172A;padding:24px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.card{background:#fff;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);padding:20px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600;color:#0F172A;margin-bottom:3px}
+.card-sub{font-size:11px;color:#94A3B8;margin-bottom:16px}
+.config-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F1F5F9;font-size:13px}
+.config-row:last-child{border:none}
+.config-label{color:#64748B}
+.config-val{font-family:'JetBrains Mono',monospace;color:#0F172A;font-size:12px}
+.badge{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px}
+.badge-green{background:#D1FAE5;color:#065F46}
+.notif-section{margin-bottom:20px}
+.notif-label{font-size:12px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px}
+.input-group{margin-bottom:12px}
+.input-label{font-size:12px;color:#64748B;margin-bottom:5px;display:block}
+.input{width:100%;padding:9px 14px;border:1px solid #E2E8F0;border-radius:8px;font-size:13px;color:#0F172A;background:#fff;outline:none;font-family:'Inter',sans-serif}
+.input:focus{border-color:#3B82F6}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F1F5F9}
+.toggle-row:last-child{border:none}
+.toggle-label{font-size:13px;color:#0F172A}
+.toggle-sub{font-size:11px;color:#94A3B8;margin-top:2px}
+.toggle{width:36px;height:20px;border-radius:10px;background:#10B981;position:relative;cursor:pointer;flex-shrink:0}
+.toggle-off{background:#E2E8F0}
+.toggle::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:2px;right:2px;transition:right 0.2s}
+.toggle-off::after{right:auto;left:2px}
+.save-btn{background:#3B82F6;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;padding:9px 20px;cursor:pointer;font-family:'Inter',sans-serif;margin-top:16px}
+.cleanup-list{display:flex;flex-direction:column;gap:8px}
+.cleanup-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:8px;font-size:13px}
+.cleanup-done{background:#F0FDF4;border:1px solid #BBF7D0}
+.cleanup-icon{flex-shrink:0;margin-top:1px}
+.cleanup-text{color:#065F46}
+.cleanup-text strong{font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Proxy Configuration</div>
+    <div class="card-sub">Connection details · production</div>
+    <div class="config-row">
+      <span class="config-label">Proxy URL</span>
+      <span class="config-val">api.tokenguard.io</span>
+    </div>
+    <div class="config-row">
+      <span class="config-label">Dashboard</span>
+      <span class="config-val">app.tokenguard.io</span>
+    </div>
+    <div class="config-row">
+      <span class="config-label">Cache</span>
+      <span class="config-val">Redis · Railway Production</span>
+    </div>
+    <div class="config-row">
+      <span class="config-label">ClickHouse</span>
+      <span class="config-val">us-east-1.aws.clickhouse.cloud</span>
+    </div>
+    <div class="config-row">
+      <span class="config-label">Version</span>
+      <span class="config-val">v1.0.0 · Production</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Routing Configuration</div>
+    <div class="card-sub">Active model selection rules</div>
+    <div class="config-row">
+      <span class="config-label">Auto routing</span>
+      <span class="badge badge-green">Enabled</span>
+    </div>
+    <div class="config-row">
+      <span class="config-label">Simple → gpt-4o-mini</span>
+      <span class="badge badge-green">Active</span>
+    </div>
+    <div class="config-row">
+      <span class="config-label">Complex → gpt-4o</span>
+      <span class="badge badge-green">Active</span>
+    </div>
+    <div class="config-row">
+      <span class="config-label">Keyword detection</span>
+      <span class="badge badge-green">Active</span>
+    </div>
+    <div class="config-row">
+      <span class="config-label">Budget enforcement</span>
+      <span class="badge badge-green">Active</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Notifications</div>
+  <div class="card-sub">Alert channels and thresholds · pulled from onboarding</div>
+
+  <div class="notif-section">
+    <div class="notif-label">Alert Channels</div>
+    <div class="input-group">
+      <label class="input-label">Alert Email</label>
+      <input class="input" type="email" value="admin@acme.com" />
+    </div>
+    <div class="input-group">
+      <label class="input-label">Slack Webhook URL</label>
+      <input class="input" type="text" value="https://hooks.slack.com/services/T0..." />
+    </div>
+  </div>
+
+  <div class="notif-section">
+    <div class="notif-label">Alert Thresholds</div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Alert at 70%</div>
+        <div class="toggle-sub">Early warning — employee still working</div>
+      </div>
+      <div class="toggle"></div>
+    </div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Alert at 90%</div>
+        <div class="toggle-sub">Urgent — almost blocked</div>
+      </div>
+      <div class="toggle"></div>
+    </div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Alert at 100% (block notification)</div>
+        <div class="toggle-sub">Notify when employee is blocked</div>
+      </div>
+      <div class="toggle toggle-off"></div>
+    </div>
+  </div>
+
+  <button class="save-btn">Save notification settings</button>
+</div>
+
+<div class="card">
+  <div class="card-title">Cleanup Summary — Prompt 9</div>
+  <div class="card-sub">Changes made to remove demo wiring</div>
+  <div class="cleanup-list">
+    <div class="cleanup-item cleanup-done">
+      <div class="cleanup-icon">✓</div>
+      <div class="cleanup-text">Removed <strong>DEMO_EMPLOYEES</strong> array and all hardcoded demo keys</div>
+    </div>
+    <div class="cleanup-item cleanup-done">
+      <div class="cleanup-icon">✓</div>
+      <div class="cleanup-text">Removed <strong>DemoControlPanel</strong> component entirely</div>
+    </div>
+    <div class="cleanup-item cleanup-done">
+      <div class="cleanup-icon">✓</div>
+      <div class="cleanup-text">Removed hardcoded fallback key from <strong>MasterKeyCard</strong> — shows "No key found" if localStorage empty</div>
+    </div>
+    <div class="cleanup-item cleanup-done">
+      <div class="cleanup-icon">✓</div>
+      <div class="cleanup-text">Changed "Cache: fakeredis (in-memory)" → <strong>Redis · Railway Production</strong></div>
+    </div>
+    <div class="cleanup-item cleanup-done">
+      <div class="cleanup-icon">✓</div>
+      <div class="cleanup-text">Changed "Version: 0.9.0 — Week 9" → <strong>v1.0.0 · Production</strong></div>
+    </div>
+    <div class="cleanup-item cleanup-done">
+      <div class="cleanup-icon">✓</div>
+      <div class="cleanup-text">Cleaned all corrupted comment characters (Î"Ã¶Ã‡) → clean <strong>// ─────</strong> dividers</div>
+    </div>
+    <div class="cleanup-item cleanup-done">
+      <div class="cleanup-icon">✓</div>
+      <div class="cleanup-text">Added Notifications card to Settings with alert email, Slack webhook, threshold toggles</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

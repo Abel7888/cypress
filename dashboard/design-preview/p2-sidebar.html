@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>P2 — Sidebar</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#F8FAFC;font-family:'Inter',sans-serif;display:flex;min-height:100vh}
+.sidebar{width:240px;background:#fff;border-right:1px solid #E2E8F0;display:flex;flex-direction:column;min-height:100vh;flex-shrink:0}
+.sb-logo{padding:18px 16px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#3B82F6,#8B5CF6);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;flex-shrink:0}
+.logo-text{font-size:14px;font-weight:700;color:#0F172A}
+.logo-sub{font-size:10px;color:#94A3B8;letter-spacing:0.06em}
+.net-pill{margin:12px 14px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between}
+.net-label{font-size:11px;color:#64748B}
+.net-val{font-size:14px;font-weight:700;color:#10B981;font-family:'JetBrains Mono',monospace}
+.spend-widget{padding:12px 16px;border-bottom:1px solid #E2E8F0}
+.widget-label{font-size:9px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
+.spend-val{font-size:22px;font-weight:700;color:#0F172A;font-family:'JetBrains Mono',monospace;margin-bottom:2px}
+.spend-sub{font-size:11px;color:#64748B;margin-bottom:8px}
+.bar-track{background:#F1F5F9;border-radius:4px;height:5px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px}
+.bar-meta{display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:#94A3B8}
+.nav-section{padding:12px 10px 0}
+.nav-label{font-size:9px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em;padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:6px;border:none;background:transparent;color:#64748B;font-size:13px;width:100%;cursor:pointer;text-align:left;margin-bottom:1px;position:relative;font-family:'Inter',sans-serif}
+.nav-item.active{color:#3B82F6;font-weight:600;background:#EFF6FF}
+.nav-item.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:2px;background:#3B82F6;border-radius:0 2px 2px 0}
+.nav-icon{width:16px;text-align:center;font-size:13px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:#FEF3C7;color:#92400E;font-size:9px;font-weight:700;padding:2px 7px;border-radius:999px}
+.section-divider{border:none;border-top:1px solid #E2E8F0;margin:10px 0}
+.team-section{padding:10px 16px;border-top:1px solid #E2E8F0}
+.team-row{display:flex;align-items:center;gap:8px;padding:4px 0}
+.team-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.team-name{font-size:12px;color:#0F172A;flex:1}
+.team-spend{font-size:12px;color:#0F172A;font-family:'JetBrains Mono',monospace}
+.team-eff{font-size:10px;color:#94A3B8;margin-left:4px}
+.provider-section{padding:10px 16px;border-top:1px solid #E2E8F0}
+.provider-row{display:flex;align-items:center;gap:8px;padding:3px 0}
+.provider-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.provider-name{font-size:12px;color:#64748B;flex:1}
+.provider-status{font-size:10px;color:#10B981}
+.sb-bottom{padding:12px;border-top:1px solid #E2E8F0;margin-top:auto}
+.proxy-pill{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.proxy-dot{width:7px;height:7px;border-radius:50%;background:#10B981}
+.proxy-info{flex:1}
+.proxy-label{font-size:11px;font-weight:600;color:#065F46}
+.proxy-sub{font-size:9px;color:#94A3B8}
+.ticker{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:8px 10px}
+.ticker-label{font-size:9px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
+.ticker-main{font-size:11px;color:#0F172A;font-family:'JetBrains Mono',monospace;line-height:1.5}
+.ticker-sub{font-size:10px;color:#10B981}
+.main{flex:1;padding:40px;background:#F8FAFC}
+.main h1{font-size:20px;font-weight:700;color:#0F172A;margin-bottom:8px}
+.main p{color:#64748B;font-size:14px}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sb-logo">
+    <div class="logo-icon">🛡</div>
+    <div>
+      <div class="logo-text">TokenGuard</div>
+      <div class="logo-sub">AI COST CONTROL</div>
+    </div>
+  </div>
+
+  <div class="net-pill">
+    <div class="net-label">Net saved this month</div>
+    <div class="net-val">+$113.40</div>
+  </div>
+
+  <div class="spend-widget">
+    <div class="widget-label">Today's Spend</div>
+    <div class="spend-val">$12.40</div>
+    <div class="spend-sub">Resets in 4h 22m</div>
+    <div class="bar-track"><div class="bar-fill" style="width:67%;background:#F59E0B"></div></div>
+    <div class="bar-meta"><span>67% of monthly budget</span><span>$200 limit</span></div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Platform</div>
+    <button class="nav-item active"><span class="nav-icon">⚡</span>Overview</button>
+    <button class="nav-item"><span class="nav-icon">📊</span>Cost Analysis</button>
+    <button class="nav-item"><span class="nav-icon">💰</span>Budgets <span class="nav-badge">⚠ 2</span></button>
+    <button class="nav-item"><span class="nav-icon">📈</span>ROI Report</button>
+    <button class="nav-item"><span class="nav-icon">↔</span>Routing</button>
+    <button class="nav-item"><span class="nav-icon">👥</span>Team</button>
+    <button class="nav-item"><span class="nav-icon">⚙</span>Settings</button>
+  </div>
+
+  <hr class="section-divider" style="margin:10px 16px">
+
+  <div class="team-section">
+    <div class="widget-label">Team</div>
+    <div class="team-row">
+      <div class="team-dot" style="background:#10B981"></div>
+      <div class="team-name">Sarah</div>
+      <div class="team-spend">$8.20</div>
+      <div class="team-eff">82%</div>
+    </div>
+    <div class="team-row">
+      <div class="team-dot" style="background:#F59E0B"></div>
+      <div class="team-name">Marcus ⚠</div>
+      <div class="team-spend">$19.40</div>
+      <div class="team-eff">12%</div>
+    </div>
+    <div class="team-row">
+      <div class="team-dot" style="background:#10B981"></div>
+      <div class="team-name">Jamie</div>
+      <div class="team-spend">$2.10</div>
+      <div class="team-eff">61%</div>
+    </div>
+  </div>
+
+  <div class="provider-section">
+    <div class="widget-label">Providers</div>
+    <div class="provider-row">
+      <div class="provider-dot" style="background:#10B981"></div>
+      <div class="provider-name">OpenAI</div>
+      <div class="provider-status">Operational</div>
+    </div>
+    <div class="provider-row">
+      <div class="provider-dot" style="background:#10B981"></div>
+      <div class="provider-name">Anthropic</div>
+      <div class="provider-status">Operational</div>
+    </div>
+    <div class="provider-row">
+      <div class="provider-dot" style="background:#EF4444"></div>
+      <div class="provider-name">Google</div>
+      <div class="provider-status" style="color:#EF4444">Incident</div>
+    </div>
+  </div>
+
+  <div class="sb-bottom">
+    <div class="proxy-pill">
+      <div class="proxy-dot"></div>
+      <div class="proxy-info">
+        <div class="proxy-label">Proxy Live · 12ms</div>
+        <div class="proxy-sub">Railway · Production</div>
+      </div>
+    </div>
+    <div class="ticker">
+      <div class="ticker-label">Last Call · 2s ago</div>
+      <div class="ticker-main">Sarah · gpt-4o → mini</div>
+      <div class="ticker-sub">$0.000043 · routed ↓ saved 94%</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <h1>Prompt 2 — Sidebar Preview</h1>
+  <p>The sidebar to the left shows the full redesign: net benefit pill, spend widget with countdown, nav with alert badge, team status with routing efficiency %, provider health dots, proxy pill, and live call ticker.</p>
+</div>
+
+</body>
+</html>

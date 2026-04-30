@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>P6 — Team Page</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#F8FAFC;font-family:'Inter',sans-serif;color:#0F172A;padding:24px}
+.card{background:#fff;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);padding:20px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600;color:#0F172A;margin-bottom:3px}
+.card-sub{font-size:11px;color:#94A3B8;margin-bottom:16px}
+.top-bar{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.search{flex:1;padding:8px 14px;border:1px solid #E2E8F0;border-radius:8px;font-size:13px;color:#0F172A;background:#fff;outline:none;font-family:'Inter',sans-serif}
+.search::placeholder{color:#94A3B8}
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;border:none}
+.btn-blue{background:#3B82F6;color:#fff}
+.leaderboard{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.leader-card{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.leader-card.gold{border-left:4px solid #F59E0B}
+.leader-card.silver{border-left:4px solid #94A3B8}
+.leader-card.bronze{border-left:4px solid #CD7C2F}
+.leader-rank{font-size:24px;font-weight:800;margin-bottom:4px}
+.leader-name{font-size:14px;font-weight:600;color:#0F172A;margin-bottom:2px}
+.leader-role{font-size:12px;color:#64748B;margin-bottom:10px}
+.leader-eff{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;color:#10B981}
+.leader-saved{font-size:12px;color:#64748B;margin-top:2px}
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.06em;text-align:left;padding:0 12px 12px;font-weight:600}
+td{padding:12px;border-top:1px solid #F1F5F9;font-size:13px;vertical-align:middle}
+tr:hover td{background:#F8FAFC}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:8px}
+.badge{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px}
+.badge-green{background:#D1FAE5;color:#065F46}
+.badge-amber{background:#FEF3C7;color:#92400E}
+.badge-red{background:#FEE2E2;color:#991B1B}
+.anomaly{background:#FEF3C7;color:#92400E;font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px;margin-left:6px}
+.eff-wrap{display:flex;align-items:center;gap:8px}
+.eff-bar-track{background:#F1F5F9;border-radius:4px;height:5px;overflow:hidden;width:60px}
+.eff-bar{height:100%;border-radius:4px}
+.budget-bar-track{background:#F1F5F9;border-radius:4px;height:5px;overflow:hidden;width:60px}
+.budget-bar{height:100%;border-radius:4px}
+.countdown{font-size:11px;color:#64748B;font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <div class="card-title">Top Performers This Month</div>
+  </div>
+  <div class="card-sub">Ranked by routing efficiency — who's generating the most savings</div>
+  <div class="leaderboard">
+    <div class="leader-card gold">
+      <div class="leader-rank" style="color:#F59E0B">🥇 1st</div>
+      <div class="leader-name">Sarah Chen</div>
+      <div class="leader-role">Engineering</div>
+      <div class="leader-eff">82%</div>
+      <div class="leader-saved">efficient · $62.10 saved</div>
+    </div>
+    <div class="leader-card silver">
+      <div class="leader-rank" style="color:#94A3B8">🥈 2nd</div>
+      <div class="leader-name">Jamie Park</div>
+      <div class="leader-role">Design</div>
+      <div class="leader-eff" style="color:#3B82F6">61%</div>
+      <div class="leader-saved">efficient · $18.40 saved</div>
+    </div>
+    <div class="leader-card bronze">
+      <div class="leader-rank" style="color:#CD7C2F">🥉 3rd</div>
+      <div class="leader-name">Marcus Webb</div>
+      <div class="leader-role">Sales</div>
+      <div class="leader-eff" style="color:#F59E0B">12%</div>
+      <div class="leader-saved">efficient · $8.90 saved</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="top-bar">
+    <input class="search" placeholder="Search employees by name or role..." />
+    <button class="btn btn-blue">+ Add Employee</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Employee</th>
+        <th>Calls Today</th>
+        <th>Routing Eff.</th>
+        <th>Cache Rate</th>
+        <th>Budget Used</th>
+        <th>Status</th>
+        <th>Resets In</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="color:#94A3B8;font-family:'JetBrains Mono',monospace">1</td>
+        <td>
+          <div style="display:flex;align-items:center">
+            <span class="dot" style="background:#10B981"></span>
+            <div>
+              <div style="font-weight:500">Sarah Chen</div>
+              <div style="font-size:11px;color:#94A3B8">Engineering</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-family:'JetBrains Mono',monospace;color:#64748B">847</td>
+        <td>
+          <div class="eff-wrap">
+            <div class="eff-bar-track"><div class="eff-bar" style="width:82%;background:#10B981"></div></div>
+            <span style="font-size:12px;color:#10B981;font-family:'JetBrains Mono',monospace">82%</span>
+          </div>
+        </td>
+        <td style="font-family:'JetBrains Mono',monospace;color:#3B82F6">34%</td>
+        <td>
+          <div class="eff-wrap">
+            <div class="budget-bar-track"><div class="budget-bar" style="width:45%;background:#10B981"></div></div>
+            <span style="font-size:12px;color:#64748B;font-family:'JetBrains Mono',monospace">45%</span>
+          </div>
+        </td>
+        <td><span class="badge badge-green">Healthy</span></td>
+        <td class="countdown">4h 22m</td>
+      </tr>
+      <tr>
+        <td style="color:#94A3B8;font-family:'JetBrains Mono',monospace">2</td>
+        <td>
+          <div style="display:flex;align-items:center">
+            <span class="dot" style="background:#F59E0B"></span>
+            <div>
+              <div style="font-weight:500">Marcus Webb <span class="anomaly">3x normal</span></div>
+              <div style="font-size:11px;color:#94A3B8">Sales</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-family:'JetBrains Mono',monospace;color:#64748B">234</td>
+        <td>
+          <div class="eff-wrap">
+            <div class="eff-bar-track"><div class="eff-bar" style="width:12%;background:#F59E0B"></div></div>
+            <span style="font-size:12px;color:#F59E0B;font-family:'JetBrains Mono',monospace">12%</span>
+          </div>
+        </td>
+        <td style="font-family:'JetBrains Mono',monospace;color:#3B82F6">8%</td>
+        <td>
+          <div class="eff-wrap">
+            <div class="budget-bar-track"><div class="budget-bar" style="width:91%;background:#F59E0B"></div></div>
+            <span style="font-size:12px;color:#F59E0B;font-family:'JetBrains Mono',monospace">91%</span>
+          </div>
+        </td>
+        <td><span class="badge badge-amber">Warning</span></td>
+        <td class="countdown">4h 22m</td>
+      </tr>
+      <tr>
+        <td style="color:#94A3B8;font-family:'JetBrains Mono',monospace">3</td>
+        <td>
+          <div style="display:flex;align-items:center">
+            <span class="dot" style="background:#EF4444"></span>
+            <div>
+              <div style="font-weight:500">Jamie Park</div>
+              <div style="font-size:11px;color:#94A3B8">Design</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-family:'JetBrains Mono',monospace;color:#64748B">340</td>
+        <td>
+          <div class="eff-wrap">
+            <div class="eff-bar-track"><div class="eff-bar" style="width:61%;background:#3B82F6"></div></div>
+            <span style="font-size:12px;color:#3B82F6;font-family:'JetBrains Mono',monospace">61%</span>
+          </div>
+        </td>
+        <td style="font-family:'JetBrains Mono',monospace;color:#3B82F6">41%</td>
+        <td>
+          <div class="eff-wrap">
+            <div class="budget-bar-track"><div class="budget-bar" style="width:100%;background:#EF4444"></div></div>
+            <span style="font-size:12px;color:#EF4444;font-family:'JetBrains Mono',monospace">100%</span>
+          </div>
+        </td>
+        <td><span class="badge badge-red">Blocked</span></td>
+        <td class="countdown" style="color:#EF4444">4h 22m</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+</body>
+</html>
