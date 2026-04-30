@@ -572,7 +572,7 @@ export default function Dashboard() {
                   {blocked ? "Reset Budget →" : "Adjust Budget →"}
                 </button>
                 <button
-                  onClick={() => setDismissedAlerts((prev) => new Set(Array.from(prev).concat([key]))}
+                  onClick={() => setDismissedAlerts((prev) => new Set(Array.from(prev).concat([key])))}
                   style={{ background: "transparent", border: "none", color: "#94A3B8", cursor: "pointer", fontSize: 16, lineHeight: 1 }}
                 >
                   ✕
