@@ -157,7 +157,7 @@ export default function OverviewPage({ setPage }: Props) {
   const blockedUsers = useMemo(() => users.filter(u => getBudgetPctRaw(u) >= 100), [users]);
   const healthyUsers = users.filter(u => getBudgetPctRaw(u) < 70);
   const activityFeed: any[] = useMemo(() => (users
-  const activityFeed = useMemo(() => users
+
     .filter(u => u.api_calls > 0)
     .flatMap((u: any) => [
       ...Array.from({ length: Math.min(u.routed_calls || 0, 2) }, (_, i) => ({
