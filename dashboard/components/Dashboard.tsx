@@ -425,7 +425,7 @@ export default function Dashboard() {
   // AI send
   const sendAssistantMessage = async (text: string) => {
     const userMsg = { role: "user", content: text };
-    setAssistantMessages((prev) => [...prev, userMsg]);
+    setAssistantMessages((prev) => Array.from(prev).concat([ userMsg]);
     setAssistantInput("");
     setAssistantTyping(true);
     try {
@@ -441,9 +441,9 @@ export default function Dashboard() {
       });
       const data = await res.json();
       const reply = data.content?.[0]?.text || "Sorry, I couldn't get a response.";
-      setAssistantMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+      setAssistantMessages((prev) => Array.from(prev).concat([ { role: "assistant", content: reply }]);
     } catch {
-      setAssistantMessages((prev) => [...prev, { role: "assistant", content: "Connection error. Please try again." }]);
+      setAssistantMessages((prev) => Array.from(prev).concat([ { role: "assistant", content: "Connection error. Please try again." }]);
     } finally {
       setAssistantTyping(false);
     }
@@ -572,7 +572,7 @@ export default function Dashboard() {
                   {blocked ? "Reset Budget →" : "Adjust Budget →"}
                 </button>
                 <button
-                  onClick={() => setDismissedAlerts((prev) => new Set([...prev, key]))}
+                  onClick={() => setDismissedAlerts((prev) => new Set(Array.from(prev).concat([key]))}
                   style={{ background: "transparent", border: "none", color: "#94A3B8", cursor: "pointer", fontSize: 16, lineHeight: 1 }}
                 >
                   ✕
@@ -797,6 +797,8 @@ export default function Dashboard() {
     </>
   );
 }
+
+
 
 
 
