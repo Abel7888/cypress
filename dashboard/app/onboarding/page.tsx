@@ -398,14 +398,14 @@ function OnboardingPage() {
     const key = providerInputs[id] || "";
     if (!key.trim()) return;
     setProviderKeys(prev => ({ ...prev, [id]: key }));
-    setSavedProviders(prev => new Set([...prev, id]));
+    setSavedProviders(prev => new Set(Array.from(prev).concat(id)));
     setExpandedProvider(null);
     localStorage.setItem(`tg_provider_${id}`, key);
   };
 
   const removeProvider = (id: string) => {
     setProviderKeys(prev => { const n = { ...prev }; delete n[id]; return n; });
-    setSavedProviders(prev => { const n = new Set(prev); n.delete(id); return n; });
+    setSavedProviders(prev => { const n = new Set(Array.from(prev)); n.delete(id); return n; });
     localStorage.removeItem(`tg_provider_${id}`);
   };
 
