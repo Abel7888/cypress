@@ -170,7 +170,7 @@ export default function OverviewPage({ setPage }: Props) {
       ...((u.blocked_calls || 0) > 0 ? [{ employee: u.employee || u.name || "—", type: "blocked" as const, model: "budget exceeded", cost: 0, secondsAgo: 120 }] : []),
     ])
     .slice(0, 6)) as any[], [users]);
-    .slice(0, 6), [users]);
+
 
   const setupComplete = Object.values(setupSteps).filter(Boolean).length;
   const allSetupDone = setupComplete === 5;
