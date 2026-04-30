@@ -387,7 +387,7 @@ function OnboardingPage() {
   const applyTemplate = () => {
     const tmpl = BUDGET_TEMPLATES.find(t => t.id === selectedTemplate);
     if (!tmpl) return;
-    const targets = selectedEmployees.size > 0 ? [...selectedEmployees] : employees.map((_, i) => i);
+    const targets = selectedEmployees.size > 0 ? Array.from(selectedEmployees) : employees.map((_, i) => i);
     setEmployees(prev => prev.map((emp, i) => targets.includes(i) ? { ...emp, budget: tmpl.amount } : emp));
     setSelectedTemplate("");
     setSelectedEmployees(new Set());
@@ -1142,4 +1142,5 @@ export default function OnboardingPageWrapper() {
     </Suspense>
   );
 }
+
 

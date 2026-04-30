@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { API_BASE, TENANT_ID, HEADERS, DEMO_EMPLOYEES, getModelColor } from "../constants";
+import { API_BASE, TENANT_ID, HEADERS, getModelColor } from "../constants";
 
 // ─── LIGHT PALETTE ───────────────────────────────────────────────────────────
 const C = {
@@ -177,7 +177,7 @@ export default function CostAnalysisPage() {
     try {
       const res = await fetch(`${API_BASE}/v1/chat/completions`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${DEMO_EMPLOYEES[0].key}`, "Content-Type": "application/json", "X-Agent-ID": "playground" },
+        headers: { Authorization: `Bearer ${typeof window !== "undefined" ? localStorage.getItem("tg_api_key") : ""}`, "Content-Type": "application/json", "X-Agent-ID": "playground" },
         body: JSON.stringify({ model: playgroundModel, max_tokens: 300, messages: [{ role: "user", content: playgroundPrompt }] }),
       });
       const data = await res.json();
@@ -681,5 +681,7 @@ export default function CostAnalysisPage() {
     </div>
   );
 }
+
+
 
 
