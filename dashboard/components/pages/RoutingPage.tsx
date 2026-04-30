@@ -103,16 +103,14 @@ export default function RoutingPage() {
       secondsAgo: (i + 1) * (5 + Math.floor(((u.employee || "").charCodeAt(0) || 0) % 30)),
       type: "routed" as const,
     })))
-    .concat(
-      users.filter((u: any) => (u.blocked_calls || 0) > 0).map((u: any) => ({
+    .concat((users.filter((u: any) => (u.blocked_calls || 0) > 0).map((u: any) => ({
         employee: u.employee,
         fromModel: "gpt-4o",
         toModel: "BLOCKED",
         saved: 0,
         secondsAgo: 10 + Math.floor(((u.employee || "").charCodeAt(1) || 0) % 120),
         type: "blocked" as const,
-      }))
-    )
+      })) as any)
     .sort((a, b) => a.secondsAgo - b.secondsAgo)
     .slice(0, 10);
 
@@ -498,6 +496,7 @@ export default function RoutingPage() {
     </div>
   );
 }
+
 
 
 
