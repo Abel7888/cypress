@@ -110,7 +110,7 @@ export default function RoutingPage() {
         saved: 0,
         secondsAgo: 10 + Math.floor(((u.employee || "").charCodeAt(1) || 0) % 120),
         type: "blocked" as const,
-      })) as any)
+      })) as any))
     .sort((a, b) => a.secondsAgo - b.secondsAgo)
     .slice(0, 10);
 
