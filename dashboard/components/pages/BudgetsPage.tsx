@@ -188,9 +188,8 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
     const amounts: Record<string, number> = { Engineering: 50, Marketing: 20, Executive: 9999 };
     const amt = amounts[selectedTemplate] ?? 0;
     const ids = Array.from(selectedEmployees);
-    const { tenantId: applyTenantId, apiKey: applyApiKey } = await getTenantConfig();
     await Promise.all(ids.map((id) =>
-      fetch(`${API_BASE}/api/tenants/${applyTenantId}/keys/${id}/budget`, {
+      fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/keys/${id}/budget`, {
         method: "PATCH",
         headers: { ...HEADERS, "Content-Type": "application/json" },
         body: JSON.stringify({ budget_usd: amt }),
@@ -498,8 +497,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                   <div style={{ fontSize: 11, color: "#6B7FA3", textAlign: "center", maxWidth: 220 }}>Group employees by department and apply budgets at scale. Available on Pro.</div>
                   <button onClick={() => window.location.href = "/settings?upgrade=departments"} style={{ marginTop: 4, background: "#4F8EF7", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, padding: "8px 20px", cursor: "pointer" }}>Upgrade to Pro</button>
                 </div>
-                <div style={{ pointerEvents: "none", opacity: 0.3 }}>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
                 {userBudgets.map((u) => {
                   const id = keyIdOf(u);
                   const sel = selectedEmployees.has(id);
@@ -542,9 +540,6 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
               <button
               </div>
               </div>
-              </div>
-                </div>
-                </div>
                 disabled={!selectedTemplate || selectedEmployees.size === 0}
                 onClick={applyTemplate}
                 style={{
