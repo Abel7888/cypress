@@ -539,6 +539,7 @@ export default function Dashboard() {
             <span style={{ fontSize: 11, color: "#94A3B8" }}>
               {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
             </span>
+            <button onClick={() => { window.location.href = "/signin"; }} style={{ background: "transparent", border: "1px solid #E2E8F0", color: "#64748B", fontSize: 12, padding: "6px 12px", borderRadius: 6, cursor: "pointer" }}>Sign out</button>
           </div>
 
           {/* Alert bar */}
