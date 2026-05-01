@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase";
 
 // ── Light palette — matches OverviewPage.tsx / all dashboard pages ──────────
 const C = {
@@ -336,6 +337,15 @@ function OnboardingPage() {
         localStorage.setItem("tg_company", company.trim());
         localStorage.setItem("tg_slack_webhook", slackWebhook);
         localStorage.setItem("tg_alert_email", alertEmail);
+          try {
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              await supabase.auth.updateUser({
+                data: { tenant_id: data.tenant_id, api_key: keyData.api_key || "" }
+              });
+            }
+          } catch (e) { console.warn("Could not save to user_metadata", e); }
 
         setStep(4); // go to Keys step
       } else {

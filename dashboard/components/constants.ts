@@ -1,3 +1,4 @@
+import { createClient } from "@/lib/supabase";
 // ─── SHARED CONSTANTS ────────────────────────────────────────────────────────
 
 export const COLORS = {
@@ -43,6 +44,25 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
 export const API_KEY = typeof window !== "undefined" ? localStorage.getItem("tg_api_key") : null;
 export const TENANT_ID = typeof window !== "undefined" ? localStorage.getItem("tg_tenant_id") : null;
 export const HEADERS = { Authorization: `Bearer ${API_KEY}` };
+
+// Read tenant config from Supabase session (works across devices)
+// Falls back to localStorage for existing sessions
+export async function getTenantConfig(): Promise<{ apiKey: string | null; tenantId: string | null }> {
+  try {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.user_metadata?.api_key) {
+      return {
+        apiKey: user.user_metadata.api_key,
+        tenantId: user.user_metadata.tenant_id,
+      };
+    }
+  } catch (e) { console.warn("Supabase session read failed", e); }
+  return {
+    apiKey: typeof window !== "undefined" ? localStorage.getItem("tg_api_key") : null,
+    tenantId: typeof window !== "undefined" ? localStorage.getItem("tg_tenant_id") : null,
+  };
+}
 
 // DEMO_EMPLOYEES removed - use real tenant keys
 
