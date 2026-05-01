@@ -553,10 +553,23 @@ export default function Dashboard() {
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981", animation: "pulse 2s infinite", display: "inline-block" }} />
               <span style={{ fontSize: 11, fontWeight: 600, color: "#065F46" }}>Live</span>
             </div>
-            <span style={{ fontSize: 11, color: "#94A3B8" }}>
-              {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-            </span>
-          </div>
+            {userEmail && (
+              <span style={{ fontSize: 11, color: "#64748B", fontWeight: 500 }}>Welcome, {userEmail.split("@")[0]}</span>
+            )}
+            <span style={{ fontSize: 11, color: "#94A3B8" }}>{new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+            <button onClick={handleSignOut} style={{ background: "transparent", border: "1px solid #E2E8F0", color: "#64748B", fontSize: 12, padding: "6px 12px", borderRadius: 6, cursor: "pointer" }}>Sign out</button>
+
+
+
+
+
+
+
+
+
+
+
+
 
           {/* Alert bar */}
           {alertUsers.map((u) => {
