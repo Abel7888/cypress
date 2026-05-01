@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { createClient } from "@/lib/supabase";
 
 import { useState, useEffect, useRef } from "react";
@@ -11,16 +11,16 @@ import SettingsPage from "./pages/SettingsPage";
 import RoutingPage from "./pages/RoutingPage";
 import TeamPage from "./pages/TeamPage";
 
-// ─── NAV ──────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ NAV â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const NAV = [
-  { id: "overview", label: "Overview", icon: "⚡" },
-  { id: "cost-analysis", label: "Cost Analysis", icon: "📊" },
-  { id: "budgets", label: "Budgets", icon: "💰" },
-  { id: "roi", label: "ROI Report", icon: "📈" },
-  { id: "routing", label: "Routing", icon: "↔" },
-  { id: "team", label: "Team", icon: "👥" },
-  { id: "settings", label: "Settings", icon: "⚙" },
+  { id: "overview", label: "Overview", icon: "âš¡" },
+  { id: "cost-analysis", label: "Cost Analysis", icon: "ðŸ“Š" },
+  { id: "budgets", label: "Budgets", icon: "ðŸ’°" },
+  { id: "roi", label: "ROI Report", icon: "ðŸ“ˆ" },
+  { id: "routing", label: "Routing", icon: "â†”" },
+  { id: "team", label: "Team", icon: "ðŸ‘¥" },
+  { id: "settings", label: "Settings", icon: "âš™" },
 ];
 
 const PAGE_META: Record<string, { title: string; subtitle: string }> = {
@@ -33,7 +33,7 @@ const PAGE_META: Record<string, { title: string; subtitle: string }> = {
   settings: { title: "Settings", subtitle: "API keys, integrations, and notifications" },
 };
 
-// ─── SIDEBAR ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ SIDEBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function Sidebar({
   page,
@@ -145,7 +145,7 @@ function Sidebar({
       {/* Logo */}
       <div style={{ padding: "20px 16px 12px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-          <span style={{ fontSize: 20 }}>🛡️</span>
+          <span style={{ fontSize: 20 }}>ðŸ›¡ï¸</span>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#0F172A" }}>TokenGuard</div>
             <div style={{ fontSize: 9, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em" }}>
@@ -170,7 +170,7 @@ function Sidebar({
           }}
         >
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981", display: "inline-block" }} />
-          {totalSaved > 0 ? `+$${totalSaved.toFixed(2)} saved this month` : "+$— saved this month"}
+          {totalSaved > 0 ? `+$${totalSaved.toFixed(2)} saved this month` : "+$â€” saved this month"}
         </div>
       </div>
 
@@ -252,7 +252,7 @@ function Sidebar({
                     borderRadius: 10,
                   }}
                 >
-                  ⚠ {warningCount}
+                  âš  {warningCount}
                 </span>
               )}
             </button>
@@ -325,7 +325,7 @@ function Sidebar({
           <span style={{ fontSize: 11, fontWeight: 600, color: "#065F46", flex: 1 }}>Proxy Live</span>
           {proxyLatency !== null && (
             <span style={{ fontSize: 11, color: "#10B981", fontFamily: FONTS.mono }}>
-              · {proxyLatency}ms
+              Â· {proxyLatency}ms
             </span>
           )}
         </div>
@@ -335,7 +335,7 @@ function Sidebar({
           </div>
           <div style={{ fontSize: 10, color: "#64748B", fontFamily: FONTS.mono, lineHeight: 1.4 }}>
             {lastUser
-              ? `${lastUser.employee || lastUser.name} · gpt-4o → mini · routed ↓`
+              ? `${lastUser.employee || lastUser.name} Â· gpt-4o â†’ mini Â· routed â†“`
               : "No calls yet"}
           </div>
         </div>
@@ -344,7 +344,7 @@ function Sidebar({
   );
 }
 
-// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ DASHBOARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function Dashboard() {
   const [page, setPage] = useState("overview");
@@ -536,7 +536,7 @@ export default function Dashboard() {
               onClick={() => setAssistantOpen(true)}
               style={{ background: "#EFF6FF", border: "1px solid #BFDBFE", color: "#1D4ED8", fontSize: 12, fontWeight: 600, padding: "6px 12px", borderRadius: 6, cursor: "pointer" }}
             >
-              ✦ Ask
+              âœ¦ Ask
             </button>
             <button
               onClick={() => setPage("settings")}
@@ -547,7 +547,7 @@ export default function Dashboard() {
             <button
               style={{ background: "transparent", border: "1px solid #E2E8F0", color: "#64748B", fontSize: 12, padding: "6px 12px", borderRadius: 6, cursor: "pointer" }}
             >
-              ⬇ Export
+              â¬‡ Export
             </button>
             <div style={{ display: "flex", alignItems: "center", gap: 5, background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 20, padding: "4px 10px" }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981", animation: "pulse 2s infinite", display: "inline-block" }} />
@@ -558,10 +558,10 @@ export default function Dashboard() {
             )}
             <span style={{ fontSize: 11, color: "#94A3B8" }}>{new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
             <button onClick={handleSignOut} style={{ background: "transparent", border: "1px solid #E2E8F0", color: "#64748B", fontSize: 12, padding: "6px 12px", borderRadius: 6, cursor: "pointer" }}>Sign out</button>
+          </div>
 
-
-
-
+          {/* Alert bar */}
+          {alertUsers.map((u) => {
 
 
 
@@ -590,7 +590,7 @@ export default function Dashboard() {
                   flexShrink: 0,
                 }}
               >
-                <span>{blocked ? "🔴" : "⚠️"}</span>
+                <span>{blocked ? "ðŸ”´" : "âš ï¸"}</span>
                 <span style={{ color: blocked ? "#991B1B" : "#92400E" }}>
                   <strong>{key}</strong>{" "}
                   {blocked ? "has been blocked" : `has used ${pct}% of their daily budget`}
@@ -599,13 +599,13 @@ export default function Dashboard() {
                   onClick={() => setPage("budgets")}
                   style={{ marginLeft: "auto", background: "transparent", border: "none", color: blocked ? "#991B1B" : "#92400E", fontWeight: 600, cursor: "pointer", fontSize: 12 }}
                 >
-                  {blocked ? "Reset Budget →" : "Adjust Budget →"}
+                  {blocked ? "Reset Budget â†’" : "Adjust Budget â†’"}
                 </button>
                 <button
                   onClick={() => setDismissedAlerts((prev) => new Set(Array.from(prev).concat([key])))}
                   style={{ background: "transparent", border: "none", color: "#94A3B8", cursor: "pointer", fontSize: 16, lineHeight: 1 }}
                 >
-                  ✕
+                  âœ•
                 </button>
               </div>
             );
@@ -638,16 +638,16 @@ export default function Dashboard() {
               <span style={{ color: "#64748B" }}>
                 Last call:{" "}
                 <strong style={{ color: "#0F172A" }}>{lastCall.employee || lastCall.name}</strong>
-                {" · gpt-4o → gpt-4o-mini · "}
+                {" Â· gpt-4o â†’ gpt-4o-mini Â· "}
                 <span style={{ color: "#10B981" }}>${(lastCall.cost_usd || 0.000043).toFixed(6)}</span>
-                {" · saved 94%"}
+                {" Â· saved 94%"}
               </span>
             ) : (
               <span style={{ color: "#94A3B8" }}>
-                No calls yet — make your first API call through the proxy
+                No calls yet â€” make your first API call through the proxy
               </span>
             )}
-            <span style={{ marginLeft: "auto", color: "#94A3B8", fontSize: 10 }}>Live · updates every 15s</span>
+            <span style={{ marginLeft: "auto", color: "#94A3B8", fontSize: 10 }}>Live Â· updates every 15s</span>
           </div>
         </div>
       </div>
@@ -669,17 +669,17 @@ export default function Dashboard() {
             }}
           >
             {[
-              { icon: "👤", label: "Add Employee", action: () => { setPage("settings"); setFabOpen(false); } },
+              { icon: "ðŸ‘¤", label: "Add Employee", action: () => { setPage("settings"); setFabOpen(false); } },
               {
-                icon: "📋", label: copiedTooltip ? "Copied!" : "Copy Proxy URL", action: () => {
+                icon: "ðŸ“‹", label: copiedTooltip ? "Copied!" : "Copy Proxy URL", action: () => {
                   navigator.clipboard.writeText(API_BASE || "");
                   setCopiedTooltip(true);
                   setTimeout(() => setCopiedTooltip(false), 2000);
                 }
               },
-              { icon: "💰", label: "Adjust Budget", action: () => { setPage("budgets"); setFabOpen(false); } },
-              { icon: "⬇", label: "Export CSV", action: () => setFabOpen(false) },
-              { icon: "🔄", label: "Reset Budget", action: () => { setPage("budgets"); setFabOpen(false); } },
+              { icon: "ðŸ’°", label: "Adjust Budget", action: () => { setPage("budgets"); setFabOpen(false); } },
+              { icon: "â¬‡", label: "Export CSV", action: () => setFabOpen(false) },
+              { icon: "ðŸ”„", label: "Reset Budget", action: () => { setPage("budgets"); setFabOpen(false); } },
             ].map((item) => (
               <button
                 key={item.label}
@@ -755,10 +755,10 @@ export default function Dashboard() {
         {/* Header */}
         <div style={{ padding: "16px 20px", borderBottom: "1px solid #E2E8F0", display: "flex", alignItems: "flex-start" }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#0F172A" }}>✦ AI Assistant</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#0F172A" }}>âœ¦ AI Assistant</div>
             <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 2 }}>Powered by Claude</div>
           </div>
-          <button onClick={() => setAssistantOpen(false)} style={{ background: "transparent", border: "none", color: "#94A3B8", fontSize: 20, cursor: "pointer" }}>✕</button>
+          <button onClick={() => setAssistantOpen(false)} style={{ background: "transparent", border: "none", color: "#94A3B8", fontSize: 20, cursor: "pointer" }}>âœ•</button>
         </div>
 
         {/* Chips */}
@@ -801,7 +801,7 @@ export default function Dashboard() {
           ))}
           {assistantTyping && (
             <div style={{ alignSelf: "flex-start", background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "2px 12px 12px 12px", padding: "8px 14px" }}>
-              <span style={{ color: "#94A3B8", fontSize: 13 }}>Typing…</span>
+              <span style={{ color: "#94A3B8", fontSize: 13 }}>Typingâ€¦</span>
             </div>
           )}
         </div>
@@ -827,6 +827,7 @@ export default function Dashboard() {
     </>
   );
 }
+
 
 
 
