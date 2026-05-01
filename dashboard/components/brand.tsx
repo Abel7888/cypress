@@ -94,7 +94,7 @@ export function Logo({ size = 36, dark = false }: { size?: number; dark?: boolea
           fontSize: size * 0.27, color: subColor,
           letterSpacing: "0.14em", marginTop: 4, fontWeight: 600,
         }}>
-          AI COST GOVERNANCE
+          MULTI-MODEL AI COST GOVERNANCE
         </div>
       </div>
     </div>
@@ -104,3 +104,4 @@ export function Logo({ size = 36, dark = false }: { size?: number; dark?: boolea
 export function LogoMini({ size = 32 }: { size?: number }) {
   return <LogoMark size={size} />;
 }
+

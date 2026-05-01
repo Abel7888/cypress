@@ -1,4 +1,5 @@
 "use client";
+import { createClient } from "@/lib/supabase";
 
 import { useState, useEffect, useRef } from "react";
 import { COLORS, FONTS, API_BASE, API_KEY, TENANT_ID, HEADERS } from "./constants";
@@ -367,6 +368,22 @@ export default function Dashboard() {
   const [lastCall, setLastCall] = useState<any>(null);
 
   // Dismissed alerts
+  const [companyName, setCompanyName] = useState(typeof window !== "undefined" ? localStorage.getItem("tg_company") || "Your Workspace" : "Your Workspace");
+  const [userEmail, setUserEmail] = useState("");
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user?.email) setUserEmail(data.user.email);
+    });
+  }, []);
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = "/signin";
+  };
+
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
 
   // Fetch overview
@@ -797,6 +814,7 @@ export default function Dashboard() {
     </>
   );
 }
+
 
 
 
