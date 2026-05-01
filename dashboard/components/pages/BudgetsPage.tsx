@@ -494,7 +494,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
               }}>
                 SELECT EMPLOYEES
               </div>
-              <div style={{ position: "relative" }}>
+              <div style={{ position: "relative", minHeight: 120 }}>
                 <div style={{ position: "absolute", inset: 0, zIndex: 10, borderRadius: 10, background: "rgba(10,20,50,0.85)", backdropFilter: "blur(3px)", border: "1px solid #1e3a6e", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: 20 }}>
                   <div style={{ fontSize: 22 }}>🔒</div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#F0F4FF" }}>Department Budgeting</div>
