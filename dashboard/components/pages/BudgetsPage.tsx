@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import { API_BASE, TENANT_ID, HEADERS } from "../constants";
+import { API_BASE, TENANT_ID, HEADERS, getTenantConfig } from "../constants";
 
 // ─── LIGHT PALETTE ───────────────────────────────────────────────────────────
 const C = {
@@ -119,9 +119,10 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
   // ─── Fetch budgets (only if no props) ────────────────────────────────────
   useEffect(() => {
     if (propBudgets) { setLoaded(true); return; }
-    if (!TENANT_ID) { setLoaded(true); return; }
-    const load = () => {
-      fetch(`${API_BASE}/api/tenants/${TENANT_ID}/users`, { headers: HEADERS })
+    const load = async () => {
+      const { tenantId } = await getTenantConfig();
+      if (!tenantId) { setLoaded(true); return; }
+      fetch(`${API_BASE}/api/tenants/${tenantId}/users`, { headers: HEADERS })
         .then((r) => r.json())
         .then((d) => { setLocalBudgets(d.users || d || []); setLoaded(true); })
         .catch(() => setLoaded(true));
@@ -142,9 +143,10 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
 
   // ─── Reload helper after mutation ─────────────────────────────────────────
   const reload = async () => {
-    if (!TENANT_ID) return;
+    const { tenantId } = await getTenantConfig();
+    if (!tenantId) return;
     try {
-      const r = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/users`, { headers: HEADERS });
+      const r = await fetch(`${API_BASE}/api/tenants/${tenantId}/users`, { headers: HEADERS });
       const d = await r.json();
       setUserBudgets(d.users || d || []);
     } catch { /* noop */ }
@@ -154,7 +156,8 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
   const updateBudget = async (keyId: string, newLimit: number) => {
     if (!keyId || !isFinite(newLimit) || newLimit < 0) return;
     try {
-      await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/keys/${keyId}/budget`, {
+      const { tenantId: utid } = await getTenantConfig();
+    await fetch(`${API_BASE}/api/tenants/${utid}/keys/${keyId}/budget`, {
         method: "PATCH",
         headers: { ...HEADERS, "Content-Type": "application/json" },
         body: JSON.stringify({ budget_usd: newLimit }),
@@ -189,7 +192,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
     const amt = amounts[selectedTemplate] ?? 0;
     const ids = Array.from(selectedEmployees);
     await Promise.all(ids.map((id) =>
-      fetch(`${API_BASE}/api/tenants/${TENANT_ID}/keys/${id}/budget`, {
+      fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/keys/${id}/budget`, {
         method: "PATCH",
         headers: { ...HEADERS, "Content-Type": "application/json" },
         body: JSON.stringify({ budget_usd: amt }),
