@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { API_BASE, TENANT_ID, HEADERS, getModelColor } from "../constants";
+import { API_BASE, TENANT_ID, HEADERS, getModelColor, getTenantConfig } from "../constants";
 
 // ─── LIGHT PALETTE ───────────────────────────────────────────────────────────
 const C = {
@@ -174,10 +174,11 @@ export default function CostAnalysisPage() {
     if (!playgroundPrompt.trim()) return;
     setPlaygroundLoading(true);
     setPlaygroundResult(null);
+    const { apiKey } = await getTenantConfig();
     try {
       const res = await fetch(`${API_BASE}/v1/chat/completions`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${typeof window !== "undefined" ? localStorage.getItem("tg_api_key") : ""}`, "Content-Type": "application/json", "X-Agent-ID": "playground" },
+        headers: { Authorization: `Bearer ${apiKey || ""}`, "Content-Type": "application/json", "X-Agent-ID": "route-tester" },
         body: JSON.stringify({ model: playgroundModel, max_tokens: 300, messages: [{ role: "user", content: playgroundPrompt }] }),
       });
       const data = await res.json();
@@ -572,8 +573,8 @@ export default function CostAnalysisPage() {
       {/* ═══ SECTION 5 — ROUTING PLAYGROUND ═══════════════════════════════ */}
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderLeft: `4px solid ${C.blue}`, borderRadius: 12, padding: "20px 22px", boxShadow: "0 1px 2px rgba(0,0,0,0.03)", width: "100%" }}>
         <SectionTitle
-          title="Routing Playground"
-          subtitle="Test any prompt — see exactly how TokenGuard routes it, what model answers, and what you save vs what you would have paid."
+          title="Live Route Tester"
+          subtitle="Send a real prompt through your tenant key — see exactly how TokenGuard routes it, what model responds, and what you save."
         />
 
         {/* Examples */}
