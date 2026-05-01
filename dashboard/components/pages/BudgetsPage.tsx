@@ -490,6 +490,13 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
               }}>
                 SELECT EMPLOYEES
               </div>
+              <div style={{ position: "relative" }}>
+                <div style={{ position: "absolute", inset: 0, zIndex: 10, borderRadius: 10, background: "rgba(13,18,32,0.88)", backdropFilter: "blur(2px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: 20 }}>
+                  <div style={{ fontSize: 22 }}>🔒</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#F0F4FF" }}>Department Budgeting</div>
+                  <div style={{ fontSize: 11, color: "#6B7FA3", textAlign: "center", maxWidth: 220 }}>Group employees by department and apply budgets at scale. Available on Pro.</div>
+                  <button onClick={() => window.location.href = "/settings?upgrade=departments"} style={{ marginTop: 4, background: "#4F8EF7", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, padding: "8px 20px", cursor: "pointer" }}>Upgrade to Pro</button>
+                </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
                 {userBudgets.map((u) => {
                   const id = keyIdOf(u);
@@ -528,6 +535,8 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                     {selectedEmployees.size === userBudgets.length ? "Clear all" : "Select all"}
                   </button>
                 )}
+              </div>
+              </div>
               </div>
 
               <button
