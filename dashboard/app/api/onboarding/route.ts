@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
           }
           // Send password reset email so they set their own password
           await supabase.auth.resetPasswordForEmail(data.email, {
-            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
           });
           return NextResponse.json({ ...result, auth_email_sent: !authError });
         }
@@ -88,3 +88,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
+

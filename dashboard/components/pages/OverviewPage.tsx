@@ -156,8 +156,8 @@ export default function OverviewPage({ setPage }: Props) {
   const warningUsers = useMemo(() => users.filter(u => { const p = getBudgetPctRaw(u); return p >= 70 && p < 100; }), [users]);
   const blockedUsers = useMemo(() => users.filter(u => getBudgetPctRaw(u) >= 100), [users]);
   const healthyUsers = users.filter(u => getBudgetPctRaw(u) < 70);
-  const activityFeed: any[] = useMemo(() => (users
 
+  const activityFeed = useMemo(() => users
     .filter(u => u.api_calls > 0)
     .flatMap((u: any) => [
       ...Array.from({ length: Math.min(u.routed_calls || 0, 2) }, (_, i) => ({
@@ -169,8 +169,8 @@ export default function OverviewPage({ setPage }: Props) {
       ...((u.cache_hits || 0) > 0 ? [{ employee: u.employee || u.name || "—", type: "cached" as const, model: "cache hit", cost: 0, secondsAgo: 45 }] : []),
       ...((u.blocked_calls || 0) > 0 ? [{ employee: u.employee || u.name || "—", type: "blocked" as const, model: "budget exceeded", cost: 0, secondsAgo: 120 }] : []),
     ])
-    .slice(0, 6)) as any[], [users]);
-
+    .sort((a, b) => a.secondsAgo - b.secondsAgo)
+    .slice(0, 6), [users]);
 
   const setupComplete = Object.values(setupSteps).filter(Boolean).length;
   const allSetupDone = setupComplete === 5;
