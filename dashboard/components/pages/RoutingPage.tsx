@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { API_BASE, TENANT_ID, HEADERS, getModelColor } from "../constants";
+import { API_BASE, TENANT_ID, HEADERS, getModelColor, getTenantConfig } from "../constants";
 
 // ─── LIGHT PALETTE ───────────────────────────────────────────────────────────
 const C = {
@@ -57,7 +57,7 @@ export default function RoutingPage() {
         fetch(`${API_BASE}/api/dashboard/overview`, { headers: HEADERS }).then(r => r.json()),
         fetch(`${API_BASE}/api/dashboard/models`, { headers: HEADERS }).then(r => r.json()),
         fetch(`${API_BASE}/api/dashboard/agents`, { headers: HEADERS }).then(r => r.json()),
-        fetch(`${API_BASE}/api/tenants/${TENANT_ID}/users`, { headers: HEADERS }).then(r => r.json()),
+        fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/users`, { headers: HEADERS }).then(r => r.json()),
       ]);
       setOverview(ov);
       setModels(Array.isArray(mo) ? mo : (mo?.models || []));
