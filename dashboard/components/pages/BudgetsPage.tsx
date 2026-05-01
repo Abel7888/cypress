@@ -537,7 +537,6 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                 )}
               </div>
               </div>
-              </div>
 
               <button
                 disabled={!selectedTemplate || selectedEmployees.size === 0}
