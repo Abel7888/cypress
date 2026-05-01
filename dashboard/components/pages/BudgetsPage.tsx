@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import { API_BASE, TENANT_ID, HEADERS } from "../constants";
+import { API_BASE, TENANT_ID, HEADERS, getTenantConfig } from "../constants";
 
 // ─── LIGHT PALETTE ───────────────────────────────────────────────────────────
 const C = {
@@ -154,7 +154,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
   const updateBudget = async (keyId: string, newLimit: number) => {
     if (!keyId || !isFinite(newLimit) || newLimit < 0) return;
     try {
-      await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/keys/${keyId}/budget`, {
+      await fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/keys/${keyId}/budget`, {
         method: "PATCH",
         headers: { ...HEADERS, "Content-Type": "application/json" },
         body: JSON.stringify({ budget_usd: newLimit }),
@@ -189,7 +189,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
     const amt = amounts[selectedTemplate] ?? 0;
     const ids = Array.from(selectedEmployees);
     await Promise.all(ids.map((id) =>
-      fetch(`${API_BASE}/api/tenants/${TENANT_ID}/keys/${id}/budget`, {
+      fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/keys/${id}/budget`, {
         method: "PATCH",
         headers: { ...HEADERS, "Content-Type": "application/json" },
         body: JSON.stringify({ budget_usd: amt }),
@@ -490,6 +490,13 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
               }}>
                 SELECT EMPLOYEES
               </div>
+              <div style={{ position: "relative" }}>
+                <div style={{ position: "absolute", inset: 0, zIndex: 10, borderRadius: 10, background: "rgba(13,18,32,0.88)", backdropFilter: "blur(2px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: 20 }}>
+                  <div style={{ fontSize: 22 }}>🔒</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#F0F4FF" }}>Department Budgeting</div>
+                  <div style={{ fontSize: 11, color: "#6B7FA3", textAlign: "center", maxWidth: 220 }}>Group employees by department and apply budgets at scale. Available on Pro.</div>
+                  <button onClick={() => window.location.href = "/settings?upgrade=departments"} style={{ marginTop: 4, background: "#4F8EF7", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, padding: "8px 20px", cursor: "pointer" }}>Upgrade to Pro</button>
+                </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
                 {userBudgets.map((u) => {
                   const id = keyIdOf(u);
@@ -531,6 +538,8 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
               </div>
 
               <button
+              </div>
+              </div>
                 disabled={!selectedTemplate || selectedEmployees.size === 0}
                 onClick={applyTemplate}
                 style={{
