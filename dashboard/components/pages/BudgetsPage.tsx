@@ -191,8 +191,9 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
     const amounts: Record<string, number> = { Engineering: 50, Marketing: 20, Executive: 9999 };
     const amt = amounts[selectedTemplate] ?? 0;
     const ids = Array.from(selectedEmployees);
+    const { tenantId: applyTid } = await getTenantConfig();
     await Promise.all(ids.map((id) =>
-      fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/keys/${id}/budget`, {
+      fetch(`${API_BASE}/api/tenants/${applyTid}/keys/${id}/budget`, {
         method: "PATCH",
         headers: { ...HEADERS, "Content-Type": "application/json" },
         body: JSON.stringify({ budget_usd: amt }),
