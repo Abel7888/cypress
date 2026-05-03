@@ -51,7 +51,6 @@ export default function SettingsPage() {
       const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
 
     async function loadBillingCtx() {
-      if (!TENANT_ID) return;
       try {
         const [ov, us] = await Promise.all([
           fetch(`${API_BASE}/api/dashboard/overview`, { headers: authHeaders }).then(r => r.json()),
