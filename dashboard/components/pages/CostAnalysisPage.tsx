@@ -220,13 +220,19 @@ export default function CostAnalysisPage() {
   }, []);
 
   useEffect(() => {
+    const load = async () => {
+      const { tenantId, apiKey } = await getTenantConfig();
+      const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
+
     async function loadUsers() {
       try {
-        const data = await fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/users`, { headers: HEADERS }).then(r => r.json());
+        const data = await fetch(`${API_BASE}/api/tenants/${tenantId}/users`, { headers: authHeaders }).then(r => r.json());
         setUserDetail(data);
       } catch (e) { console.error(e); }
     }
     loadUsers();
+      };
+    load();
   }, []);
 
   const tenantUsers = userDetail?.users || [];

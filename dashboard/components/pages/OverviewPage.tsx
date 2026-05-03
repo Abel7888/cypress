@@ -83,10 +83,10 @@ export default function OverviewPage({ setPage }: Props) {
   async function loadAll() {
     try {
       const [ov, tr, us, mo] = await Promise.all([
-        fetch(`${API_BASE}/api/dashboard/overview`,         { headers: HEADERS }).then(r => r.json()),
-        fetch(`${API_BASE}/api/dashboard/cost-trends`,      { headers: HEADERS }).then(r => r.json()),
-        fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/users`, { headers: HEADERS }).then(r => r.json()),
-        fetch(`${API_BASE}/api/dashboard/models`,           { headers: HEADERS }).then(r => r.json()),
+        fetch(`${API_BASE}/api/dashboard/overview`,         { headers: authHeaders }).then(r => r.json()),
+        fetch(`${API_BASE}/api/dashboard/cost-trends`,      { headers: authHeaders }).then(r => r.json()),
+        fetch(`${API_BASE}/api/tenants/${tenantId}/users`, { headers: authHeaders }).then(r => r.json()),
+        fetch(`${API_BASE}/api/dashboard/models`,           { headers: authHeaders }).then(r => r.json()),
       ]);
       
       // Use demo data if API returns empty

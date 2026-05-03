@@ -63,12 +63,18 @@ export default function ROIReportPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      fetch(`${API_BASE}/api/dashboard/overview`, { headers: HEADERS }).then(r => r.json()).then(setOverview).catch(console.error),
-      fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/billing-summary`, { headers: HEADERS }).then(r => r.json()).then(setBilling).catch(console.error),
-      fetch(`${API_BASE}/api/dashboard/cost-trends`, { headers: HEADERS }).then(r => r.json()).then((d) => setTrends(Array.isArray(d) ? d : [])).catch(console.error),
-      fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/users`, { headers: HEADERS }).then(r => r.json()).then((d) => setUsers(d?.users || [])).catch(console.error),
-    ]).finally(() => setLoading(false));
+    const load = async () => {
+      const { tenantId, apiKey } = await getTenantConfig();
+      const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
+      await Promise.all([
+        fetch(`${API_BASE}/api/dashboard/overview`, { headers: authHeaders }).then(r => r.json()).then(setOverview).catch(console.error),
+        fetch(`${API_BASE}/api/tenants/${tenantId}/billing-summary`, { headers: authHeaders }).then(r => r.json()).then(setBilling).catch(console.error),
+        fetch(`${API_BASE}/api/dashboard/cost-trends`, { headers: authHeaders }).then(r => r.json()).then((d) => setTrends(Array.isArray(d) ? d : [])).catch(console.error),
+        fetch(`${API_BASE}/api/tenants/${tenantId}/users`, { headers: authHeaders }).then(r => r.json()).then((d) => setUsers(d?.users || [])).catch(console.error),
+      ]);
+      setLoading(false);
+    };
+    load();
   }, []);
 
   // ── Existing math preserved ──────────────────────────────────────────────

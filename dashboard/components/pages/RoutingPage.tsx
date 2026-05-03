@@ -54,10 +54,10 @@ export default function RoutingPage() {
   async function loadData() {
     try {
       const [ov, mo, ag, us] = await Promise.all([
-        fetch(`${API_BASE}/api/dashboard/overview`, { headers: HEADERS }).then(r => r.json()),
-        fetch(`${API_BASE}/api/dashboard/models`, { headers: HEADERS }).then(r => r.json()),
-        fetch(`${API_BASE}/api/dashboard/agents`, { headers: HEADERS }).then(r => r.json()),
-        fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/users`, { headers: HEADERS }).then(r => r.json()),
+        fetch(`${API_BASE}/api/dashboard/overview`, { headers: authHeaders }).then(r => r.json()),
+        fetch(`${API_BASE}/api/dashboard/models`, { headers: authHeaders }).then(r => r.json()),
+        fetch(`${API_BASE}/api/dashboard/agents`, { headers: authHeaders }).then(r => r.json()),
+        fetch(`${API_BASE}/api/tenants/${tenantId}/users`, { headers: authHeaders }).then(r => r.json()),
       ]);
       setOverview(ov);
       setModels(Array.isArray(mo) ? mo : (mo?.models || []));
