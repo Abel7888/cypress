@@ -52,6 +52,8 @@ export default function RoutingPage() {
   const [tick, setTick] = useState(0); // drives "Xs ago"
 
   async function loadData() {
+    const { tenantId, apiKey } = await getTenantConfig();
+    const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
     try {
       const [ov, mo, ag, us] = await Promise.all([
         fetch(`${API_BASE}/api/dashboard/overview`, { headers: authHeaders }).then(r => r.json()),
