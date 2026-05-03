@@ -81,6 +81,8 @@ export default function OverviewPage({ setPage }: Props) {
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
 
   async function loadAll() {
+    const { tenantId, apiKey } = await getTenantConfig();
+    const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
     try {
       const [ov, tr, us, mo] = await Promise.all([
         fetch(`${API_BASE}/api/dashboard/overview`,         { headers: authHeaders }).then(r => r.json()),
