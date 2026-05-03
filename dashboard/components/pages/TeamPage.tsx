@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useMemo } from "react";
-import { API_BASE, TENANT_ID, HEADERS } from "../constants";
+import { API_BASE, TENANT_ID, HEADERS, getTenantConfig } from "../constants";
 
 // ─── LIGHT PALETTE ───────────────────────────────────────────────────────────
 const C = {
@@ -107,7 +107,7 @@ function StatusBadge({ status }: { status: "healthy" | "warning" | "blocked" }) 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN
 // ═══════════════════════════════════════════════════════════════════════════
-export default function TeamPage() {
+export default function TeamPage({ setPage }: { setPage?: (p: string) => void }) {
   const [users, setUsers] = useState<any[]>([]);
   const [usingDemo, setUsingDemo] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -483,6 +483,7 @@ export default function TeamPage() {
         }}>
           <DetailPanel
             user={selectedUser}
+            setPage={setPage}
             alertEmail={alertEmail}
             setAlertEmail={setAlertEmail}
             alertEmailSaved={alertEmailSaved}
@@ -619,9 +620,10 @@ function LeaderCard({ rank, user, onClick }: { rank: number; user: any; onClick:
 
 // ─── DETAIL PANEL ────────────────────────────────────────────────────────
 function DetailPanel({
-  user, alertEmail, setAlertEmail, alertEmailSaved, onSaveAlert, onClose,
+  user, setPage, alertEmail, setAlertEmail, alertEmailSaved, onSaveAlert, onClose,
 }: {
   user: any;
+  setPage?: (p: string) => void;
   alertEmail: string;
   setAlertEmail: (v: string) => void;
   alertEmailSaved: boolean;
@@ -852,8 +854,8 @@ function DetailPanel({
         padding: "16px 24px", borderTop: `1px solid ${C.border}`, flexShrink: 0,
         display: "flex", gap: 8,
       }}>
-        <button style={{ ...btnBlueOutline, flex: 1 }}>Adjust Budget</button>
-        <button style={btnRedOutline}>Revoke Access</button>
+        <button style={{ ...btnBlueOutline, flex: 1 }} onClick={() => setPage && setPage("budgets")}>Adjust Budget</button>
+        <button style={btnRedOutline} onClick={async () => { if (!confirm("Revoke access for " + user.employee + "? This cannot be undone.")) return; const { tenantId } = await getTenantConfig(); await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${user.user_id}`, { method: "DELETE", headers: HEADERS }); onClose(); }}>Revoke Access</button>
       </div>
     </>
   );

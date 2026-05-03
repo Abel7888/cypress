@@ -476,7 +476,7 @@ export default function Dashboard() {
       case "routing":
         return <RoutingPage />;
       case "team":
-        return <TeamPage />;
+        return <TeamPage setPage={setPage} />;
       case "settings":
         return <SettingsPage />;
       default:
