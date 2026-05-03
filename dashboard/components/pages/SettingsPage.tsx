@@ -285,11 +285,12 @@ function ProviderKeysCard() {
   useEffect(() => { load(); }, []);
 
   const save = async (provider: string) => {
+    const { tenantId: saveTenantId } = await getTenantConfig();
     const raw = inputs[provider].trim();
     if (!raw) return;
     setSaving(provider);
     try {
-      await fetch(`${API_BASE}/api/tenants/${tenantId}/provider-keys`, {
+      await fetch(`${API_BASE}/api/tenants/${saveTenantId}/provider-keys`, {
         method: "POST",
         headers: { ...HEADERS, "Content-Type": "application/json" },
         body: JSON.stringify({ provider, api_key: raw }),
@@ -304,6 +305,7 @@ function ProviderKeysCard() {
 
   const remove = async (provider: string) => {
     setRemoving(provider);
+    const { tenantId } = await getTenantConfig();
     try {
       await fetch(`${API_BASE}/api/tenants/${tenantId}/provider-keys/${provider}`, {
         method: "DELETE", headers: HEADERS,
@@ -425,6 +427,7 @@ function EmployeeKeyManager() {
 
   const load = async () => {
     setLoading(true);
+    const { tenantId } = await getTenantConfig();
     try {
       const res = await fetch(`${API_BASE}/api/tenants/${tenantId}/keys`, { headers: HEADERS });
       const data = await res.json();
@@ -436,6 +439,7 @@ function EmployeeKeyManager() {
 
   const createKey = async () => {
     if (!newName.trim()) return;
+    const { tenantId } = await getTenantConfig();
     setActionLoading("creating");
     try {
       const res = await fetch(`${API_BASE}/api/tenants/${tenantId}/users`, {
@@ -454,6 +458,7 @@ function EmployeeKeyManager() {
 
   const revokeKey = async (keyId: string) => {
     setActionLoading(keyId);
+    const { tenantId } = await getTenantConfig();
     try {
       await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${keyId}`, { method: "DELETE", headers: HEADERS });
       await load();
@@ -463,6 +468,7 @@ function EmployeeKeyManager() {
 
   const reactivateKey = async (keyId: string) => {
     setActionLoading(keyId);
+    const { tenantId } = await getTenantConfig();
     try {
       await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${keyId}/reactivate`, { method: "POST", headers: HEADERS });
       await load();
@@ -472,6 +478,7 @@ function EmployeeKeyManager() {
 
   const updateBudget = async (keyId: string) => {
     if (!editBudgetVal) return;
+    const { tenantId } = await getTenantConfig();
     setActionLoading("budget-" + keyId);
     try {
       await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${keyId}/budget`, {
@@ -487,6 +494,7 @@ function EmployeeKeyManager() {
 
   const seedKey = async (keyId: string) => {
     setSeedStatus(s => ({ ...s, [keyId]: "seeding" }));
+    const { tenantId } = await getTenantConfig();
     try {
       const res = await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${keyId}/seed`, { method: "POST", headers: HEADERS });
       const data = await res.json();
