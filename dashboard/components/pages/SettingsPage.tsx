@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { API_BASE, TENANT_ID, HEADERS } from "../constants";
+import { API_BASE, TENANT_ID, HEADERS , getTenantConfig } from "../constants";
 
 // ─── LIGHT PALETTE ───────────────────────────────────────────────────────────
 const C = {
@@ -51,7 +51,7 @@ export default function SettingsPage() {
       try {
         const [ov, us] = await Promise.all([
           fetch(`${API_BASE}/api/dashboard/overview`, { headers: HEADERS }).then(r => r.json()),
-          fetch(`${API_BASE}/api/tenants/${TENANT_ID}/users`, { headers: HEADERS }).then(r => r.json()),
+          fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/users`, { headers: HEADERS }).then(r => r.json()),
         ]);
         setOverview(ov);
         setUsers(us?.users || []);
@@ -267,7 +267,7 @@ function ProviderKeysCard() {
 
   const load = async () => {
     try {
-      const res  = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/provider-keys`, { headers: HEADERS });
+      const res  = await fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/provider-keys`, { headers: HEADERS });
       const data = await res.json();
       const map: Record<string, any> = {};
       (data.keys || []).forEach((k: any) => { map[k.provider] = k; });
@@ -281,7 +281,7 @@ function ProviderKeysCard() {
     if (!raw) return;
     setSaving(provider);
     try {
-      await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/provider-keys`, {
+      await fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/provider-keys`, {
         method: "POST",
         headers: { ...HEADERS, "Content-Type": "application/json" },
         body: JSON.stringify({ provider, api_key: raw }),
@@ -297,7 +297,7 @@ function ProviderKeysCard() {
   const remove = async (provider: string) => {
     setRemoving(provider);
     try {
-      await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/provider-keys/${provider}`, {
+      await fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/provider-keys/${provider}`, {
         method: "DELETE", headers: HEADERS,
       });
       await load();
@@ -418,7 +418,7 @@ function EmployeeKeyManager() {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/keys`, { headers: HEADERS });
+      const res = await fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/keys`, { headers: HEADERS });
       const data = await res.json();
       setKeys(data.keys || []);
     } catch (e) { console.error(e); }
@@ -430,7 +430,7 @@ function EmployeeKeyManager() {
     if (!newName.trim()) return;
     setActionLoading("creating");
     try {
-      const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/users`, {
+      const res = await fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/users`, {
         method: "POST",
         headers: { ...HEADERS, "Content-Type": "application/json" },
         body: JSON.stringify({ name: newName.trim(), role: newRole.trim(), budget_usd: parseFloat(newBudget) || 50 }),
@@ -447,7 +447,7 @@ function EmployeeKeyManager() {
   const revokeKey = async (keyId: string) => {
     setActionLoading(keyId);
     try {
-      await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/keys/${keyId}`, { method: "DELETE", headers: HEADERS });
+      await fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/keys/${keyId}`, { method: "DELETE", headers: HEADERS });
       await load();
     } catch (e) { console.error(e); }
     setActionLoading(null);
@@ -456,7 +456,7 @@ function EmployeeKeyManager() {
   const reactivateKey = async (keyId: string) => {
     setActionLoading(keyId);
     try {
-      await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/keys/${keyId}/reactivate`, { method: "POST", headers: HEADERS });
+      await fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/keys/${keyId}/reactivate`, { method: "POST", headers: HEADERS });
       await load();
     } catch (e) { console.error(e); }
     setActionLoading(null);
@@ -466,7 +466,7 @@ function EmployeeKeyManager() {
     if (!editBudgetVal) return;
     setActionLoading("budget-" + keyId);
     try {
-      await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/keys/${keyId}/budget`, {
+      await fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/keys/${keyId}/budget`, {
         method: "PATCH",
         headers: { ...HEADERS, "Content-Type": "application/json" },
         body: JSON.stringify({ budget_usd: parseFloat(editBudgetVal) }),
@@ -480,7 +480,7 @@ function EmployeeKeyManager() {
   const seedKey = async (keyId: string) => {
     setSeedStatus(s => ({ ...s, [keyId]: "seeding" }));
     try {
-      const res = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/keys/${keyId}/seed`, { method: "POST", headers: HEADERS });
+      const res = await fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/keys/${keyId}/seed`, { method: "POST", headers: HEADERS });
       const data = await res.json();
       setSeedStatus(s => ({ ...s, [keyId]: data.seeded ? "done" : "error" }));
       setTimeout(() => setSeedStatus(s => ({ ...s, [keyId]: "" })), 3000);

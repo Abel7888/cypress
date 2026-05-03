@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { API_BASE, TENANT_ID, HEADERS } from "../constants";
+import { API_BASE, TENANT_ID, HEADERS , getTenantConfig } from "../constants";
 
 // ─── LIGHT PALETTE (matches Overview / Cost Analysis / Budgets) ───────────────
 const C = {
@@ -65,9 +65,9 @@ export default function ROIReportPage() {
   useEffect(() => {
     Promise.all([
       fetch(`${API_BASE}/api/dashboard/overview`, { headers: HEADERS }).then(r => r.json()).then(setOverview).catch(console.error),
-      fetch(`${API_BASE}/api/tenants/${TENANT_ID}/billing-summary`, { headers: HEADERS }).then(r => r.json()).then(setBilling).catch(console.error),
+      fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/billing-summary`, { headers: HEADERS }).then(r => r.json()).then(setBilling).catch(console.error),
       fetch(`${API_BASE}/api/dashboard/cost-trends`, { headers: HEADERS }).then(r => r.json()).then((d) => setTrends(Array.isArray(d) ? d : [])).catch(console.error),
-      fetch(`${API_BASE}/api/tenants/${TENANT_ID}/users`, { headers: HEADERS }).then(r => r.json()).then((d) => setUsers(d?.users || [])).catch(console.error),
+      fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/users`, { headers: HEADERS }).then(r => r.json()).then((d) => setUsers(d?.users || [])).catch(console.error),
     ]).finally(() => setLoading(false));
   }, []);
 

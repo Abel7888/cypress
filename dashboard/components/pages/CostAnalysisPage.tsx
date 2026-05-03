@@ -222,7 +222,7 @@ export default function CostAnalysisPage() {
   useEffect(() => {
     async function loadUsers() {
       try {
-        const data = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/users`, { headers: HEADERS }).then(r => r.json());
+        const data = await fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/users`, { headers: HEADERS }).then(r => r.json());
         setUserDetail(data);
       } catch (e) { console.error(e); }
     }

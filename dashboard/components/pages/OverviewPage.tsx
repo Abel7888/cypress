@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import { API_BASE, TENANT_ID, HEADERS, getModelColor } from "../constants";
+import { API_BASE, TENANT_ID, HEADERS, getModelColor , getTenantConfig } from "../constants";
 
 // ─── LIGHT PALETTE ───────────────────────────────────────────────────────────
 const C = {
@@ -85,7 +85,7 @@ export default function OverviewPage({ setPage }: Props) {
       const [ov, tr, us, mo] = await Promise.all([
         fetch(`${API_BASE}/api/dashboard/overview`,         { headers: HEADERS }).then(r => r.json()),
         fetch(`${API_BASE}/api/dashboard/cost-trends`,      { headers: HEADERS }).then(r => r.json()),
-        fetch(`${API_BASE}/api/tenants/${TENANT_ID}/users`, { headers: HEADERS }).then(r => r.json()),
+        fetch(`${API_BASE}/api/tenants/${(await getTenantConfig()).tenantId}/users`, { headers: HEADERS }).then(r => r.json()),
         fetch(`${API_BASE}/api/dashboard/models`,           { headers: HEADERS }).then(r => r.json()),
       ]);
       
