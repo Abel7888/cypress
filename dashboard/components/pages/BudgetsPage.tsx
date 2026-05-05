@@ -123,9 +123,10 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
   useEffect(() => {
     if (propBudgets) { setLoaded(true); return; }
     const load = async () => {
-      const { tenantId } = await getTenantConfig();
+      const { tenantId, apiKey } = await getTenantConfig();
       if (!tenantId) { setLoaded(true); return; }
-      fetch(`${API_BASE}/api/tenants/${tenantId}/users`, { headers: HEADERS })
+      const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
+      fetch(`${API_BASE}/api/tenants/${tenantId}/users`, { headers: authHeaders })
         .then((r) => r.json())
         .then((d) => { setLocalBudgets(d.users || d || []); setLoaded(true); })
         .catch(() => setLoaded(true));
@@ -146,10 +147,11 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
 
   // ─── Reload helper after mutation ─────────────────────────────────────────
   const reload = async () => {
-    const { tenantId } = await getTenantConfig();
+    const { tenantId, apiKey } = await getTenantConfig();
     if (!tenantId) return;
+    const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
     try {
-      const r = await fetch(`${API_BASE}/api/tenants/${tenantId}/users`, { headers: HEADERS });
+      const r = await fetch(`${API_BASE}/api/tenants/${tenantId}/users`, { headers: authHeaders });
       const d = await r.json();
       setUserBudgets(d.users || d || []);
     } catch { /* noop */ }
