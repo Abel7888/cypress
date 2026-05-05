@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 import Link from "next/link";
 import { useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { BRAND as C, Logo } from "@/components/brand";
+import { useSearchParams, useRouter } from "next/navigation";
+import { BRAND as C, Logo, LogoMark } from "@/components/brand";
 import { createClient, SUPABASE_CONFIGURED } from "@/lib/supabase";
 
 const PLAN_INFO: Record<string, { name: string; price: number; seats: string }> = {
@@ -21,6 +21,7 @@ function SignUpInner() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [showTrialForm, setShowTrialForm] = useState(false);
 
   const CALENDLY_URL = "https://calendly.com/abelassefa19/cypress-tokenguard-premium";
 
@@ -65,11 +66,11 @@ function SignUpInner() {
         window.location.href = data.url;
         return;
       }
-      // Fallback — if Stripe not configured, go straight to onboarding
+      // Fallback â€” if Stripe not configured, go straight to onboarding
       setNotice("Stripe not configured yet. Proceeding to onboarding (demo mode)...");
       setTimeout(() => (window.location.href = "/onboarding"), 800);
     } catch {
-      setNotice("Couldn't reach payments — proceeding to onboarding.");
+      setNotice("Couldn't reach payments â€” proceeding to onboarding.");
       setTimeout(() => (window.location.href = "/onboarding"), 800);
     }
     setLoading(false);
@@ -129,7 +130,7 @@ function SignUpInner() {
                 borderRadius: 10, padding: "14px 0", fontSize: 15, fontWeight: 700,
                 cursor: "pointer", marginTop: 10, opacity: loading ? 0.7 : 1,
               }}>
-                {loading ? "Creating account..." : `Continue to payment — $${selected.price}/mo →`}
+                {loading ? "Creating account..." : `Continue to payment â€” $${selected.price}/mo â†’`}
               </button>
 
               <div style={{ fontSize: 12, color: C.textFaint, textAlign: "center", marginTop: 4 }}>
@@ -150,6 +151,40 @@ function SignUpInner() {
             <div style={{ fontSize: 12, color: C.textFaint, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700, marginBottom: 14 }}>
               Choose your plan
             </div>
+
+            {/* â”€â”€â”€â”€â”€ FREE TRIAL CARD â”€â”€â”€â”€â”€ */}
+            <div style={{
+              background: C.bgTint, border: `2px solid ${C.primary}`, borderRadius: 12,
+              padding: "16px 18px", marginBottom: 14,
+              display: "flex", flexDirection: "column", gap: 10,
+            }}>
+              <div style={{
+                display: "inline-block", alignSelf: "flex-start",
+                background: C.primarySoft, color: C.primary,
+                fontSize: 11, fontWeight: 700, letterSpacing: "0.04em",
+                padding: "4px 10px", borderRadius: 999,
+              }}>
+                No Credit Card
+              </div>
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: C.text }}>Free Trial</div>
+                <div style={{ fontSize: 13, color: C.textMuted, marginTop: 2 }}>
+                  7 days · 1 seat · full dashboard access
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTrialForm(true)}
+                style={{
+                  background: C.primary, color: "#fff", border: "none",
+                  borderRadius: 10, padding: "11px 0", fontSize: 14, fontWeight: 700,
+                  cursor: "pointer", width: "100%",
+                }}
+              >
+                Request Free Trial Access
+              </button>
+            </div>
+
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
               {Object.entries(PLAN_INFO).map(([key, p]) => (
                 <label key={key} style={{
@@ -185,7 +220,7 @@ function SignUpInner() {
                 "Cancel anytime",
               ].map((f, i) => (
                 <div key={i} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: C.textMuted, padding: "4px 0" }}>
-                  <span style={{ color: C.green }}>✓</span>
+                  <span style={{ color: C.green }}>âœ“</span>
                   <span>{f}</span>
                 </div>
               ))}
@@ -198,12 +233,329 @@ function SignUpInner() {
         </div>
 
         <div style={{ textAlign: "center", fontSize: 12, color: C.textFaint, marginTop: 24 }}>
-          <Link href="/" style={{ color: C.textFaint, textDecoration: "none" }}>← Back to home</Link>
+          <Link href="/" style={{ color: C.textFaint, textDecoration: "none" }}>â† Back to home</Link>
         </div>
       </div>
+
+      {showTrialForm && <TrialModal onClose={() => setShowTrialForm(false)} />}
     </div>
   );
 }
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// TRIAL MODAL
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+function TrialModal({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
+  const [step, setStep] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  // Step 1
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [company, setCompany] = useState("");
+  // Step 2
+  const [teamSize, setTeamSize] = useState("");
+  const [currentTracking, setCurrentTracking] = useState("");
+  const [hopingFor, setHopingFor] = useState("");
+  // Step 3
+  const [agreed, setAgreed] = useState(false);
+
+  const step1Valid = name.trim() && email.trim() && company.trim();
+  const step2Valid = teamSize && currentTracking;
+
+  const handleSubmit = async () => {
+    setSubmitError("");
+    setSubmitting(true);
+    try {
+      const res = await fetch("https://formspree.io/f/xgodkbdp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({
+          name, email, company, teamSize, currentTracking, hopingFor,
+          source: "trial-request",
+        }),
+      });
+      if (!res.ok) throw new Error("Request failed");
+      setSubmitted(true);
+    } catch (err: any) {
+      setSubmitError("Something went wrong. Please try again or email support@tokenguard.io.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 16, zIndex: 1000,
+      }}
+    >
+      <div
+        className="tg-trial-modal"
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: "#FFFFFF", borderRadius: 16, padding: 32,
+          maxWidth: 480, width: "100%", maxHeight: "90vh", overflowY: "auto",
+          fontFamily: "Inter, system-ui, sans-serif",
+          position: "relative",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+        }}
+      >
+        {/* Close button */}
+        <button
+          type="button"
+          aria-label="Close"
+          onClick={onClose}
+          style={{
+            position: "absolute", top: 14, right: 14,
+            width: 32, height: 32, borderRadius: 8,
+            background: "transparent", border: "none",
+            fontSize: 22, color: C.textMuted, cursor: "pointer", lineHeight: 1,
+          }}
+        >Ã—</button>
+
+        {submitted ? (
+          <SuccessView email={email} onHome={() => router.push("/")} />
+        ) : (
+          <>
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+              <LogoMark size={32} />
+            </div>
+            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: C.text, textAlign: "center" }}>
+              Request Trial Access
+            </h2>
+            <p style={{ margin: "6px 0 20px", fontSize: 13, color: C.textMuted, textAlign: "center", lineHeight: 1.5 }}>
+              Tell us a little about your team and we'll get you set up within 24 hours.
+            </p>
+
+            {/* Step indicator */}
+            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 22 }}>
+              {[1, 2, 3].map(n => (
+                <div key={n} style={{
+                  width: 10, height: 10, borderRadius: "50%",
+                  background: n <= step ? C.primary : C.border,
+                  transition: "background 0.15s",
+                }} />
+              ))}
+            </div>
+
+            {/* Step content */}
+            {step === 1 && (
+              <>
+                <SectionTitle>About You</SectionTitle>
+                <Field label="Full Name">
+                  <input value={name} onChange={e => setName(e.target.value)} placeholder="Jane Doe" style={trialInputStyle} />
+                </Field>
+                <Field label="Work Email">
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" style={trialInputStyle} />
+                </Field>
+                <Field label="Company Name">
+                  <input value={company} onChange={e => setCompany(e.target.value)} placeholder="Acme Corp" style={trialInputStyle} />
+                </Field>
+                <NavRow>
+                  <span />
+                  <button
+                    type="button"
+                    disabled={!step1Valid}
+                    onClick={() => setStep(2)}
+                    style={{ ...primaryBtnStyle, opacity: step1Valid ? 1 : 0.5, cursor: step1Valid ? "pointer" : "not-allowed" }}
+                  >
+                    Next â†’
+                  </button>
+                </NavRow>
+              </>
+            )}
+
+            {step === 2 && (
+              <>
+                <SectionTitle>Your Team</SectionTitle>
+                <Field label="Team Size">
+                  <select value={teamSize} onChange={e => setTeamSize(e.target.value)} style={trialInputStyle}>
+                    <option value="">Select team sizeâ€¦</option>
+                    <option value="Just me">Just me</option>
+                    <option value="2â€“10">2â€“10</option>
+                    <option value="11â€“50">11â€“50</option>
+                    <option value="51â€“200">51â€“200</option>
+                    <option value="200+">200+</option>
+                  </select>
+                </Field>
+                <Field label="How is your team currently managing AI costs?">
+                  <select value={currentTracking} onChange={e => setCurrentTracking(e.target.value)} style={trialInputStyle}>
+                    <option value="">Select an optionâ€¦</option>
+                    <option value="We're not â€” it's a problem">We're not â€” it's a problem</option>
+                    <option value="Spreadsheets / manual tracking">Spreadsheets / manual tracking</option>
+                    <option value="Another tool">Another tool</option>
+                    <option value="Just getting started with AI">Just getting started with AI</option>
+                  </select>
+                </Field>
+                <Field label="What are you hoping TokenGuard helps with? (optional)">
+                  <textarea
+                    value={hopingFor}
+                    onChange={e => setHopingFor(e.target.value)}
+                    rows={3}
+                    placeholder="e.g. control spend, get visibility, route to cheaper models..."
+                    style={{ ...trialInputStyle, resize: "vertical", fontFamily: "Inter, system-ui, sans-serif" }}
+                  />
+                </Field>
+                <NavRow>
+                  <button type="button" onClick={() => setStep(1)} style={secondaryBtnStyle}>â† Back</button>
+                  <button
+                    type="button"
+                    disabled={!step2Valid}
+                    onClick={() => setStep(3)}
+                    style={{ ...primaryBtnStyle, opacity: step2Valid ? 1 : 0.5, cursor: step2Valid ? "pointer" : "not-allowed" }}
+                  >
+                    Next â†’
+                  </button>
+                </NavRow>
+              </>
+            )}
+
+            {step === 3 && (
+              <>
+                <SectionTitle>Review & Submit</SectionTitle>
+                <div style={{
+                  background: C.bgTint, border: `1px solid ${C.border}`, borderRadius: 10,
+                  padding: 14, marginBottom: 16, fontSize: 13, lineHeight: 1.7,
+                }}>
+                  <SummaryRow label="Name" value={name} />
+                  <SummaryRow label="Email" value={email} />
+                  <SummaryRow label="Company" value={company} />
+                  <SummaryRow label="Team Size" value={teamSize} />
+                </div>
+                <label style={{
+                  display: "flex", alignItems: "flex-start", gap: 10,
+                  fontSize: 13, color: C.text, cursor: "pointer", marginBottom: 16, lineHeight: 1.5,
+                }}>
+                  <input
+                    type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
+                    style={{ marginTop: 3, accentColor: C.primary }}
+                  />
+                  <span>I agree to be contacted by the TokenGuard team</span>
+                </label>
+
+                {submitError && (
+                  <div style={{
+                    background: `${C.red}15`, color: C.red, border: `1px solid ${C.red}40`,
+                    borderRadius: 8, padding: "8px 12px", fontSize: 13, marginBottom: 12,
+                  }}>{submitError}</div>
+                )}
+
+                <NavRow>
+                  <button type="button" onClick={() => setStep(2)} style={secondaryBtnStyle}>â† Back</button>
+                  <button
+                    type="button"
+                    disabled={!agreed || submitting}
+                    onClick={handleSubmit}
+                    style={{ ...primaryBtnStyle, opacity: (!agreed || submitting) ? 0.5 : 1, cursor: (!agreed || submitting) ? "not-allowed" : "pointer" }}
+                  >
+                    {submitting ? "Submittingâ€¦" : "Submit Request"}
+                  </button>
+                </NavRow>
+              </>
+            )}
+          </>
+        )}
+      </div>
+
+      <style>{`
+        .tg-trial-modal input:focus,
+        .tg-trial-modal select:focus,
+        .tg-trial-modal textarea:focus {
+          border-color: ${C.primary} !important;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function SuccessView({ email, onHome }: { email: string; onHome: () => void }) {
+  return (
+    <div style={{ textAlign: "center", padding: "8px 0" }}>
+      <div style={{
+        width: 48, height: 48, borderRadius: "50%",
+        background: `${C.green}18`, color: C.green,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        margin: "8px auto 16px", fontSize: 26, fontWeight: 700,
+      }}>âœ“</div>
+      <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: C.text }}>
+        Request Received! ðŸŽ‰
+      </h2>
+      <p style={{ margin: "10px 0 22px", fontSize: 14, color: C.textMuted, lineHeight: 1.6 }}>
+        We'll review your request and send your trial credentials within 24 hours.
+        Check your inbox at <strong style={{ color: C.text }}>{email}</strong>.
+      </p>
+      <button type="button" onClick={onHome} style={{ ...primaryBtnStyle, width: "100%" }}>
+        Back to Home
+      </button>
+    </div>
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      fontSize: 11, fontWeight: 700, color: C.primary,
+      letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 14,
+    }}>{children}</div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <label style={trialLabelStyle}>{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function NavRow({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginTop: 18 }}>
+      {children}
+    </div>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+      <span style={{ color: C.textMuted }}>{label}</span>
+      <span style={{ color: C.text, fontWeight: 600, textAlign: "right" }}>{value || "â€”"}</span>
+    </div>
+  );
+}
+
+const trialInputStyle: React.CSSProperties = {
+  width: "100%", border: `1px solid ${C.border}`, borderRadius: 8,
+  padding: "10px 12px", fontSize: 14, fontFamily: "Inter, system-ui, sans-serif",
+  color: C.text, background: "#fff", outline: "none", boxSizing: "border-box",
+};
+
+const trialLabelStyle: React.CSSProperties = {
+  fontSize: 12, fontWeight: 600, color: C.textMuted,
+  marginBottom: 4, display: "block",
+};
+
+const primaryBtnStyle: React.CSSProperties = {
+  background: C.primary, color: "#fff", border: "none",
+  borderRadius: 8, padding: "10px 18px", fontSize: 14, fontWeight: 600,
+  cursor: "pointer", fontFamily: "Inter, system-ui, sans-serif",
+};
+
+const secondaryBtnStyle: React.CSSProperties = {
+  background: "transparent", color: C.textMuted, border: `1px solid ${C.border}`,
+  borderRadius: 8, padding: "10px 18px", fontSize: 14, fontWeight: 600,
+  cursor: "pointer", fontFamily: "Inter, system-ui, sans-serif",
+};
 
 export default function SignUpPage() {
   return (
@@ -223,6 +575,8 @@ const labelStyle: React.CSSProperties = {
   display: "block", fontSize: 11, color: C.textMuted, fontWeight: 600,
   letterSpacing: "0.06em", marginBottom: 6,
 };
+
+
 
 
 

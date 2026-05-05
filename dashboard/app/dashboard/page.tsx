@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Dashboard from "@/components/Dashboard"
+import TrialBanner from "@/components/TrialBanner"
 
 export default async function DashboardPage() {
   const cookieStore = cookies()
@@ -23,9 +24,12 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Dashboard />
-    </div>
+    <>
+      <TrialBanner />
+      <div className="flex h-screen overflow-hidden">
+        <Dashboard />
+      </div>
+    </>
   )
 }
 

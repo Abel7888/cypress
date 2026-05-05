@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import { API_BASE, TENANT_ID, HEADERS, getTenantConfig } from "../constants";
+import useTrialStatus from "@/hooks/useTrialStatus";
 
 // ─── LIGHT PALETTE ───────────────────────────────────────────────────────────
 const C = {
@@ -100,6 +101,8 @@ function StatusBadge({ status }: { status: "healthy" | "warning" | "blocked" }) 
 type Props = { userBudgets?: U[]; setUserBudgets?: (u: U[]) => void };
 
 export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: propSet }: Props) {
+  const { isTrial, seatLimit } = useTrialStatus();
+  const [trialSeatMsg, setTrialSeatMsg] = useState(false);
   // Local fallback if not provided via props (so the page works standalone too)
   const [localBudgets, setLocalBudgets] = useState<U[]>([]);
   const liveBudgets: U[] = propBudgets ?? localBudgets;
@@ -302,13 +305,30 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
               title="Employee Budgets"
               subtitle="Daily spend caps · resets at midnight UTC"
               right={
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button style={btnBlueFilled} onClick={() => showToast("Add Employee — open Settings")}>
-                    ＋ Add Employee
-                  </button>
-                  <button style={btnGhost} onClick={resetAll}>
-                    Reset All
-                  </button>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button style={btnBlueFilled} onClick={() => {
+                      if (isTrial && userBudgets.length >= seatLimit) {
+                        setTrialSeatMsg(true);
+                        setTimeout(() => setTrialSeatMsg(false), 4000);
+                        return;
+                      }
+                      showToast("Add Employee — open Settings");
+                    }}>
+                      ＋ Add Employee
+                    </button>
+                    <button style={btnGhost} onClick={resetAll}>
+                      Reset All
+                    </button>
+                  </div>
+                  {trialSeatMsg && (
+                    <div style={{
+                      background: "#EEF3FB", border: "1px solid #2563EB", borderRadius: 8,
+                      padding: "10px 14px", fontSize: 13, color: "#2563EB", marginTop: 8
+                    }}>
+                      🔒 Trial accounts are limited to 1 seat. <a href="/settings?tab=billing" style={{ color: "#2563EB", fontWeight: 600 }}>Upgrade to add your full team →</a>
+                    </div>
+                  )}
                 </div>
               }
             />
