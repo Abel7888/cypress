@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import Link from "next/link";
 import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -66,11 +66,11 @@ function SignUpInner() {
         window.location.href = data.url;
         return;
       }
-      // Fallback â€” if Stripe not configured, go straight to onboarding
+      // Fallback — if Stripe not configured, go straight to onboarding
       setNotice("Stripe not configured yet. Proceeding to onboarding (demo mode)...");
       setTimeout(() => (window.location.href = "/onboarding"), 800);
     } catch {
-      setNotice("Couldn't reach payments â€” proceeding to onboarding.");
+      setNotice("Couldn't reach payments — proceeding to onboarding.");
       setTimeout(() => (window.location.href = "/onboarding"), 800);
     }
     setLoading(false);
@@ -130,7 +130,7 @@ function SignUpInner() {
                 borderRadius: 10, padding: "14px 0", fontSize: 15, fontWeight: 700,
                 cursor: "pointer", marginTop: 10, opacity: loading ? 0.7 : 1,
               }}>
-                {loading ? "Creating account..." : `Continue to payment â€” $${selected.price}/mo â†’`}
+                {loading ? "Creating account..." : `Continue to payment — $${selected.price}/mo →`}
               </button>
 
               <div style={{ fontSize: 12, color: C.textFaint, textAlign: "center", marginTop: 4 }}>
@@ -233,7 +233,7 @@ function SignUpInner() {
         </div>
 
         <div style={{ textAlign: "center", fontSize: 12, color: C.textFaint, marginTop: 24 }}>
-          <Link href="/" style={{ color: C.textFaint, textDecoration: "none" }}>â† Back to home</Link>
+          <Link href="/" style={{ color: C.textFaint, textDecoration: "none" }}>← Back to home</Link>
         </div>
       </div>
 
@@ -367,7 +367,7 @@ function TrialModal({ onClose }: { onClose: () => void }) {
                     onClick={() => setStep(2)}
                     style={{ ...primaryBtnStyle, opacity: step1Valid ? 1 : 0.5, cursor: step1Valid ? "pointer" : "not-allowed" }}
                   >
-                    Next â†’
+                    Next →
                   </button>
                 </NavRow>
               </>
@@ -378,18 +378,18 @@ function TrialModal({ onClose }: { onClose: () => void }) {
                 <SectionTitle>Your Team</SectionTitle>
                 <Field label="Team Size">
                   <select value={teamSize} onChange={e => setTeamSize(e.target.value)} style={trialInputStyle}>
-                    <option value="">Select team sizeâ€¦</option>
+                    <option value="">Select team size…</option>
                     <option value="Just me">Just me</option>
-                    <option value="2â€“10">2â€“10</option>
-                    <option value="11â€“50">11â€“50</option>
-                    <option value="51â€“200">51â€“200</option>
+                    <option value="2–10">2–10</option>
+                    <option value="11–50">11–50</option>
+                    <option value="51–200">51–200</option>
                     <option value="200+">200+</option>
                   </select>
                 </Field>
                 <Field label="How is your team currently managing AI costs?">
                   <select value={currentTracking} onChange={e => setCurrentTracking(e.target.value)} style={trialInputStyle}>
-                    <option value="">Select an optionâ€¦</option>
-                    <option value="We're not â€” it's a problem">We're not â€” it's a problem</option>
+                    <option value="">Select an option…</option>
+                    <option value="We're not — it's a problem">We're not — it's a problem</option>
                     <option value="Spreadsheets / manual tracking">Spreadsheets / manual tracking</option>
                     <option value="Another tool">Another tool</option>
                     <option value="Just getting started with AI">Just getting started with AI</option>
@@ -405,14 +405,14 @@ function TrialModal({ onClose }: { onClose: () => void }) {
                   />
                 </Field>
                 <NavRow>
-                  <button type="button" onClick={() => setStep(1)} style={secondaryBtnStyle}>â† Back</button>
+                  <button type="button" onClick={() => setStep(1)} style={secondaryBtnStyle}>← Back</button>
                   <button
                     type="button"
                     disabled={!step2Valid}
                     onClick={() => setStep(3)}
                     style={{ ...primaryBtnStyle, opacity: step2Valid ? 1 : 0.5, cursor: step2Valid ? "pointer" : "not-allowed" }}
                   >
-                    Next â†’
+                    Next →
                   </button>
                 </NavRow>
               </>
@@ -449,14 +449,14 @@ function TrialModal({ onClose }: { onClose: () => void }) {
                 )}
 
                 <NavRow>
-                  <button type="button" onClick={() => setStep(2)} style={secondaryBtnStyle}>â† Back</button>
+                  <button type="button" onClick={() => setStep(2)} style={secondaryBtnStyle}>← Back</button>
                   <button
                     type="button"
                     disabled={!agreed || submitting}
                     onClick={handleSubmit}
                     style={{ ...primaryBtnStyle, opacity: (!agreed || submitting) ? 0.5 : 1, cursor: (!agreed || submitting) ? "not-allowed" : "pointer" }}
                   >
-                    {submitting ? "Submittingâ€¦" : "Submit Request"}
+                    {submitting ? "Submitting…" : "Submit Request"}
                   </button>
                 </NavRow>
               </>
@@ -529,7 +529,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
       <span style={{ color: C.textMuted }}>{label}</span>
-      <span style={{ color: C.text, fontWeight: 600, textAlign: "right" }}>{value || "â€”"}</span>
+      <span style={{ color: C.text, fontWeight: 600, textAlign: "right" }}>{value || "—"}</span>
     </div>
   );
 }
