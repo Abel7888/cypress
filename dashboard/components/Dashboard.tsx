@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { COLORS, FONTS, API_BASE, API_KEY, TENANT_ID, HEADERS } from "./constants";
+import { COLORS, FONTS, API_BASE, API_KEY, TENANT_ID, HEADERS, getTenantConfig } from "./constants";
 import OverviewPage from "./pages/OverviewPage";
 import CostAnalysisPage from "./pages/CostAnalysisPage";
 import BudgetsPage from "./pages/BudgetsPage";
@@ -385,9 +385,12 @@ export default function Dashboard() {
 
   // Fetch users
   useEffect(() => {
-    if (!TENANT_ID) return;
-    const fetchUsers = () => {
-      fetch(`${API_BASE}/api/tenants/${TENANT_ID}/users`, { headers: HEADERS })
+    const fetchUsers = async () => {
+      const { tenantId, apiKey } = await getTenantConfig();
+      if (!tenantId) return;
+      fetch(`${API_BASE}/api/tenants/${tenantId}/users`, {
+        headers: { Authorization: `Bearer ${apiKey || ""}` },
+      })
         .then((r) => r.json())
         .then((d) => {
           const users = d.users || d || [];
