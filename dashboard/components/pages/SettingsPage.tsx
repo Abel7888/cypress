@@ -507,11 +507,11 @@ function EmployeeKeyManager() {
 
   const seedKey = async (keyId: string) => {
     setSeedStatus(s => ({ ...s, [keyId]: "seeding" }));
-    const { tenantId } = await getTenantConfig();
+    const { tenantId, apiKey } = await getTenantConfig();
     try {
       const res = await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${keyId}/seed`, {
         method: "POST",
-        headers: HEADERS,
+        headers: { ...HEADERS, Authorization: `Bearer ${apiKey || ""}` },
       });
       const data = await res.json();
       if (data.seeded) {
