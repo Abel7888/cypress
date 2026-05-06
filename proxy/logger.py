@@ -47,7 +47,6 @@ def _worker():
                 [[
                     event.get("client_id", "unknown"),
                     event.get("agent_id", "unknown"),
-                    event.get("workflow_id", "unknown"),
                     event.get("model_requested", "unknown"),
                     event.get("model_used", "unknown"),
                     int(event.get("input_tokens", 0)),
@@ -59,7 +58,7 @@ def _worker():
                     int(event.get("blocked", 0)),
                 ]],
                 column_names=[
-                    "client_id", "agent_id", "workflow_id",
+                    "client_id", "agent_id",
                     "model_requested", "model_used",
                     "input_tokens", "output_tokens", "cost_usd",
                     "latency_ms", "was_routed", "cache_hit", "blocked"
