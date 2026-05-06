@@ -138,9 +138,9 @@ async def get_agent_recent(request: Request, agent_id: str, limit: int = 8):
         )
         result = client.query(
             """
-            SELECT timestamp, model_requested, model_used, cost_usd,
-                   was_routed, cache_hit, blocked, latency_ms
-            FROM tokenguard.events
+            SELECT timestamp, request_model, routed_model, total_cost_usd,
+                   was_downgraded, cache_hit, 0 as blocked, latency_ms
+            FROM tokenguard.llm_events
             WHERE agent_id = {agent_id:String}
             ORDER BY timestamp DESC
             LIMIT {limit:Int32}

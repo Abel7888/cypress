@@ -18,8 +18,8 @@ def get_client():
 def get_total_events(client_id: str) -> int:
     client = get_client()
     result = client.query(
-        "SELECT count() FROM tokenguard.events WHERE client_id = {client_id:String}",
-        parameters={"client_id": client_id}
+        "SELECT count() FROM tokenguard.llm_events WHERE tenant_id = {tenant_id:String}",
+        parameters={"tenant_id": client_id}
     )
     return result.result_rows[0][0]
 
@@ -27,8 +27,8 @@ def get_total_events(client_id: str) -> int:
 def get_total_cost(client_id: str) -> float:
     client = get_client()
     result = client.query(
-        "SELECT sum(cost_usd) FROM tokenguard.events WHERE client_id = {client_id:String}",
-        parameters={"client_id": client_id}
+        "SELECT sum(total_cost_usd) FROM tokenguard.llm_events WHERE tenant_id = {tenant_id:String}",
+        parameters={"tenant_id": client_id}
     )
     return round(float(result.result_rows[0][0]), 6)
 
@@ -37,13 +37,13 @@ def get_spend_by_model(client_id: str) -> list:
     client = get_client()
     result = client.query(
         """
-        SELECT model_used, sum(cost_usd) as total_cost, count() as calls
-        FROM tokenguard.events
-        WHERE client_id = {client_id:String}
-        GROUP BY model_used
+        SELECT routed_model, sum(total_cost_usd) as total_cost, count() as calls
+        FROM tokenguard.llm_events
+        WHERE tenant_id = {tenant_id:String}
+        GROUP BY routed_model
         ORDER BY total_cost DESC
         """,
-        parameters={"client_id": client_id}
+        parameters={"tenant_id": client_id}
     )
     return [{"model": r[0], "cost": round(r[1], 6), "calls": r[2]}
             for r in result.result_rows]
@@ -56,11 +56,11 @@ def get_cache_savings(client_id: str) -> dict:
         SELECT
             countIf(cache_hit = 1) as cache_hits,
             countIf(cache_hit = 0) as api_calls,
-            sum(cost_usd) as total_cost
-        FROM tokenguard.events
-        WHERE client_id = {client_id:String}
+            sum(total_cost_usd) as total_cost
+        FROM tokenguard.llm_events
+        WHERE tenant_id = {tenant_id:String}
         """,
-        parameters={"client_id": client_id}
+        parameters={"tenant_id": client_id}
     )
     row = result.result_rows[0]
     return {
