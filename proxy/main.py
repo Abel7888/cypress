@@ -434,7 +434,19 @@ async def proxy_completion(request: Request):
         import clickhouse_connect
         _bearer = request.headers.get("Authorization", "").replace("Bearer ", "").strip()
         _row = get_tenant_from_key(_bearer)
-        _key_id = str(_row[2]) if _row else ""
+        _key_id = ""
+        if _row:
+            try:
+                import psycopg2
+                _conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+                _cur = _conn.cursor()
+                _cur.execute("SELECT label FROM api_keys WHERE id = %s::uuid", (str(_row[2]),))
+                _label_row = _cur.fetchone()
+                _key_id = _label_row[0] if _label_row else str(_row[2])
+                _cur.close()
+                _conn.close()
+            except:
+                _key_id = str(_row[2])
         _ch = clickhouse_connect.get_client(
             host=os.getenv("CLICKHOUSE_HOST"),
             port=int(os.getenv("CLICKHOUSE_PORT", 8443)),
