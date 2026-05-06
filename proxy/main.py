@@ -91,7 +91,7 @@ def get_tenant_from_key(api_key: str):
         conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
         cur = conn.cursor()
         cur.execute("""
-            SELECT t.id, t.name, ak.id, ak.budget_usd 
+            SELECT t.id, t.name, ak.id, ak.budget_usd, ak.label
             FROM api_keys ak
             JOIN tenants t ON t.id = ak.tenant_id
             WHERE ak.key = %s AND ak.is_active = TRUE
@@ -99,7 +99,7 @@ def get_tenant_from_key(api_key: str):
         row = cur.fetchone()
         cur.close()
         conn.close()
-        return row  # (tenant_id, tenant_name, key_id, budget_usd)
+        return row  # (tenant_id, tenant_name, key_id, budget_usd, label)
     except Exception as e:
         print(f"[Auth] DB lookup failed: {e}")
         return None
@@ -117,7 +117,8 @@ def authenticate(request: Request):
     if api_key.startswith("tg-"):
         tenant = get_tenant_from_key(api_key)
         if tenant:
-            tenant_id, tenant_name, key_id, budget_usd = tenant
+            tenant_id, tenant_name, key_id, budget_usd, label = tenant
+            request.state.agent_label = label
             print(f"[Auth] Authenticated: {tenant_name} key={key_id} budget=${budget_usd}")
             return str(tenant_id)
         else:
@@ -330,7 +331,7 @@ async def proxy_completion(request: Request):
         print(f"[Budget] BLOCKED — {budget_result.message}")
         log_event({
             "client_id":        client_id,
-            "agent_id":         request.headers.get("X-Agent-ID", "unknown"),
+            "agent_id":         request.headers.get("X-Agent-ID") or getattr(request.state, "agent_label", "unknown"),
             "model_requested":  original_model,
             "model_used":       "blocked",
             "cost_usd":         0.0,
@@ -356,7 +357,7 @@ async def proxy_completion(request: Request):
         print(f"[{datetime.utcnow().isoformat()}] CACHE HIT - {latency_ms}ms - $0.00")
         log_event({
             "client_id":    client_id,
-            "agent_id":     request.headers.get("X-Agent-ID", "unknown"),
+            "agent_id":     request.headers.get("X-Agent-ID") or getattr(request.state, "agent_label", "unknown"),
             "model_used":   "cache",
             "cost_usd":     0.0,
             "latency_ms":   latency_ms,
@@ -416,7 +417,7 @@ async def proxy_completion(request: Request):
 
     log_event({
         "client_id":        client_id,
-        "agent_id":         request.headers.get("X-Agent-ID", "unknown"),
+        "agent_id":         request.headers.get("X-Agent-ID") or getattr(request.state, "agent_label", "unknown"),
         "workflow_id":      request.headers.get("X-Workflow-ID", "unknown"),
         "model_requested":  body.get("model", "unknown"),
         "model_used":       model_used,
