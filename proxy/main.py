@@ -1002,7 +1002,7 @@ async def get_user_breakdown(tenant_id: str, request: Request):
         print(f"[Users] Could not fetch reset_at: {e}")
 
     since = reset_at.strftime("%Y-%m-%d %H:%M:%S") if reset_at else None
-    time_filter = "AND created_at >= {since:String}" if since else "AND created_at >= now() - INTERVAL 30 DAY"
+    time_filter = "AND timestamp >= {since:String}" if since else "AND timestamp >= now() - INTERVAL 30 DAY"
 
     result = ch.query(f"""
         SELECT

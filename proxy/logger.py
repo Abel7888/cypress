@@ -47,9 +47,23 @@ def _worker():
                 [[
                     event.get("client_id", "unknown"),
                     event.get("agent_id", "unknown"),
+                    event.get("model_requested", "unknown"),
+                    event.get("model_used", "unknown"),
+                    int(event.get("input_tokens", 0)),
+                    int(event.get("output_tokens", 0)),
+                    int(event.get("input_tokens", 0)) + int(event.get("output_tokens", 0)),
                     float(event.get("cost_usd", 0.0)),
+                    int(event.get("cache_hit", 0)),
+                    int(event.get("was_routed", 0)),
+                    int(event.get("blocked", 0)),
+                    int(event.get("latency_ms", 0)),
                 ]],
-                column_names=["client_id", "agent_id", "cost_usd"]
+                column_names=[
+                    "client_id", "agent_id",
+                    "model_requested", "model_used",
+                    "prompt_tokens", "completion_tokens", "total_tokens",
+                    "cost_usd", "cache_hit", "was_routed", "blocked", "latency_ms"
+                ]
             )
             print(f"[Logger] Event saved - {event.get('model_used')} "
                   f"${event.get('cost_usd', 0):.6f}")
