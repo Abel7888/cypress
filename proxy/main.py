@@ -1006,7 +1006,7 @@ async def get_user_breakdown(tenant_id: str, request: Request):
 
     result = ch.query(f"""
         SELECT
-            api_key_id,
+            agent_id,
             count() as total_calls,
             sum(total_cost_usd) as total_cost,
             countIf(cache_hit = 1) as cache_hits,
@@ -1015,12 +1015,13 @@ async def get_user_breakdown(tenant_id: str, request: Request):
             avg(latency_ms) as avg_latency_ms
         FROM tokenguard.llm_events
         WHERE tenant_id = {{tenant_id:String}}
+        AND agent_id != '' AND agent_id != 'unknown'
         {time_filter}
-        GROUP BY api_key_id
+        GROUP BY agent_id
         ORDER BY total_cost DESC
     """, parameters={"tenant_id": tenant_id, **({"since": since} if since else {})})
 
-    # Fetch budget_usd per employee from Postgres
+    # Fetch budget_usd per employee from Postgres (keyed by label = agent_id)
     budgets = {}
     try:
         conn2 = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
@@ -1030,7 +1031,7 @@ async def get_user_breakdown(tenant_id: str, request: Request):
             WHERE tenant_id = %s::uuid AND is_active = TRUE
         """, (tenant_id,))
         for r in cur2.fetchall():
-            budgets[r[0]] = float(r[1]) if r[1] else 0.01
+            budgets[r[0]] = float(r[1]) if r[1] else 0.05
         cur2.close()
         conn2.close()
     except Exception as e:
@@ -1039,9 +1040,12 @@ async def get_user_breakdown(tenant_id: str, request: Request):
     users = []
     for row in result.result_rows:
         agent_id, calls, cost, cache_hits, routed, blocked, avg_latency = row
+        if not agent_id or agent_id in ("unknown", "seed"):
+            continue
         cost_without = cost * 4.2 if routed > 0 else cost
         users.append({
             "employee": agent_id,
+            "name": agent_id,
             "api_calls": calls,
             "cost_usd": round(float(cost), 6),
             "cache_hits": cache_hits,
@@ -1051,7 +1055,7 @@ async def get_user_breakdown(tenant_id: str, request: Request):
             "estimated_cost_without_tokenguard": round(float(cost_without), 6),
             "savings_usd": round(float(cost_without - cost), 6),
             "status": "blocked" if blocked > 0 else "healthy",
-            "budget_usd": budgets.get(agent_id, 0.01),
+            "budget_usd": budgets.get(agent_id, 0.05),
         })
 
     total_cost = sum(u["cost_usd"] for u in users)
