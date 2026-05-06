@@ -509,15 +509,22 @@ function EmployeeKeyManager() {
     setSeedStatus(s => ({ ...s, [keyId]: "seeding" }));
     const { tenantId } = await getTenantConfig();
     try {
-      const res = await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${keyId}/seed`, { method: "POST", headers: HEADERS });
+      const res = await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${keyId}/seed`, {
+        method: "POST",
+        headers: HEADERS,
+      });
       const data = await res.json();
-      setSeedStatus(s => ({ ...s, [keyId]: data.seeded ? "done" : "error" }));
-      setTimeout(() => setSeedStatus(s => ({ ...s, [keyId]: "" })), 3000);
-      await load();
-    } catch {
+      if (data.seeded) {
+        setSeedStatus(s => ({ ...s, [keyId]: "done" }));
+        await load();
+      } else {
+        setSeedStatus(s => ({ ...s, [keyId]: "error" }));
+      }
+    } catch (e) {
+      console.error(e);
       setSeedStatus(s => ({ ...s, [keyId]: "error" }));
-      setTimeout(() => setSeedStatus(s => ({ ...s, [keyId]: "" })), 3000);
     }
+    setTimeout(() => setSeedStatus(s => ({ ...s, [keyId]: "" })), 3000);
   };
 
   const copyNewKey = (key: string) => {
@@ -696,7 +703,7 @@ function EmployeeKeyManager() {
                     </span>
                   )}
                 </div>
-                <div style={{ display: "flex", gap: 6 }}>
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <button onClick={() => seedKey(k.id)} disabled={seedStatus[k.id] === "seeding"} style={btnBlueOutlineSm}>
                     {seedStatus[k.id] === "seeding" ? "…" : seedStatus[k.id] === "done" ? "✓" : seedStatus[k.id] === "error" ? "✗" : "Seed"}
                   </button>

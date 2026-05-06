@@ -577,6 +577,16 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
               subtitle="Overall spend enforcement across all employees."
             />
             <div style={{ padding: "0 20px 20px" }}>
+              {accountTotals.limit === 0 && (
+                <div style={{
+                  background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 8,
+                  padding: "10px 14px", fontSize: 12, color: "#92400E", marginBottom: 12,
+                  display: "flex", alignItems: "center", gap: 8,
+                }}>
+                  <span>⚠</span>
+                  <span>No company budget set yet. Add employees and set their daily budgets — the account total updates automatically.</span>
+                </div>
+              )}
               <div style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8,
               }}>
