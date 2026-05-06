@@ -1320,18 +1320,33 @@ async def debug_env():
         "all_env_keys": list(os.environ.keys()),
     })
 
+@app.get("/debug/clickhouse")
+async def debug_clickhouse(request: Request):
+    authenticate(request)
+    try:
+        import clickhouse_connect
+        ch = clickhouse_connect.get_client(
+            host=os.getenv("CLICKHOUSE_HOST"),
+            port=int(os.getenv("CLICKHOUSE_PORT", 8443)),
+            username=os.getenv("CLICKHOUSE_USER", "default"),
+            password=os.getenv("CLICKHOUSE_PASSWORD"),
+            secure=True
+        )
+        tables = ch.query("SHOW TABLES FROM tokenguard")
+        schema = ch.query("DESCRIBE tokenguard.events")
+        count  = ch.query("SELECT count() FROM tokenguard.events")
+        sample = ch.query("SELECT client_id, agent_id, cost_usd, created_at FROM tokenguard.events ORDER BY created_at DESC LIMIT 5")
+        return JSONResponse(content={
+            "tables":        [r[0] for r in tables.result_rows],
+            "events_schema": [r[0] for r in schema.result_rows],
+            "total_rows":    count.result_rows[0][0],
+            "latest_5":      [{"client_id": r[0], "agent_id": r[1], "cost": float(r[2]), "created_at": str(r[3])} for r in sample.result_rows],
+        })
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)})
 
-
-
-
-
-
-
-
-
-
-
-
+if __name__ == "__main__":
+    pass
 
 
 
