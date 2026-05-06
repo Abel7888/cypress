@@ -973,19 +973,19 @@ async def get_user_breakdown(tenant_id: str, request: Request):
 
     result = ch.query(f"""
         SELECT
-            agent_id,
+            api_key_id,
             count() as total_calls,
-            sum(cost_usd) as total_cost,
+            sum(total_cost_usd) as total_cost,
             countIf(cache_hit = 1) as cache_hits,
-            countIf(was_routed = 1) as routed_calls,
-            countIf(blocked = 1) as blocked_calls,
+            countIf(was_downgraded = 1) as routed_calls,
+            0 as blocked_calls,
             avg(latency_ms) as avg_latency_ms
-        FROM tokenguard.events
-        WHERE client_id = {{client_id:String}}
+        FROM tokenguard.llm_events
+        WHERE tenant_id = {{tenant_id:String}}
         {time_filter}
-        GROUP BY agent_id
+        GROUP BY api_key_id
         ORDER BY total_cost DESC
-    """, parameters={"client_id": tenant_id, **({"since": since} if since else {})})
+    """, parameters={"tenant_id": tenant_id, **({"since": since} if since else {})})
 
     # Fetch budget_usd per employee from Postgres
     budgets = {}
@@ -1069,15 +1069,15 @@ async def billing_summary(tenant_id: str, request: Request):
     result = ch.query("""
         SELECT
             count() as total_calls,
-            sum(cost_usd) as total_cost,
+            sum(total_cost_usd) as total_cost,
             countIf(cache_hit = 1) as cache_hits,
-            countIf(was_routed = 1) as routed_calls,
-            sum(cost_usd * if(was_routed = 1, 15.0, 1.0)) as estimated_without_routing,
-            count(DISTINCT agent_id) as active_users
-        FROM tokenguard.events
-        WHERE client_id = {client_id:String}
-        AND created_at >= now() - INTERVAL 30 DAY
-    """, parameters={"client_id": tenant_id})
+            countIf(was_downgraded = 1) as routed_calls,
+            sum(total_cost_usd * if(was_downgraded = 1, 15.0, 1.0)) as estimated_without_routing,
+            count(DISTINCT api_key_id) as active_users
+        FROM tokenguard.llm_events
+        WHERE tenant_id = {tenant_id:String}
+        AND timestamp >= now() - INTERVAL 30 DAY
+    """, parameters={"tenant_id": tenant_id})
 
     row = result.result_rows[0] if result.result_rows else (0, 0, 0, 0, 0, 0)
     total_calls, total_cost, cache_hits, routed_calls, cost_without, active_users = row
@@ -1156,16 +1156,16 @@ async def dashboard_cost_trends(request: Request):
     
     result = ch.query("""
         SELECT 
-            toDate(created_at) as date,
-            sum(cost_usd) as total_cost,
+            toDate(timestamp) as date,
+            sum(total_cost_usd) as total_cost,
             countIf(cache_hit = 1) as cache_hits,
             count() as total_calls
-        FROM tokenguard.events
-        WHERE client_id = {client_id:String}
-        AND created_at >= now() - INTERVAL 30 DAY
+        FROM tokenguard.llm_events
+        WHERE tenant_id = {tenant_id:String}
+        AND timestamp >= now() - INTERVAL 30 DAY
         GROUP BY date
         ORDER BY date
-    """, parameters={"client_id": client_id})
+    """, parameters={"tenant_id": client_id})
     
     trends = []
     for row in result.result_rows:
@@ -1204,7 +1204,7 @@ async def agent_recent(request: Request, agent_id: str, limit: int = 8):
             secure=True
         )
         result = ch.query(
-            """SELECT now() as timestamp, model_requested, model_used, cost_usd, was_routed, cache_hit, blocked, latency_ms FROM tokenguard.events WHERE agent_id = {agent_id:String} ORDER BY latency_ms DESC LIMIT {limit:Int32}""",
+            """SELECT timestamp, request_model, routed_model, total_cost_usd, was_downgraded, cache_hit, 0 as blocked, latency_ms FROM tokenguard.llm_events WHERE agent_id = {agent_id:String} ORDER BY latency_ms DESC LIMIT {limit:Int32}""",
             parameters={"agent_id": agent_id, "limit": limit}
         )
         return JSONResponse(content=[{
@@ -1238,17 +1238,17 @@ async def dashboard_agents(request: Request):
     result = ch.query("""
         SELECT
             agent_id,
-            sum(cost_usd) as total_cost,
+            sum(total_cost_usd) as total_cost,
             count() as total_calls,
-            countIf(was_routed = 1) as routed_calls,
+            countIf(was_downgraded = 1) as routed_calls,
             countIf(cache_hit = 1) as cache_hits,
-            countIf(blocked = 1) as blocked_calls
-        FROM tokenguard.events
-        WHERE client_id = {client_id:String}
+            0 as blocked_calls
+        FROM tokenguard.llm_events
+        WHERE tenant_id = {tenant_id:String}
         GROUP BY agent_id
         ORDER BY total_cost DESC
         LIMIT 20
-    """, parameters={"client_id": client_id})
+    """, parameters={"tenant_id": client_id})
     
     agents = []
     for row in result.result_rows:
