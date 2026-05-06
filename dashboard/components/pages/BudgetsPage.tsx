@@ -240,16 +240,14 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
       display: "flex", flexDirection: "column", gap: 16,
       width: "100%", fontFamily: FONT_SANS, color: C.text,
     }}>
-      {usingDemo && (
+      {!loaded && (
         <div style={{
-          background: C.blueBg, border: `1px solid ${C.blueBorder}`, color: C.blueText,
-          borderRadius: 10, padding: "8px 14px", fontSize: 12,
-          display: "flex", alignItems: "center", gap: 8,
+          background: C.borderSoft, border: `1px solid ${C.border}`,
+          borderRadius: 10, padding: "10px 16px", fontSize: 12,
+          display: "flex", alignItems: "center", gap: 10, color: C.textMuted,
         }}>
-          <span style={{ fontSize: 14 }}>ⓘ</span>
-          <span>
-            <strong>Preview mode</strong> — showing demo budgets. Connect your proxy and real employees will replace these automatically.
-          </span>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: C.textDim, opacity: 0.5 }} />
+          Loading budgets…
         </div>
       )}
       {/* ═══ HEADER ════════════════════════════════════════════════════════ */}
@@ -324,6 +322,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
               }
             />
             <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 20px 20px" }}>
+              {loaded && userBudgets.length === 0 && <EmptyCard />}
               {userBudgets.map((u) => {
                 const pct = pctOf(u);
                 const status = statusOf(pct);
