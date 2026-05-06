@@ -26,15 +26,6 @@ type U = {
 
 // ─── DEMO FALLBACK (renders the design when no live data is available) ──────
 // Swapped in only when userBudgets is empty/undefined so every section is visible.
-const DEMO_FALLBACK: U[] = [
-  { id: "demo-1", name: "Sarah Chen",    role: "Senior Engineer",  cost_usd: 42.18,  budget_usd: 50, api_calls: 284, routed_calls: 196 },
-  { id: "demo-2", name: "Marcus Rivera", role: "Sales Lead",       cost_usd: 18.45,  budget_usd: 25, api_calls: 142, routed_calls: 64 },
-  { id: "demo-3", name: "Priya Shah",    role: "Product Manager",  cost_usd: 9.62,   budget_usd: 20, api_calls: 78,  routed_calls: 55 },
-  { id: "demo-4", name: "Jamie Wu",      role: "Marketing",        cost_usd: 21.07,  budget_usd: 20, api_calls: 165, routed_calls: 41 },
-  { id: "demo-5", name: "Dan Okafor",    role: "Data Analyst",     cost_usd: 33.80,  budget_usd: 40, api_calls: 221, routed_calls: 182 },
-  { id: "demo-6", name: "Leah Martins",  role: "Designer",         cost_usd: 4.15,   budget_usd: 15, api_calls: 33,  routed_calls: 22 },
-];
-
 function pctOf(u: U) {
   const limit = u.budget_usd || 0;
   const spent = u.cost_usd || 0;
@@ -106,9 +97,8 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
   // Local fallback if not provided via props (so the page works standalone too)
   const [localBudgets, setLocalBudgets] = useState<U[]>([]);
   const liveBudgets: U[] = propBudgets ?? localBudgets;
-  // Use demo fallback when nothing is live yet so the design is always visible.
-  const usingDemo = liveBudgets.length === 0;
-  const userBudgets: U[] = usingDemo ? DEMO_FALLBACK : liveBudgets;
+  const usingDemo = false;
+  const userBudgets: U[] = liveBudgets;
   const setUserBudgets = propSet ?? setLocalBudgets;
 
   const [loaded, setLoaded] = useState(false);

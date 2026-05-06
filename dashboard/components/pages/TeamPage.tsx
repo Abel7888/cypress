@@ -19,17 +19,6 @@ const FONT_MONO = "'JetBrains Mono', monospace";
 const FONT_SANS = "'Inter', system-ui, sans-serif";
 
 // ─── DEMO FALLBACK (renders design when /users returns empty) ───────────────
-const DEMO_FALLBACK_USERS: any[] = [
-  { user_id: "demo-1", employee: "Sarah Chen",    role: "Senior Engineer",   cost_usd: 42.18, budget_usd: 50, savings_usd: 168.40, api_calls: 284, routed_calls: 242, cache_hits: 42, blocked_calls: 0, top_model: "gpt-4o-mini" },
-  { user_id: "demo-2", employee: "Marcus Rivera", role: "Sales Lead",        cost_usd: 26.92, budget_usd: 25, savings_usd: 12.10,  api_calls: 142, routed_calls: 51,  cache_hits: 9,  blocked_calls: 3, top_model: "gpt-4o" },
-  { user_id: "demo-3", employee: "Priya Shah",    role: "Product Manager",   cost_usd: 9.62,  budget_usd: 20, savings_usd: 48.75,  api_calls: 78,  routed_calls: 55,  cache_hits: 14, blocked_calls: 0, top_model: "claude-3.5-haiku" },
-  { user_id: "demo-4", employee: "Jamie Wu",      role: "Marketing",         cost_usd: 21.07, budget_usd: 20, savings_usd: 8.30,   api_calls: 165, routed_calls: 41,  cache_hits: 6,  blocked_calls: 1, top_model: "gpt-4o" },
-  { user_id: "demo-5", employee: "Dan Okafor",    role: "Data Analyst",      cost_usd: 33.80, budget_usd: 40, savings_usd: 94.90,  api_calls: 221, routed_calls: 182, cache_hits: 33, blocked_calls: 0, top_model: "gpt-4o-mini" },
-  { user_id: "demo-6", employee: "Leah Martins",  role: "Designer",          cost_usd: 4.15,  budget_usd: 15, savings_usd: 6.20,   api_calls: 33,  routed_calls: 22,  cache_hits: 5,  blocked_calls: 0, top_model: "claude-3.5-sonnet" },
-  { user_id: "demo-7", employee: "Nikhil Rao",    role: "Platform Engineer", cost_usd: 38.45, budget_usd: 50, savings_usd: 172.15, api_calls: 312, routed_calls: 271, cache_hits: 55, blocked_calls: 0, top_model: "gpt-4o-mini" },
-  { user_id: "demo-8", employee: "Taylor Brooks", role: "Ops Manager",       cost_usd: 14.20, budget_usd: 20, savings_usd: 28.90,  api_calls: 95,  routed_calls: 72,  cache_hits: 11, blocked_calls: 0, top_model: "claude-3.5-haiku" },
-];
-
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 function fmtMoney(n: number, dp = 2) { return "$" + (isFinite(n) ? n : 0).toFixed(dp); }
 function fmtInt(n: number) { return (n || 0).toLocaleString(); }
@@ -126,7 +115,7 @@ export default function TeamPage({ setPage }: { setPage?: (p: string) => void })
         .then((r) => r.json());
       const arr: any[] = data?.users || [];
       if (arr.length === 0) {
-        setUsers(DEMO_FALLBACK_USERS);
+        setUsers([]);
         setUsingDemo(true);
       } else {
         // Normalize to make sure fields used in JSX exist
@@ -149,7 +138,7 @@ export default function TeamPage({ setPage }: { setPage?: (p: string) => void })
     } catch (e) {
       console.error(e);
       // Network failure → still show demo design
-      setUsers((prev) => (prev.length === 0 ? DEMO_FALLBACK_USERS : prev));
+      setUsers((prev) => (prev.length === 0 ? [] : prev));
       setUsingDemo((prev) => (users.length === 0 ? true : prev));
     }
     setLoading(false);

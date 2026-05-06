@@ -16,44 +16,6 @@ const C = {
 const FONT_MONO = "'JetBrains Mono', monospace";
 const FONT_SANS = "'Inter', system-ui, sans-serif";
 
-// ─── DEMO FALLBACK DATA ──────────────────────────────────────────────────────
-const DEMO_OVERVIEW = {
-  total_requests: 45230,
-  total_cost_usd: 127.4523,
-  cache_hits: 8940,
-  cache_hit_rate: 19.8,
-};
-
-const DEMO_TRENDS = [
-  { date: "04-01", cost: 3.21 }, { date: "04-02", cost: 4.15 }, { date: "04-03", cost: 3.89 },
-  { date: "04-04", cost: 4.52 }, { date: "04-05", cost: 5.01 }, { date: "04-06", cost: 4.78 },
-  { date: "04-07", cost: 5.34 }, { date: "04-08", cost: 6.12 }, { date: "04-09", cost: 5.87 },
-  { date: "04-10", cost: 6.45 }, { date: "04-11", cost: 7.23 }, { date: "04-12", cost: 6.98 },
-  { date: "04-13", cost: 7.56 }, { date: "04-14", cost: 8.34 }, { date: "04-15", cost: 8.12 },
-  { date: "04-16", cost: 8.89 }, { date: "04-17", cost: 9.45 }, { date: "04-18", cost: 9.23 },
-  { date: "04-19", cost: 10.12 }, { date: "04-20", cost: 11.34 }, { date: "04-21", cost: 10.87 },
-  { date: "04-22", cost: 11.56 }, { date: "04-23", cost: 12.45 }, { date: "04-24", cost: 12.12 },
-  { date: "04-25", cost: 13.23 }, { date: "04-26", cost: 14.56 }, { date: "04-27", cost: 14.01 },
-  { date: "04-28", cost: 15.34 },
-];
-
-const DEMO_USERS = [
-  { employee: "Sarah Chen", user_id: "u1", api_calls: 3420, routed_calls: 2850, cache_hits: 680, blocked_calls: 0, cost_usd: 18.45, savings_usd: 12.34, budget_usd: 50 },
-  { employee: "Marcus Johnson", user_id: "u2", api_calls: 2890, routed_calls: 2310, cache_hits: 520, blocked_calls: 0, cost_usd: 15.23, savings_usd: 9.87, budget_usd: 50 },
-  { employee: "Jamie Lee", user_id: "u3", api_calls: 4120, routed_calls: 3290, cache_hits: 780, blocked_calls: 0, cost_usd: 22.67, savings_usd: 15.23, budget_usd: 50 },
-  { employee: "Alex Rivera", user_id: "u4", api_calls: 1850, routed_calls: 1420, cache_hits: 390, blocked_calls: 0, cost_usd: 9.87, savings_usd: 6.45, budget_usd: 50 },
-  { employee: "Taylor Kim", user_id: "u5", api_calls: 2950, routed_calls: 2180, cache_hits: 670, blocked_calls: 0, cost_usd: 16.12, savings_usd: 10.23, budget_usd: 50 },
-  { employee: "Jordan Smith", user_id: "u6", api_calls: 3210, routed_calls: 2540, cache_hits: 590, blocked_calls: 0, cost_usd: 17.89, savings_usd: 11.56, budget_usd: 50 },
-  { employee: "Casey Brown", user_id: "u7", api_calls: 2340, routed_calls: 1780, cache_hits: 480, blocked_calls: 0, cost_usd: 12.45, savings_usd: 7.89, budget_usd: 50 },
-  { employee: "Morgan Davis", user_id: "u8", api_calls: 1920, routed_calls: 1450, cache_hits: 410, blocked_calls: 0, cost_usd: 10.34, savings_usd: 6.78, budget_usd: 50 },
-];
-
-const DEMO_MODELS = [
-  { model: "gpt-4o-mini", calls: 18450, requests: 18450, cost: 42.34, cost_usd: 42.34, percentage: 45 },
-  { model: "gpt-4o", calls: 12340, requests: 12340, cost: 58.67, cost_usd: 58.67, percentage: 30 },
-  { model: "claude-3-5-sonnet", calls: 8920, requests: 8920, cost: 18.23, cost_usd: 18.23, percentage: 18 },
-  { model: "gpt-3.5-turbo", calls: 5520, requests: 5520, cost: 8.22, cost_usd: 8.22, percentage: 7 },
-];
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 const fmtMoney = (n: number, dp = 2) => "$" + (isFinite(n) ? n : 0).toFixed(dp);
@@ -91,27 +53,17 @@ export default function OverviewPage({ setPage }: Props) {
         fetch(`${API_BASE}/api/dashboard/models`,           { headers: authHeaders }).then(r => r.json()),
       ]);
       
-      // Use demo data if API returns empty
-      const hasData = (ov?.total_requests || 0) > 0 || (us?.users || []).length > 0;
-      if (!hasData) {
-        setOverview(DEMO_OVERVIEW);
-        setTrends(DEMO_TRENDS);
-        setUsers(DEMO_USERS);
-        setModels(DEMO_MODELS);
-      } else {
-        setOverview(ov);
-        setTrends(Array.isArray(tr) ? tr.map((t: any) => ({ ...t, date: typeof t.date === "string" ? t.date.slice(5) : t.date })) : []);
-        setUsers(us?.users || []);
-        setModels(Array.isArray(mo) ? mo : []);
-      }
+      setOverview(ov);
+      setTrends(Array.isArray(tr) ? tr.map((t: any) => ({ ...t, date: typeof t.date === "string" ? t.date.slice(5) : t.date })) : []);
+      setUsers(us?.users || []);
+      setModels(Array.isArray(mo) ? mo : []);
       setLastUpdated(new Date());
     } catch (e) {
       console.error("Overview load error:", e);
-      // On error, use demo data
-      setOverview(DEMO_OVERVIEW);
-      setTrends(DEMO_TRENDS);
-      setUsers(DEMO_USERS);
-      setModels(DEMO_MODELS);
+      setOverview(null);
+      setTrends([]);
+      setUsers([]);
+      setModels([]);
     }
     setLoading(false);
   }
