@@ -432,49 +432,59 @@ async def proxy_completion(request: Request):
     # ── ClickHouse direct logging (tenant_id + key_id) ───────────────────────
     try:
         import clickhouse_connect
-
-        # Resolve key_id from the bearer token used to authenticate this request
-        _auth_header = request.headers.get("Authorization", "")
-        _api_key = _auth_header.replace("Bearer ", "").strip() if _auth_header.startswith("Bearer ") else ""
-        _key_id = ""
-        if _api_key.startswith("tg-"):
-            _row = get_tenant_from_key(_api_key)
-            if _row:
-                # (tenant_id, tenant_name, key_id, budget_usd)
-                _key_id = str(_row[2])
-
-        ch = clickhouse_connect.get_client(
+        _bearer = request.headers.get("Authorization", "").replace("Bearer ", "").strip()
+        _row = get_tenant_from_key(_bearer)
+        _key_id = str(_row[2]) if _row else ""
+        _ch = clickhouse_connect.get_client(
             host=os.getenv("CLICKHOUSE_HOST"),
             port=int(os.getenv("CLICKHOUSE_PORT", 8443)),
             username=os.getenv("CLICKHOUSE_USER", "default"),
             password=os.getenv("CLICKHOUSE_PASSWORD"),
             secure=True
         )
-        ch.insert(
-            "tokenguard.events",
+        _ch.insert(
+            "tokenguard.llm_events",
             [[
-                str(client_id),
+                client_id,
                 _key_id,
-                str(original_model),
-                str(model_used),
-                int(input_tokens),
-                int(output_tokens),
-                float(cost_usd),
-                1 if (str(original_model) != str(model_used)) else 0,
+                "",
+                "",
+                "",
+                original_model,
+                model_used,
+                "openai",
+                "/v1/chat/completions",
+                "POST",
+                0,
+                input_tokens,
+                output_tokens,
+                input_tokens + output_tokens,
+                0.0,
+                0.0,
+                cost_usd,
+                0.0,
+                round((time.time() - start_time) * 1000),
                 0,
                 0,
-                int(round((time.time() - start_time) * 1000)),
+                "",
+                1 if original_model != model_used else 0,
+                "",
+                200,
+                "",
+                "",
             ]],
             column_names=[
-                "tenant_id", "key_id",
-                "model_requested", "model_used",
-                "prompt_tokens", "completion_tokens",
-                "cost_usd", "was_routed", "cache_hit", "blocked",
-                "latency_ms",
+                "tenant_id", "api_key_id", "agent_id", "workflow_id", "trace_id",
+                "request_model", "routed_model", "provider", "endpoint", "method",
+                "is_streaming", "prompt_tokens", "completion_tokens", "total_tokens",
+                "prompt_cost_usd", "completion_cost_usd", "total_cost_usd", "savings_usd",
+                "latency_ms", "cache_hit", "time_to_first_token_ms", "cache_key",
+                "was_downgraded", "routing_reason", "status_code", "error_type", "error_message",
             ]
         )
-    except Exception as _ch_err:
-        print(f"[ClickHouse] Direct log failed (non-fatal): {_ch_err}")
+        print(f"[ClickHouse] Event logged for tenant {client_id}")
+    except Exception as _e:
+        print(f"[ClickHouse] Direct log failed (non-fatal): {_e}")
 
     record_spend(client_id, cost_usd)
 
