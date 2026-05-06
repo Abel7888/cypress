@@ -43,26 +43,43 @@ def _worker():
                 continue
 
             client.insert(
-                "tokenguard.events",
+                "tokenguard.llm_events",
                 [[
                     event.get("client_id", "unknown"),
+                    "",
                     event.get("agent_id", "unknown"),
                     event.get("workflow_id", "unknown"),
+                    "",
                     event.get("model_requested", "unknown"),
                     event.get("model_used", "unknown"),
+                    "openai",
+                    "/v1/chat/completions",
+                    "POST",
+                    0,
                     int(event.get("input_tokens", 0)),
                     int(event.get("output_tokens", 0)),
+                    int(event.get("input_tokens", 0)) + int(event.get("output_tokens", 0)),
+                    0.0,
+                    0.0,
                     float(event.get("cost_usd", 0.0)),
+                    0.0,
                     int(event.get("latency_ms", 0)),
-                    int(event.get("was_routed", 0)),
                     int(event.get("cache_hit", 0)),
-                    int(event.get("blocked", 0)),
+                    0,
+                    "",
+                    int(event.get("was_routed", 0)),
+                    "",
+                    200,
+                    "",
+                    "",
                 ]],
                 column_names=[
-                    "client_id", "agent_id", "workflow_id",
-                    "model_requested", "model_used",
-                    "input_tokens", "output_tokens", "cost_usd",
-                    "latency_ms", "was_routed", "cache_hit", "blocked"
+                    "tenant_id", "api_key_id", "agent_id", "workflow_id", "trace_id",
+                    "request_model", "routed_model", "provider", "endpoint", "method",
+                    "is_streaming", "prompt_tokens", "completion_tokens", "total_tokens",
+                    "prompt_cost_usd", "completion_cost_usd", "total_cost_usd", "savings_usd",
+                    "latency_ms", "cache_hit", "time_to_first_token_ms", "cache_key",
+                    "was_downgraded", "routing_reason", "status_code", "error_type", "error_message",
                 ]
             )
             print(f"[Logger] Event saved - {event.get('model_used')} "
