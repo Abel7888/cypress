@@ -78,6 +78,30 @@ export async function POST(req: NextRequest) {
         }),
       });
       const result = await res.json();
+
+      // If this is the admin key (role === "Admin"), save api_key to Supabase metadata
+      if (data.role === "Admin" && result.api_key && data.email) {
+        try {
+          const supabase = getSupabaseAdmin();
+          if (supabase) {
+            const { data: { users } } = await supabase.auth.admin.listUsers();
+            const user = users.find(u => u.email === data.email);
+            if (user) {
+              await supabase.auth.admin.updateUserById(user.id, {
+                user_metadata: {
+                  ...user.user_metadata,
+                  api_key: result.api_key,
+                  tenant_id: tenantId,
+                },
+              });
+              console.log("[onboarding] Saved api_key to Supabase metadata for", data.email);
+            }
+          }
+        } catch (e) {
+          console.error("[onboarding] Could not update user_metadata with api_key:", e);
+        }
+      }
+
       return NextResponse.json(result);
     }
 
