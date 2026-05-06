@@ -455,6 +455,20 @@ function EmployeeKeyManager() {
     setActionLoading(null);
   };
 
+  const deleteKey = async (keyId: string) => {
+    if (!window.confirm("Permanently delete this employee and all their data? This cannot be undone.")) return;
+    setActionLoading(keyId + "-del");
+    const { tenantId } = await getTenantConfig();
+    try {
+      await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${keyId}/hard-delete`, {
+        method: "DELETE",
+        headers: HEADERS,
+      });
+      await load();
+    } catch (e) { console.error(e); }
+    setActionLoading(null);
+  };
+
   const revokeKey = async (keyId: string) => {
     setActionLoading(keyId);
     const { tenantId } = await getTenantConfig();
@@ -617,7 +631,7 @@ function EmployeeKeyManager() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <div style={{
-              display: "grid", gridTemplateColumns: "1fr 160px 120px 80px 100px 160px",
+              display: "grid", gridTemplateColumns: "1fr 160px 120px 80px 100px 220px",
               gap: 12, padding: "0 12px 6px",
               borderBottom: `2px solid ${C.border}`,
             }}>
@@ -631,7 +645,7 @@ function EmployeeKeyManager() {
             {keys.map(k => (
               <div key={k.id}
                 style={{
-                  display: "grid", gridTemplateColumns: "1fr 160px 120px 80px 100px 160px",
+                  display: "grid", gridTemplateColumns: "1fr 160px 120px 80px 100px 220px",
                   gap: 12, alignItems: "center", padding: "10px 12px",
                   borderRadius: 8, transition: "background 0.1s",
                   background: "transparent",
@@ -695,6 +709,23 @@ function EmployeeKeyManager() {
                       {actionLoading === k.id ? "…" : "Restore"}
                     </button>
                   )}
+                  <button
+                    onClick={() => deleteKey(k.id)}
+                    disabled={actionLoading === k.id + "-del"}
+                    style={{
+                      background: "transparent",
+                      color: "#94A3B8",
+                      border: "1px solid #E2E8F0",
+                      fontSize: 11,
+                      fontWeight: 500,
+                      padding: "5px 10px",
+                      borderRadius: 6,
+                      cursor: "pointer",
+                      fontFamily: "'Inter', system-ui, sans-serif",
+                    }}
+                  >
+                    {actionLoading === k.id + "-del" ? "…" : "Delete"}
+                  </button>
                 </div>
               </div>
             ))}

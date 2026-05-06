@@ -470,7 +470,7 @@ export default function Dashboard() {
       case "cost-analysis":
         return <CostAnalysisPage />;
       case "budgets":
-        return <AnyBudgets userBudgets={userBudgets} setUserBudgets={setUserBudgets} />;
+        return <AnyBudgets userBudgets={userBudgets} setUserBudgets={setUserBudgets} nav={setPage} />;
       case "roi":
         return <AnyROI overview={overview} />;
       case "routing":

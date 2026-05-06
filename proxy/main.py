@@ -789,6 +789,27 @@ async def revoke_tenant_key(tenant_id: str, key_id: str, request: Request):
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
+@app.delete("/api/tenants/{tenant_id}/keys/{key_id}/hard-delete")
+async def hard_delete_tenant_key(tenant_id: str, key_id: str, request: Request):
+    """Permanently delete an API key row from Postgres (cannot be undone)."""
+    authenticate(request)
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute(
+            "DELETE FROM api_keys WHERE id = %s::uuid AND tenant_id = %s::uuid RETURNING label",
+            (key_id, tenant_id)
+        )
+        row = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        load_tenant_budgets()
+        return JSONResponse(content={"deleted": True, "label": row[0] if row else None})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
 @app.patch("/api/tenants/{tenant_id}/keys/{key_id}/budget")
 async def update_key_budget(tenant_id: str, key_id: str, request: Request):
     """Update budget for a specific key and reload it live."""

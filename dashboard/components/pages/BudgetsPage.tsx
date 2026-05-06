@@ -89,15 +89,14 @@ function StatusBadge({ status }: { status: "healthy" | "warning" | "blocked" }) 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN
 // ═══════════════════════════════════════════════════════════════════════════
-type Props = { userBudgets?: U[]; setUserBudgets?: (u: U[]) => void };
+type Props = { userBudgets?: U[]; setUserBudgets?: (u: U[]) => void; nav?: (page: string) => void };
 
-export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: propSet }: Props) {
+export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: propSet, nav }: Props) {
   const { isTrial, seatLimit } = useTrialStatus();
   const [trialSeatMsg, setTrialSeatMsg] = useState(false);
   // Local fallback if not provided via props (so the page works standalone too)
   const [localBudgets, setLocalBudgets] = useState<U[]>([]);
   const liveBudgets: U[] = propBudgets ?? localBudgets;
-  const usingDemo = false;
   const userBudgets: U[] = liveBudgets;
   const setUserBudgets = propSet ?? setLocalBudgets;
 
@@ -305,7 +304,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                         setTimeout(() => setTrialSeatMsg(false), 4000);
                         return;
                       }
-                      showToast("Add Employee — open Settings");
+                      if (nav) { nav("settings"); } else { window.location.hash = "settings"; }
                     }}>
                       ＋ Add Employee
                     </button>
@@ -602,6 +601,16 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                 <span>
                   <span style={{ color: C.textMuted }}>Limit </span>
                   <span style={{ color: C.text, fontWeight: 600 }}>{fmtMoney(accountTotals.limit, 0)}/day</span>
+                </span>
+              </div>
+              <div style={{
+                marginTop: 10, padding: "10px 14px",
+                background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8,
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+              }}>
+                <span style={{ fontSize: 12, color: "#64748B" }}>Monthly cap (30 days)</span>
+                <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: "#0F172A" }}>
+                  {fmtMoney(accountTotals.limit * 30, 0)}
                 </span>
               </div>
               <div style={{ marginTop: 10 }}>
