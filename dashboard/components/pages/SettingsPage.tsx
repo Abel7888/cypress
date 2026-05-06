@@ -274,7 +274,7 @@ function ProviderKeysCard() {
     const { tenantId, apiKey } = await getTenantConfig();
     const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
     try {
-      const res  = await fetch(`${API_BASE}/api/tenants/${tenantId}/provider-keys`, { headers: HEADERS });
+      const res  = await fetch(`${API_BASE}/api/tenants/${tenantId}/provider-keys`, { headers: authHeaders });
       const data = await res.json();
       const map: Record<string, any> = {};
       (data.keys || []).forEach((k: any) => { map[k.provider] = k; });
@@ -284,14 +284,15 @@ function ProviderKeysCard() {
   useEffect(() => { load(); }, []);
 
   const save = async (provider: string) => {
-    const { tenantId: saveTenantId } = await getTenantConfig();
+    const { tenantId: saveTenantId, apiKey } = await getTenantConfig();
+    const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
     const raw = inputs[provider].trim();
     if (!raw) return;
     setSaving(provider);
     try {
       await fetch(`${API_BASE}/api/tenants/${saveTenantId}/provider-keys`, {
         method: "POST",
-        headers: { ...HEADERS, "Content-Type": "application/json" },
+        headers: { ...authHeaders, "Content-Type": "application/json" },
         body: JSON.stringify({ provider, api_key: raw }),
       });
       setInputs(v => ({ ...v, [provider]: "" }));
@@ -304,10 +305,11 @@ function ProviderKeysCard() {
 
   const remove = async (provider: string) => {
     setRemoving(provider);
-    const { tenantId } = await getTenantConfig();
+    const { tenantId, apiKey } = await getTenantConfig();
+    const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
     try {
       await fetch(`${API_BASE}/api/tenants/${tenantId}/provider-keys/${provider}`, {
-        method: "DELETE", headers: HEADERS,
+        method: "DELETE", headers: authHeaders,
       });
       await load();
     } catch (e) { console.error(e); }
