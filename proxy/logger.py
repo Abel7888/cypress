@@ -42,9 +42,11 @@ def _worker():
                 print("[Logger] No connection - event dropped")
                 continue
 
+            from datetime import datetime
             client.insert(
                 "tokenguard.events",
                 [[
+                    datetime.utcnow(),
                     event.get("client_id", "unknown"),
                     event.get("agent_id", "unknown"),
                     event.get("model_requested", "unknown"),
@@ -59,6 +61,7 @@ def _worker():
                     int(event.get("latency_ms", 0)),
                 ]],
                 column_names=[
+                    "timestamp",
                     "client_id", "agent_id",
                     "model_requested", "model_used",
                     "prompt_tokens", "completion_tokens", "total_tokens",
