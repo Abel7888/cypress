@@ -1008,13 +1008,13 @@ async def get_user_breakdown(tenant_id: str, request: Request):
         SELECT
             agent_id,
             count() as total_calls,
-            sum(total_cost_usd) as total_cost,
+            sum(cost_usd) as total_cost,
             countIf(cache_hit = 1) as cache_hits,
-            countIf(was_downgraded = 1) as routed_calls,
-            0 as blocked_calls,
+            countIf(was_routed = 1) as routed_calls,
+            countIf(blocked = 1) as blocked_calls,
             avg(latency_ms) as avg_latency_ms
-        FROM tokenguard.llm_events
-        WHERE tenant_id = {{tenant_id:String}}
+        FROM tokenguard.events
+        WHERE client_id = {{tenant_id:String}}
         AND agent_id != '' AND agent_id != 'unknown'
         {time_filter}
         GROUP BY agent_id
