@@ -426,9 +426,10 @@ function EmployeeKeyManager() {
 
   const load = async () => {
     setLoading(true);
-    const { tenantId } = await getTenantConfig();
+    const { tenantId, apiKey } = await getTenantConfig();
+    const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
     try {
-      const res = await fetch(`${API_BASE}/api/tenants/${tenantId}/keys`, { headers: HEADERS });
+      const res = await fetch(`${API_BASE}/api/tenants/${tenantId}/keys`, { headers: authHeaders });
       const data = await res.json();
       setKeys(data.keys || []);
     } catch (e) { console.error(e); }
@@ -438,12 +439,13 @@ function EmployeeKeyManager() {
 
   const createKey = async () => {
     if (!newName.trim()) return;
-    const { tenantId } = await getTenantConfig();
+    const { tenantId, apiKey } = await getTenantConfig();
+    const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
     setActionLoading("creating");
     try {
       const res = await fetch(`${API_BASE}/api/tenants/${tenantId}/users`, {
         method: "POST",
-        headers: { ...HEADERS, "Content-Type": "application/json" },
+        headers: { ...authHeaders, "Content-Type": "application/json" },
         body: JSON.stringify({ name: newName.trim(), role: newRole.trim(), budget_usd: parseFloat(newBudget) || 50 }),
       });
       const data = await res.json();
@@ -458,11 +460,12 @@ function EmployeeKeyManager() {
   const deleteKey = async (keyId: string) => {
     if (!window.confirm("Permanently delete this employee and all their data? This cannot be undone.")) return;
     setActionLoading(keyId + "-del");
-    const { tenantId } = await getTenantConfig();
+    const { tenantId, apiKey } = await getTenantConfig();
+    const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
     try {
       await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${keyId}/hard-delete`, {
         method: "DELETE",
-        headers: HEADERS,
+        headers: authHeaders,
       });
       await load();
     } catch (e) { console.error(e); }
@@ -471,9 +474,10 @@ function EmployeeKeyManager() {
 
   const revokeKey = async (keyId: string) => {
     setActionLoading(keyId);
-    const { tenantId } = await getTenantConfig();
+    const { tenantId, apiKey } = await getTenantConfig();
+    const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
     try {
-      await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${keyId}`, { method: "DELETE", headers: HEADERS });
+      await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${keyId}`, { method: "DELETE", headers: authHeaders });
       await load();
     } catch (e) { console.error(e); }
     setActionLoading(null);
@@ -481,9 +485,10 @@ function EmployeeKeyManager() {
 
   const reactivateKey = async (keyId: string) => {
     setActionLoading(keyId);
-    const { tenantId } = await getTenantConfig();
+    const { tenantId, apiKey } = await getTenantConfig();
+    const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
     try {
-      await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${keyId}/reactivate`, { method: "POST", headers: HEADERS });
+      await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${keyId}/reactivate`, { method: "POST", headers: authHeaders });
       await load();
     } catch (e) { console.error(e); }
     setActionLoading(null);
@@ -491,12 +496,13 @@ function EmployeeKeyManager() {
 
   const updateBudget = async (keyId: string) => {
     if (!editBudgetVal) return;
-    const { tenantId } = await getTenantConfig();
+    const { tenantId, apiKey } = await getTenantConfig();
+    const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
     setActionLoading("budget-" + keyId);
     try {
       await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${keyId}/budget`, {
         method: "PATCH",
-        headers: { ...HEADERS, "Content-Type": "application/json" },
+        headers: { ...authHeaders, "Content-Type": "application/json" },
         body: JSON.stringify({ budget_usd: parseFloat(editBudgetVal) }),
       });
       setEditBudgetId(null); setEditBudgetVal("");
@@ -508,10 +514,11 @@ function EmployeeKeyManager() {
   const seedKey = async (keyId: string) => {
     setSeedStatus(s => ({ ...s, [keyId]: "seeding" }));
     const { tenantId, apiKey } = await getTenantConfig();
+    const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
     try {
       const res = await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${keyId}/seed`, {
         method: "POST",
-        headers: { ...HEADERS, Authorization: `Bearer ${apiKey || ""}` },
+        headers: authHeaders,
       });
       const data = await res.json();
       if (data.seeded) {
