@@ -112,23 +112,23 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
 
   // ─── Fetch budgets (only if no props) ────────────────────────────────────
   useEffect(() => {
-    if (propBudgets) { setLoaded(true); return; }
     const load = async () => {
       const { tenantId, apiKey } = await getTenantConfig();
       if (!tenantId) { setLoaded(true); return; }
       const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
-      try {
-        const usersRes = await fetch(`${API_BASE}/api/tenants/${tenantId}/users`, { headers: authHeaders });
-        const d = await usersRes.json();
-        setLocalBudgets(d.users || d || []);
-        setLoaded(true);
-      } catch { setLoaded(true); }
       try {
         const capsRes = await fetch(`${API_BASE}/api/tenants/${tenantId}/caps`, { headers: authHeaders });
         const capsData = await capsRes.json();
         if (capsData.daily_cap_usd != null) setDailyCap(Number(capsData.daily_cap_usd));
         if (capsData.monthly_cap_usd != null) setMonthlyCap(Number(capsData.monthly_cap_usd));
       } catch { /* noop */ }
+      if (propBudgets) { setLoaded(true); return; }
+      try {
+        const usersRes = await fetch(`${API_BASE}/api/tenants/${tenantId}/users`, { headers: authHeaders });
+        const d = await usersRes.json();
+        setLocalBudgets(d.users || d || []);
+        setLoaded(true);
+      } catch { setLoaded(true); }
     };
     load();
     const i = setInterval(load, 15000);
