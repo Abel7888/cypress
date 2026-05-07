@@ -197,7 +197,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
       setConfirmingRemove(null);
       await reload();
       showToast("Employee removed from budget view");
-    } catch { /* noop */ }
+    } catch (err) { console.error("hideEmployee error:", err); showToast("Error removing employee"); }
   };
 
   const showToast = (msg: string) => {
@@ -388,75 +388,34 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <StatusBadge status={status} />
-                        {isEditing ? (
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ fontSize: 12, color: C.textMuted, fontFamily: FONT_MONO }}>$</span>
-                            <input
-                              type="number" min={0} step="0.01"
-                              value={editValue}
-                              onChange={(e) => setEditValue(e.target.value)}
-                              autoFocus
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") { updateBudget(id, parseFloat(editValue)); setEditingId(null); }
-                                if (e.key === "Escape") { setEditingId(null); }
-                              }}
-                              style={{
-                                width: 80, fontSize: 12, fontFamily: FONT_MONO,
-                                padding: "4px 8px", border: `1px solid ${C.blueBorder}`,
-                                borderRadius: 6, color: C.text, background: "#fff", outline: "none",
-                              }}
-                            />
-                            <button
-                              onClick={() => { updateBudget(id, parseFloat(editValue)); setEditingId(null); }}
-                              style={{ ...btnBlueFilled, padding: "4px 10px", fontSize: 11 }}
-                            >Save</button>
-                            <button
-                              onClick={() => setEditingId(null)}
-                              style={{ ...btnGhost, padding: "4px 10px", fontSize: 11 }}
-                            >Cancel</button>
-                          </div>
-                        ) : (
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                             <span style={{ fontSize: 12, color: C.textMuted, fontFamily: FONT_MONO }}>
                               {fmtMoney(limit, 2)}/day
                             </span>
-                            <button
-                              onClick={() => { setEditingId(id); setEditValue(String(limit || 50)); }}
-                              title="Edit limit"
-                              style={{
-                                background: "transparent", border: "none", padding: 4,
-                                color: C.textDim, cursor: "pointer", fontSize: 12, lineHeight: 1,
-                              }}
-                            >✎</button>
-                            <button
-                              onClick={() => setConfirmingRemove(confirmingRemove === id ? null : id)}
-                              title="Remove from budget view"
-                              style={{
-                                background: C.redBg,
-                                border: `1px solid ${C.redBorder}`,
-                                color: C.redText,
-                                fontSize: 10,
-                                fontWeight: 600,
-                                padding: "3px 8px",
-                                borderRadius: 6,
-                                cursor: "pointer",
-                                fontFamily: FONT_SANS,
-                              }}
-                            >{confirmingRemove === id ? (
+                            {confirmingRemove === nameOf(u) ? (
                               <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                                <span>Sure?</span>
+                                <span style={{ fontSize: 11, color: C.textMuted }}>Sure?</span>
                                 <button
-                                  onClick={(e) => { e.stopPropagation(); hideEmployee(id); }}
+                                  onClick={() => hideEmployee(id)}
                                   style={{ background: C.red, color: "#fff", border: "none", borderRadius: 4, fontSize: 10, fontWeight: 600, padding: "2px 6px", cursor: "pointer" }}
                                 >Yes</button>
                                 <button
-                                  onClick={(e) => { e.stopPropagation(); setConfirmingRemove(null); }}
-                                  style={{ background: "transparent", border: `1px solid ${C.border}`, borderRadius: 4, fontSize: 10, padding: "2px 6px", cursor: "pointer" }}
+                                  onClick={() => setConfirmingRemove(null)}
+                                  style={{ background: "transparent", border: `1px solid ${C.border}`, borderRadius: 4, fontSize: 10, padding: "2px 6px", cursor: "pointer", color: C.textMuted }}
                                 >No</button>
                               </span>
-                            ) : "Remove"}</button>
+                            ) : (
+                              <button
+                                onClick={() => setConfirmingRemove(nameOf(u))}
+                                style={{
+                                  background: C.redBg, border: `1px solid ${C.redBorder}`,
+                                  color: C.redText, fontSize: 10, fontWeight: 600,
+                                  padding: "3px 8px", borderRadius: 6, cursor: "pointer",
+                                  fontFamily: FONT_SANS,
+                                }}
+                              >Remove</button>
+                            )}
                           </div>
-                        )}
                       </div>
                     </div>
 
