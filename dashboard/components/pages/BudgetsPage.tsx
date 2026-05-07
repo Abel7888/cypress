@@ -431,10 +431,17 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                               onClick={() => hideEmployee(id, nameOf(u))}
                               title="Remove from budget view"
                               style={{
-                                background: "transparent", border: "none", padding: 4,
-                                color: C.textDim, cursor: "pointer", fontSize: 12, lineHeight: 1,
+                                background: C.redBg,
+                                border: `1px solid ${C.redBorder}`,
+                                color: C.redText,
+                                fontSize: 10,
+                                fontWeight: 600,
+                                padding: "3px 8px",
+                                borderRadius: 6,
+                                cursor: "pointer",
+                                fontFamily: FONT_SANS,
                               }}
-                            >×</button>
+                            >Remove</button>
                           </div>
                         )}
                       </div>
