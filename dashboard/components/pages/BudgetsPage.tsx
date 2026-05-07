@@ -117,17 +117,18 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
       const { tenantId, apiKey } = await getTenantConfig();
       if (!tenantId) { setLoaded(true); return; }
       const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
-      fetch(`${API_BASE}/api/tenants/${tenantId}/users`, { headers: authHeaders })
-        .then((r) => r.json())
-        .then((d) => { setLocalBudgets(d.users || d || []); setLoaded(true); })
-        .catch(() => setLoaded(true));
-      fetch(`${API_BASE}/api/tenants/${tenantId}/caps`, { headers: authHeaders })
-        .then(r => r.json())
-        .then(d => {
-          if (d.daily_cap_usd != null) setDailyCap(d.daily_cap_usd);
-          if (d.monthly_cap_usd != null) setMonthlyCap(d.monthly_cap_usd);
-        })
-        .catch(() => {/* noop */});
+      try {
+        const usersRes = await fetch(`${API_BASE}/api/tenants/${tenantId}/users`, { headers: authHeaders });
+        const d = await usersRes.json();
+        setLocalBudgets(d.users || d || []);
+        setLoaded(true);
+      } catch { setLoaded(true); }
+      try {
+        const capsRes = await fetch(`${API_BASE}/api/tenants/${tenantId}/caps`, { headers: authHeaders });
+        const capsData = await capsRes.json();
+        if (capsData.daily_cap_usd != null) setDailyCap(Number(capsData.daily_cap_usd));
+        if (capsData.monthly_cap_usd != null) setMonthlyCap(Number(capsData.monthly_cap_usd));
+      } catch { /* noop */ }
     };
     load();
     const i = setInterval(load, 15000);
