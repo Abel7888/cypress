@@ -106,6 +106,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
+  const [confirmingRemove, setConfirmingRemove] = useState<string | null>(null);
   const [, setTick] = useState(0);
   const [dailyCap, setDailyCap] = useState<number | null>(null);
   const [monthlyCap, setMonthlyCap] = useState<number | null>(null);
@@ -184,9 +185,8 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
     } catch { /* noop */ }
   };
 
-  const hideEmployee = async (keyId: string, name: string) => {
+  const hideEmployee = async (keyId: string) => {
     if (!keyId) return;
-    if (!window.confirm(`Remove ${name} from budget view? Their key will still work.`)) return;
     try {
       const { tenantId, apiKey } = await getTenantConfig();
       await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${keyId}/hide`, {
@@ -194,8 +194,9 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
         headers: { Authorization: `Bearer ${apiKey || ""}`, "Content-Type": "application/json" },
         body: JSON.stringify({ hidden: true }),
       });
+      setConfirmingRemove(null);
       await reload();
-      showToast(`${name} removed from budget view`);
+      showToast("Employee removed from budget view");
     } catch { /* noop */ }
   };
 
@@ -428,7 +429,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                               }}
                             >✎</button>
                             <button
-                              onClick={() => hideEmployee(id, nameOf(u))}
+                              onClick={() => setConfirmingRemove(confirmingRemove === id ? null : id)}
                               title="Remove from budget view"
                               style={{
                                 background: C.redBg,
@@ -441,7 +442,19 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                                 cursor: "pointer",
                                 fontFamily: FONT_SANS,
                               }}
-                            >Remove</button>
+                            >{confirmingRemove === id ? (
+                              <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                <span>Sure?</span>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); hideEmployee(id); }}
+                                  style={{ background: C.red, color: "#fff", border: "none", borderRadius: 4, fontSize: 10, fontWeight: 600, padding: "2px 6px", cursor: "pointer" }}
+                                >Yes</button>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setConfirmingRemove(null); }}
+                                  style={{ background: "transparent", border: `1px solid ${C.border}`, borderRadius: 4, fontSize: 10, padding: "2px 6px", cursor: "pointer" }}
+                                >No</button>
+                              </span>
+                            ) : "Remove"}</button>
                           </div>
                         )}
                       </div>
