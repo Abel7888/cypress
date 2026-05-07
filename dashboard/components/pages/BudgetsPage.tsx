@@ -432,9 +432,6 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                         <span style={{ color: colorForPct(pct), fontWeight: 600 }}>
                           {pct.toFixed(0)}% used
                         </span>
-                        <span style={{ fontFamily: FONT_MONO, color: C.textDim }}>
-                          Resets in {hrs}h {mins}m
-                        </span>
                       </div>
                     </div>
 
