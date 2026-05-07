@@ -1031,6 +1031,9 @@ async def get_user_breakdown(tenant_id: str, request: Request):
         agent_id, calls, cost, cache_hits, routed, blocked, avg_latency = row
         if not agent_id or agent_id in ("unknown", "seed"):
             continue
+        # Skip employees hidden from budget or not in Postgres keys
+        if agent_id not in key_ids:
+            continue
         cost_without = cost * 4.2 if routed > 0 else cost
         users.append({
             "employee": agent_id,
