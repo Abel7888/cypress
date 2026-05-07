@@ -1008,17 +1008,19 @@ async def get_user_breakdown(tenant_id: str, request: Request):
         ORDER BY total_cost DESC
     """, parameters={"tenant_id": tenant_id, **({"since": since} if since else {})})
 
-    # Fetch budget_usd per employee from Postgres (keyed by label = agent_id)
+    # Fetch budget_usd and key_id per employee from Postgres (keyed by label = agent_id)
     budgets = {}
+    key_ids = {}
     try:
         conn2 = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
         cur2 = conn2.cursor()
         cur2.execute("""
-            SELECT label, budget_usd FROM api_keys
+            SELECT label, budget_usd, id FROM api_keys
             WHERE tenant_id = %s::uuid AND is_active = TRUE AND hidden_from_budget = FALSE
         """, (tenant_id,))
         for r in cur2.fetchall():
             budgets[r[0]] = float(r[1]) if r[1] else 0.05
+            key_ids[r[0]] = str(r[2])
         cur2.close()
         conn2.close()
     except Exception as e:
@@ -1043,6 +1045,7 @@ async def get_user_breakdown(tenant_id: str, request: Request):
             "savings_usd": round(float(cost_without - cost), 6),
             "status": "blocked" if blocked > 0 else "healthy",
             "budget_usd": budgets.get(agent_id, 0.05),
+            "key_id": key_ids.get(agent_id, ""),
         })
 
     total_cost = sum(u["cost_usd"] for u in users)
