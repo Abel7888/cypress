@@ -393,27 +393,30 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                               {fmtMoney(limit, 2)}/day
                             </span>
                             {confirmingRemove === nameOf(u) ? (
-                              <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                                 <span style={{ fontSize: 11, color: C.textMuted }}>Sure?</span>
-                                <button
+                                <div
                                   onClick={() => hideEmployee(id)}
+                                  role="button"
                                   style={{ background: C.red, color: "#fff", border: "none", borderRadius: 4, fontSize: 10, fontWeight: 600, padding: "2px 6px", cursor: "pointer" }}
-                                >Yes</button>
-                                <button
+                                >Yes</div>
+                                <div
                                   onClick={() => setConfirmingRemove(null)}
+                                  role="button"
                                   style={{ background: "transparent", border: `1px solid ${C.border}`, borderRadius: 4, fontSize: 10, padding: "2px 6px", cursor: "pointer", color: C.textMuted }}
-                                >No</button>
-                              </span>
+                                >No</div>
+                              </div>
                             ) : (
-                              <button
+                              <div
                                 onClick={() => setConfirmingRemove(nameOf(u))}
+                                role="button"
                                 style={{
                                   background: C.redBg, border: `1px solid ${C.redBorder}`,
                                   color: C.redText, fontSize: 10, fontWeight: 600,
                                   padding: "3px 8px", borderRadius: 6, cursor: "pointer",
                                   fontFamily: FONT_SANS,
                                 }}
-                              >Remove</button>
+                              >Remove</div>
                             )}
                           </div>
                       </div>
