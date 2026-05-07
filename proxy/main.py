@@ -825,10 +825,18 @@ async def seed_key_usage(tenant_id: str, key_id: str, request: Request):
         cur = conn.cursor()
         cur.execute("SELECT label FROM api_keys WHERE id = %s::uuid AND tenant_id = %s::uuid", (key_id, tenant_id))
         row = cur.fetchone()
+        if not row:
+            cur.close()
+            conn.close()
+            return JSONResponse(status_code=404, content={"error": "Key not found"})
+        cur.execute("""
+            UPDATE api_keys 
+            SET hidden_from_budget = FALSE 
+            WHERE id = %s::uuid
+        """, (key_id,))
+        conn.commit()
         cur.close()
         conn.close()
-        if not row:
-            return JSONResponse(status_code=404, content={"error": "Key not found"})
         label = row[0]
         from logger import log_event
         log_event({
