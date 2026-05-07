@@ -1332,6 +1332,75 @@ async def debug_clickhouse(request: Request):
     except Exception as e:
         return JSONResponse(content={"error": str(e)})
 
+
+@app.post("/admin/migrate/tenant-caps")
+async def migrate_tenant_caps(request: Request):
+    """One-time migration: add daily_cap_usd and monthly_cap_usd to tenants table."""
+    key = request.headers.get("Authorization", "")
+    if key != f"Bearer {os.environ.get('TOKENGUARD_ADMIN_KEY', '')}":
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("""
+            ALTER TABLE tenants 
+            ADD COLUMN IF NOT EXISTS daily_cap_usd NUMERIC(10,4) DEFAULT NULL,
+            ADD COLUMN IF NOT EXISTS monthly_cap_usd NUMERIC(10,4) DEFAULT NULL
+        """)
+        conn.commit()
+        cur.close()
+        conn.close()
+        return JSONResponse({"migrated": True, "columns_added": ["daily_cap_usd", "monthly_cap_usd"]})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.patch("/api/tenants/{tenant_id}/caps")
+async def update_tenant_caps(tenant_id: str, request: Request):
+    """Set daily and monthly spend caps for the whole tenant."""
+    authenticate(request)
+    body = await request.json()
+    daily_cap = body.get("daily_cap_usd")
+    monthly_cap = body.get("monthly_cap_usd")
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE tenants 
+            SET daily_cap_usd = %s, monthly_cap_usd = %s
+            WHERE id = %s
+        """, (daily_cap, monthly_cap, tenant_id))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return JSONResponse({"updated": True, "daily_cap_usd": daily_cap, "monthly_cap_usd": monthly_cap})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get("/api/tenants/{tenant_id}/caps")
+async def get_tenant_caps(tenant_id: str, request: Request):
+    """Get daily and monthly spend caps for the tenant."""
+    authenticate(request)
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT daily_cap_usd, monthly_cap_usd 
+            FROM tenants WHERE id = %s
+        """, (tenant_id,))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        return JSONResponse({
+            "daily_cap_usd": float(row[0]) if row and row[0] else None,
+            "monthly_cap_usd": float(row[1]) if row and row[1] else None
+        })
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 if __name__ == "__main__":
     pass
 
