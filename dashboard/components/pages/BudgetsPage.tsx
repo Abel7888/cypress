@@ -434,7 +434,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                                 background: "transparent", border: "none", padding: 4,
                                 color: C.textDim, cursor: "pointer", fontSize: 12, lineHeight: 1,
                               }}
-                            >✕</button>
+                            >×</button>
                           </div>
                         )}
                       </div>
