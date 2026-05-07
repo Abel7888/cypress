@@ -455,44 +455,30 @@ async def proxy_completion(request: Request):
             password=os.getenv("CLICKHOUSE_PASSWORD"),
             secure=True
         )
+        from datetime import datetime
         _ch.insert(
-            "tokenguard.llm_events",
+            "tokenguard.events",
             [[
+                datetime.utcnow(),
                 client_id,
                 _key_id,
-                "",
-                "",
-                "",
                 original_model,
                 model_used,
-                "openai",
-                "/v1/chat/completions",
-                "POST",
-                0,
                 input_tokens,
                 output_tokens,
                 input_tokens + output_tokens,
-                0.0,
-                0.0,
                 cost_usd,
-                0.0,
-                round((time.time() - start_time) * 1000),
                 0,
-                0,
-                "",
                 1 if original_model != model_used else 0,
-                "",
-                200,
-                "",
-                "",
+                0,
+                round((time.time() - start_time) * 1000),
             ]],
             column_names=[
-                "tenant_id", "api_key_id", "agent_id", "workflow_id", "trace_id",
-                "request_model", "routed_model", "provider", "endpoint", "method",
-                "is_streaming", "prompt_tokens", "completion_tokens", "total_tokens",
-                "prompt_cost_usd", "completion_cost_usd", "total_cost_usd", "savings_usd",
-                "latency_ms", "cache_hit", "time_to_first_token_ms", "cache_key",
-                "was_downgraded", "routing_reason", "status_code", "error_type", "error_message",
+                "timestamp",
+                "client_id", "agent_id",
+                "model_requested", "model_used",
+                "prompt_tokens", "completion_tokens", "total_tokens",
+                "cost_usd", "cache_hit", "was_routed", "blocked", "latency_ms"
             ]
         )
         print(f"[ClickHouse] Event logged for tenant {client_id}")
@@ -1107,13 +1093,13 @@ async def billing_summary(tenant_id: str, request: Request):
     result = ch.query("""
         SELECT
             count() as total_calls,
-            sum(total_cost_usd) as total_cost,
+            sum(cost_usd) as total_cost,
             countIf(cache_hit = 1) as cache_hits,
-            countIf(was_downgraded = 1) as routed_calls,
-            sum(total_cost_usd * if(was_downgraded = 1, 15.0, 1.0)) as estimated_without_routing,
-            count(DISTINCT api_key_id) as active_users
-        FROM tokenguard.llm_events
-        WHERE tenant_id = {tenant_id:String}
+            countIf(was_routed = 1) as routed_calls,
+            sum(cost_usd * if(was_routed = 1, 15.0, 1.0)) as estimated_without_routing,
+            count(DISTINCT agent_id) as active_users
+        FROM tokenguard.events
+        WHERE client_id = {tenant_id:String}
         AND timestamp >= now() - INTERVAL 30 DAY
     """, parameters={"tenant_id": tenant_id})
 
@@ -1195,11 +1181,11 @@ async def dashboard_cost_trends(request: Request):
     result = ch.query("""
         SELECT 
             toDate(timestamp) as date,
-            sum(total_cost_usd) as total_cost,
+            sum(cost_usd) as total_cost,
             countIf(cache_hit = 1) as cache_hits,
             count() as total_calls
-        FROM tokenguard.llm_events
-        WHERE tenant_id = {tenant_id:String}
+        FROM tokenguard.events
+        WHERE client_id = {tenant_id:String}
         AND timestamp >= now() - INTERVAL 30 DAY
         GROUP BY date
         ORDER BY date
@@ -1242,7 +1228,7 @@ async def agent_recent(request: Request, agent_id: str, limit: int = 8):
             secure=True
         )
         result = ch.query(
-            """SELECT timestamp, request_model, routed_model, total_cost_usd, was_downgraded, cache_hit, 0 as blocked, latency_ms FROM tokenguard.llm_events WHERE agent_id = {agent_id:String} ORDER BY latency_ms DESC LIMIT {limit:Int32}""",
+            """SELECT timestamp, model_requested, model_used, cost_usd, was_routed, cache_hit, blocked, latency_ms FROM tokenguard.events WHERE agent_id = {agent_id:String} ORDER BY latency_ms DESC LIMIT {limit:Int32}""",
             parameters={"agent_id": agent_id, "limit": limit}
         )
         return JSONResponse(content=[{
@@ -1276,13 +1262,13 @@ async def dashboard_agents(request: Request):
     result = ch.query("""
         SELECT
             agent_id,
-            sum(total_cost_usd) as total_cost,
+            sum(cost_usd) as total_cost,
             count() as total_calls,
-            countIf(was_downgraded = 1) as routed_calls,
+            countIf(was_routed = 1) as routed_calls,
             countIf(cache_hit = 1) as cache_hits,
-            0 as blocked_calls
-        FROM tokenguard.llm_events
-        WHERE tenant_id = {tenant_id:String}
+            countIf(blocked = 1) as blocked_calls
+        FROM tokenguard.events
+        WHERE client_id = {tenant_id:String}
         GROUP BY agent_id
         ORDER BY total_cost DESC
         LIMIT 20
