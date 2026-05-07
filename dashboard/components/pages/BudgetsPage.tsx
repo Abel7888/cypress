@@ -107,6 +107,8 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
   const [, setTick] = useState(0);
+  const [dailyCap, setDailyCap] = useState<number | null>(null);
+  const [monthlyCap, setMonthlyCap] = useState<number | null>(null);
 
   // ─── Fetch budgets (only if no props) ────────────────────────────────────
   useEffect(() => {
@@ -119,6 +121,13 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
         .then((r) => r.json())
         .then((d) => { setLocalBudgets(d.users || d || []); setLoaded(true); })
         .catch(() => setLoaded(true));
+      fetch(`${API_BASE}/api/tenants/${tenantId}/caps`, { headers: authHeaders })
+        .then(r => r.json())
+        .then(d => {
+          if (d.daily_cap_usd != null) setDailyCap(d.daily_cap_usd);
+          if (d.monthly_cap_usd != null) setMonthlyCap(d.monthly_cap_usd);
+        })
+        .catch(() => {/* noop */});
     };
     load();
     const i = setInterval(load, 15000);
@@ -595,21 +604,21 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                 </div>
                 <StatusBadge status={statusOf(accountTotals.pct)} />
               </div>
-              <Bar pct={accountTotals.pct || 0} color={colorForPct(accountTotals.pct)} height={10} />
+              <Bar pct={(dailyCap ? (userBudgets.reduce((s,u) => s+(u.cost_usd||0),0) / dailyCap) * 100 : 0) || 0} color={colorForPct(dailyCap ? (userBudgets.reduce((s,u) => s+(u.cost_usd||0),0) / dailyCap) * 100 : 0)} height={10} />
               <div style={{
                 display: "flex", justifyContent: "space-between", marginTop: 8,
                 fontSize: 12, fontFamily: FONT_MONO,
               }}>
                 <span>
                   <span style={{ color: C.textMuted }}>Spent </span>
-                  <span style={{ color: C.text, fontWeight: 600 }}>{fmtMoney(accountTotals.spent, 2)}</span>
+                  <span style={{ color: C.text, fontWeight: 600 }}>{fmtMoney(userBudgets.reduce((s, u) => s + (u.cost_usd || 0), 0), 4)}</span>
                 </span>
-                <span style={{ color: colorForPct(accountTotals.pct), fontWeight: 600 }}>
-                  {accountTotals.pct.toFixed(0)}% of team daily cap
+                <span style={{ color: colorForPct(dailyCap ? (userBudgets.reduce((s,u) => s+(u.cost_usd||0),0) / dailyCap) * 100 : 0), fontWeight: 600 }}>
+                  {(dailyCap ? (userBudgets.reduce((s,u) => s+(u.cost_usd||0),0) / dailyCap) * 100 : 0).toFixed(0)}% of team daily cap
                 </span>
                 <span>
                   <span style={{ color: C.textMuted }}>Limit </span>
-                  <span style={{ color: C.text, fontWeight: 600 }}>{fmtMoney(accountTotals.limit, 0)}/day</span>
+                  <span style={{ color: C.text, fontWeight: 600 }}>{dailyCap != null ? `$${dailyCap.toFixed(2)}/day` : "No limit set"}</span>
                 </span>
               </div>
               <div style={{
@@ -619,7 +628,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
               }}>
                 <span style={{ fontSize: 12, color: "#64748B" }}>Monthly cap (30 days)</span>
                 <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: "#0F172A" }}>
-                  {fmtMoney(accountTotals.limit * 30, 0)}
+                  {monthlyCap != null ? `$${monthlyCap.toFixed(2)}` : "No limit set"}
                 </span>
               </div>
               <div style={{ marginTop: 10 }}>

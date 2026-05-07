@@ -160,8 +160,126 @@ function SecurityTab() {
     <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
       <MasterKeyCard />
       <ProviderKeysCard />
+      <AccountLimitsCard />
       <EmployeeKeyManager />
     </div>
+  );
+}
+
+function AccountLimitsCard() {
+  const [dailyCap, setDailyCap] = useState<string>("");
+  const [monthlyCap, setMonthlyCap] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { tenantId, apiKey } = await getTenantConfig();
+        const r = await fetch(`${API_BASE}/api/tenants/${tenantId}/caps`, {
+          headers: { Authorization: `Bearer ${apiKey || ""}` },
+        });
+        const d = await r.json();
+        if (d.daily_cap_usd != null) setDailyCap(String(d.daily_cap_usd));
+        if (d.monthly_cap_usd != null) setMonthlyCap(String(d.monthly_cap_usd));
+      } catch { /* noop */ }
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const { tenantId, apiKey } = await getTenantConfig();
+      await fetch(`${API_BASE}/api/tenants/${tenantId}/caps`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${apiKey || ""}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          daily_cap_usd: dailyCap ? parseFloat(dailyCap) : null,
+          monthly_cap_usd: monthlyCap ? parseFloat(monthlyCap) : null,
+        }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch { /* noop */ }
+    setSaving(false);
+  };
+
+  return (
+    <Card>
+      <CardInner>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          <IconCircle bg={C.amberBg} color={C.amber} size={32} fontSize={15}>⚡</IconCircle>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Account Spending Limits</div>
+            <div style={{ fontSize: 12, color: C.textMuted }}>
+              Set daily and monthly caps for your entire team. All employee keys are blocked when the team cap is hit.
+            </div>
+          </div>
+        </div>
+
+        {loading ? (
+          <div style={{ fontSize: 12, color: C.textMuted }}>Loading…</div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Daily Team Cap (USD)
+                </div>
+                <div style={{ position: "relative" }}>
+                  <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", fontSize: 13, color: C.textMuted }}>$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="e.g. 5.00"
+                    value={dailyCap}
+                    onChange={e => setDailyCap(e.target.value)}
+                    style={{ ...fullInputStyle, paddingLeft: 22 }}
+                  />
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Monthly Team Cap (USD)
+                </div>
+                <div style={{ position: "relative" }}>
+                  <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", fontSize: 13, color: C.textMuted }}>$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="e.g. 150.00"
+                    value={monthlyCap}
+                    onChange={e => setMonthlyCap(e.target.value)}
+                    style={{ ...fullInputStyle, paddingLeft: 22 }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button onClick={save} disabled={saving} style={btnBlueFilled}>
+                {saving ? "Saving…" : "Save Limits"}
+              </button>
+              {saved && (
+                <span style={{ fontSize: 12, color: C.greenText, fontWeight: 500 }}>✓ Saved</span>
+              )}
+            </div>
+
+            <div style={{
+              background: C.amberBg, border: `1px solid ${C.amberBorder}`,
+              borderRadius: 8, padding: "10px 14px", fontSize: 12, color: C.amberText,
+            }}>
+              ⚡ When the monthly cap is reached, all employee API calls will be blocked until the next billing period or an admin raises the limit.
+            </div>
+          </div>
+        )}
+      </CardInner>
+    </Card>
   );
 }
 
