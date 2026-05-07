@@ -1015,7 +1015,7 @@ async def get_user_breakdown(tenant_id: str, request: Request):
         cur2 = conn2.cursor()
         cur2.execute("""
             SELECT label, budget_usd FROM api_keys
-            WHERE tenant_id = %s::uuid AND is_active = TRUE
+            WHERE tenant_id = %s::uuid AND is_active = TRUE AND hidden_from_budget = FALSE
         """, (tenant_id,))
         for r in cur2.fetchall():
             budgets[r[0]] = float(r[1]) if r[1] else 0.05
@@ -1356,6 +1356,28 @@ async def migrate_tenant_caps(request: Request):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
+@app.post("/admin/migrate/budget-hide")
+async def migrate_budget_hide(request: Request):
+    """One-time migration: add hidden_from_budget to api_keys table."""
+    key = request.headers.get("Authorization", "")
+    if key != f"Bearer {os.environ.get('TOKENGUARD_ADMIN_KEY', '')}":
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("""
+            ALTER TABLE api_keys 
+            ADD COLUMN IF NOT EXISTS hidden_from_budget BOOLEAN DEFAULT FALSE
+        """)
+        conn.commit()
+        cur.close()
+        conn.close()
+        return JSONResponse({"migrated": True, "column_added": "hidden_from_budget"})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 @app.patch("/api/tenants/{tenant_id}/caps")
 async def update_tenant_caps(tenant_id: str, request: Request):
     """Set daily and monthly spend caps for the whole tenant."""
@@ -1401,12 +1423,51 @@ async def get_tenant_caps(tenant_id: str, request: Request):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
+@app.patch("/api/tenants/{tenant_id}/keys/{key_id}/hide")
+async def hide_key_from_budget(tenant_id: str, key_id: str, request: Request):
+    """Hide or unhide an employee from the budget view."""
+    authenticate(request)
+    body = await request.json()
+    hidden = bool(body.get("hidden", True))
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE api_keys 
+            SET hidden_from_budget = %s
+            WHERE id = %s AND tenant_id = %s
+        """, (hidden, key_id, tenant_id))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return JSONResponse({"updated": True, "hidden_from_budget": hidden})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get("/api/tenants/{tenant_id}/keys/{key_id}/hide")
+async def get_hide_key_from_budget(tenant_id: str, key_id: str, request: Request):
+    """Get hide status of an employee from the budget view."""
+    authenticate(request)
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT hidden_from_budget 
+            FROM api_keys WHERE id = %s AND tenant_id = %s
+        """, (key_id, tenant_id))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        return JSONResponse({
+            "hidden_from_budget": bool(row[0]) if row and row[0] else False
+        })
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 if __name__ == "__main__":
     pass
-
-
-
-
 
 
 
