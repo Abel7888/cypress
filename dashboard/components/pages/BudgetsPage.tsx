@@ -184,6 +184,21 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
     } catch { /* noop */ }
   };
 
+  const hideEmployee = async (keyId: string, name: string) => {
+    if (!keyId) return;
+    if (!window.confirm(`Remove ${name} from budget view? Their key will still work.`)) return;
+    try {
+      const { tenantId, apiKey } = await getTenantConfig();
+      await fetch(`${API_BASE}/api/tenants/${tenantId}/keys/${keyId}/hide`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${apiKey || ""}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ hidden: true }),
+      });
+      await reload();
+      showToast(`${name} removed from budget view`);
+    } catch { /* noop */ }
+  };
+
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2000);
@@ -412,6 +427,14 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                                 color: C.textDim, cursor: "pointer", fontSize: 12, lineHeight: 1,
                               }}
                             >✎</button>
+                            <button
+                              onClick={() => hideEmployee(id, nameOf(u))}
+                              title="Remove from budget view"
+                              style={{
+                                background: "transparent", border: "none", padding: 4,
+                                color: C.textDim, cursor: "pointer", fontSize: 12, lineHeight: 1,
+                              }}
+                            >✕</button>
                           </div>
                         )}
                       </div>
