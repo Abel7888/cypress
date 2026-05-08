@@ -227,18 +227,16 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
   };
 
   const resetAll = async () => {
-    if (userBudgets.length === 0) return;
-    await Promise.all(userBudgets.map((u) => {
-      const id = keyIdOf(u);
-      if (!id) return Promise.resolve();
-      return fetch(`${API_BASE}/budget/reset`, {
+    try {
+      const { tenantId, apiKey } = await getTenantConfig();
+      await fetch(`${API_BASE}/budget/reset`, {
         method: "POST",
-        headers: { ...HEADERS, "Content-Type": "application/json" },
-        body: JSON.stringify({ key_id: id }),
-      }).catch(() => null);
-    }));
-    await reload();
-    showToast("All budgets reset");
+        headers: { Authorization: `Bearer ${apiKey || ""}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ tenant_id: tenantId }),
+      });
+      await reload();
+      showToast("All employee budgets reset");
+    } catch { /* noop */ }
   };
 
   // ─── Derived metrics ─────────────────────────────────────────────────────
@@ -472,20 +470,6 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                       </div>
                     )}
 
-                    {/* Row 4 — Always visible actions */}
-                    <div style={{
-                      marginTop: 10, display: "flex", justifyContent: "flex-end", gap: 8,
-                    }}>
-                      <button
-                        onClick={() => resetBudget(id)}
-                        style={{
-                          border: `1px solid ${C.redBorder}`, color: C.redText,
-                          background: C.redBg, fontSize: 11, padding: "4px 10px",
-                          borderRadius: 6, cursor: "pointer", fontWeight: 600,
-                          fontFamily: FONT_SANS,
-                        }}
-                      >Reset Budget</button>
-                    </div>
                   </div>
                 );
               })}

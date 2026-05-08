@@ -1390,6 +1390,33 @@ async def migrate_budget_hide(request: Request):
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
+@app.post("/admin/migrate/budget-resets")
+async def migrate_budget_resets(request: Request):
+    """One-time migration: create budget_resets table."""
+    key = request.headers.get("Authorization", "")
+    if key != f"Bearer {os.environ.get('TOKENGUARD_ADMIN_KEY', '')}":
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS budget_resets (
+                id SERIAL PRIMARY KEY,
+                tenant_id UUID NOT NULL,
+                reset_at TIMESTAMPTZ NOT NULL DEFAULT now()
+            )
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_budget_resets_tenant 
+            ON budget_resets(tenant_id, reset_at DESC)
+        """)
+        conn.commit()
+        cur.close()
+        conn.close()
+        return JSONResponse({"migrated": True, "table": "budget_resets"})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
 
 @app.patch("/api/tenants/{tenant_id}/caps")
 async def update_tenant_caps(tenant_id: str, request: Request):
