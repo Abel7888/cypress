@@ -1033,18 +1033,14 @@ async def get_user_breakdown(tenant_id: str, request: Request):
     except Exception as e:
         print(f"[Users] Could not fetch budgets: {e}")
 
-    users = []
+    # Build spend lookup from ClickHouse results
+    spend_data = {}
     for row in result.result_rows:
         agent_id, calls, cost, cache_hits, routed, blocked, avg_latency = row
         if not agent_id or agent_id in ("unknown", "seed"):
             continue
-        # Skip employees hidden from budget or not in Postgres keys
-        if agent_id not in key_ids:
-            continue
         cost_without = cost * 4.2 if routed > 0 else cost
-        users.append({
-            "employee": agent_id,
-            "name": agent_id,
+        spend_data[agent_id] = {
             "api_calls": calls,
             "cost_usd": round(float(cost), 6),
             "cache_hits": cache_hits,
@@ -1054,8 +1050,26 @@ async def get_user_breakdown(tenant_id: str, request: Request):
             "estimated_cost_without_tokenguard": round(float(cost_without), 6),
             "savings_usd": round(float(cost_without - cost), 6),
             "status": "blocked" if blocked > 0 else "healthy",
-            "budget_usd": budgets.get(agent_id, 0.05),
-            "key_id": key_ids.get(agent_id, ""),
+        }
+
+    # Build users list from Postgres keys as base (always show all active employees)
+    users = []
+    for label, key_id in key_ids.items():
+        spend = spend_data.get(label, {})
+        users.append({
+            "employee": label,
+            "name": label,
+            "api_calls": spend.get("api_calls", 0),
+            "cost_usd": spend.get("cost_usd", 0.0),
+            "cache_hits": spend.get("cache_hits", 0),
+            "routed_calls": spend.get("routed_calls", 0),
+            "blocked_calls": spend.get("blocked_calls", 0),
+            "avg_latency_ms": spend.get("avg_latency_ms", 0.0),
+            "estimated_cost_without_tokenguard": spend.get("estimated_cost_without_tokenguard", 0.0),
+            "savings_usd": spend.get("savings_usd", 0.0),
+            "status": spend.get("status", "healthy"),
+            "budget_usd": budgets.get(label, 0.05),
+            "key_id": key_id,
         })
 
     total_cost = sum(u["cost_usd"] for u in users)
