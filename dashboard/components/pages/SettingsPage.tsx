@@ -593,33 +593,39 @@ function EmployeeKeyManager() {
     setActionLoading(null);
   };
 
-  const resetSpend = async (keyId: string, label: string) => {
-    const cur = resetSpendStatus[keyId] || "idle";
-    if (cur === "idle") {
-      setResetSpendStatus((s) => ({ ...s, [keyId]: "confirm" }));
+  async function handleResetSpend(keyId: string, label: string) {
+    const status = resetSpendStatus[keyId] || "idle";
+    if (status === "idle") {
+      setResetSpendStatus(s => ({ ...s, [keyId]: "confirm" }));
       setTimeout(() => {
-        setResetSpendStatus((s) => (s[keyId] === "confirm" ? { ...s, [keyId]: "idle" } : s));
+        setResetSpendStatus(s => s[keyId] === "confirm" ? { ...s, [keyId]: "idle" } : s);
       }, 3000);
       return;
     }
-    if (cur !== "confirm") return;
-    setResetSpendStatus((s) => ({ ...s, [keyId]: "resetting" }));
-    try {
-      const { tenantId, apiKey } = await getTenantConfig();
-      await fetch(`${API_BASE}/api/tenants/${tenantId}/budget/reset-employee`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey || ""}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ agent_id: label }),
-      });
-      setResetSpendStatus((s) => ({ ...s, [keyId]: "done" }));
-      setTimeout(() => {
-        setResetSpendStatus((s) => ({ ...s, [keyId]: "idle" }));
-      }, 2000);
-    } catch (e) {
-      console.error(e);
-      setResetSpendStatus((s) => ({ ...s, [keyId]: "idle" }));
+    if (status === "confirm") {
+      setResetSpendStatus(s => ({ ...s, [keyId]: "resetting" }));
+      try {
+        const { tenantId, apiKey } = await getTenantConfig();
+        await fetch(
+          `${API_BASE}/api/tenants/${tenantId}/budget/reset-employee`,
+          {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${apiKey || ""}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ agent_id: label })
+          }
+        );
+        setResetSpendStatus(s => ({ ...s, [keyId]: "done" }));
+        setTimeout(() => {
+          setResetSpendStatus(s => ({ ...s, [keyId]: "idle" }));
+        }, 2000);
+      } catch {
+        setResetSpendStatus(s => ({ ...s, [keyId]: "idle" }));
+      }
     }
-  };
+  }
 
   const revokeKey = async (keyId: string) => {
     setActionLoading(keyId);
@@ -864,21 +870,27 @@ function EmployeeKeyManager() {
                     {seedStatus[k.id] === "seeding" ? "…" : seedStatus[k.id] === "done" ? "✓" : seedStatus[k.id] === "error" ? "✗" : "Seed"}
                   </button>
                   {(() => {
-                    const st = resetSpendStatus[k.id] || "idle";
-                    const isDone = st === "done";
-                    const isConfirm = st === "confirm";
-                    const isResetting = st === "resetting";
-                    const style: React.CSSProperties = isDone
-                      ? { background: C.greenBg, color: C.greenText, border: `1px solid ${C.greenBorder}`, fontSize: 11, fontWeight: 600, padding: "5px 11px", borderRadius: 6, cursor: "pointer", fontFamily: FONT_SANS }
-                      : { background: C.amberBg, color: C.amberText, border: `1px solid ${C.amber}`, fontSize: 11, fontWeight: 600, padding: "5px 11px", borderRadius: 6, cursor: "pointer", fontFamily: FONT_SANS };
+                    const rs = resetSpendStatus[k.id] || "idle";
+                    const rsLabel = rs === "confirm" ? "✓ Confirm?" : rs === "resetting" ? "…" : rs === "done" ? "✓ Reset" : "Reset Spend";
+                    const rsBg = rs === "done" ? C.greenBg : C.amberBg;
+                    const rsBorder = rs === "done" ? C.greenBorder : C.amberBorder;
+                    const rsFg = rs === "done" ? C.greenText : C.amberText;
                     return (
                       <button
-                        onClick={() => resetSpend(k.id, k.label)}
-                        disabled={isResetting}
-                        style={style}
-                        title="Reset spend counter for this employee"
+                        onClick={() => handleResetSpend(k.id, k.label)}
+                        style={{
+                          padding: "5px 11px",
+                          fontSize: 11,
+                          fontFamily: FONT_SANS,
+                          background: rsBg,
+                          border: `1px solid ${rsBorder}`,
+                          borderRadius: 6,
+                          color: rsFg,
+                          cursor: "pointer",
+                          whiteSpace: "nowrap",
+                        }}
                       >
-                        {isResetting ? "…" : isDone ? "✓ Reset" : isConfirm ? "✓ Confirm?" : "Reset Spend"}
+                        {rsLabel}
                       </button>
                     );
                   })()}
