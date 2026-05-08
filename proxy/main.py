@@ -455,7 +455,6 @@ async def proxy_completion(request: Request):
             password=os.getenv("CLICKHOUSE_PASSWORD"),
             secure=True
         )
-        from datetime import datetime
         _ch.insert(
             "tokenguard.events",
             [[
