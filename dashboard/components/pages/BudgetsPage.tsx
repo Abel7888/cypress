@@ -107,6 +107,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
   const [confirmingRemove, setConfirmingRemove] = useState<string | null>(null);
+  const [confirmingResetAll, setConfirmingResetAll] = useState(false);
   const [, setTick] = useState(0);
   const [dailyCap, setDailyCap] = useState<number | null>(null);
   const [monthlyCap, setMonthlyCap] = useState<number | null>(null);
@@ -332,9 +333,25 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                     }}>
                       ＋ Add Employee
                     </button>
-                    <button style={btnGhost} onClick={resetAll}>
-                      Reset All
-                    </button>
+                    {confirmingResetAll ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontSize: 11, color: C.textMuted }}>Reset all?</span>
+                        <div
+                          onClick={async () => { setConfirmingResetAll(false); await resetAll(); }}
+                          role="button"
+                          style={{ background: C.red, color: "#fff", border: "none", borderRadius: 4, fontSize: 11, fontWeight: 600, padding: "4px 10px", cursor: "pointer" }}
+                        >Yes</div>
+                        <div
+                          onClick={() => setConfirmingResetAll(false)}
+                          role="button"
+                          style={{ background: "transparent", border: `1px solid ${C.border}`, borderRadius: 4, fontSize: 11, padding: "4px 10px", cursor: "pointer", color: C.textMuted }}
+                        >No</div>
+                      </div>
+                    ) : (
+                      <button style={btnGhost} onClick={() => setConfirmingResetAll(true)}>
+                        Reset All
+                      </button>
+                    )}
                   </div>
                   {trialSeatMsg && (
                     <div style={{
@@ -440,38 +457,35 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                       </div>
                     </div>
 
-                    {/* Row 3 — Action row (>=70%) */}
+                    {/* Row 3 — Warning banner (>=70%) */}
                     {pct >= 70 && (
                       <div style={{
                         marginTop: 10, background: C.amberBg, border: `1px solid ${C.amberBorder}`,
                         borderRadius: 8, padding: "10px 14px",
-                        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                        display: "flex", alignItems: "center", gap: 12,
                       }}>
                         <span style={{ fontSize: 12, color: C.amberText }}>
                           {pct >= 100
                             ? <>⚠ Budget exhausted — <strong>access blocked</strong></>
                             : <>⚠ At current rate, budget exhausted in <strong>~{Math.max(1, Math.round(hoursRemaining))}h</strong></>}
                         </span>
-                        <div style={{ display: "flex", gap: 8 }}>
-                          <button
-                            onClick={() => { setEditingId(id); setEditValue(String((limit || 50) * 1.5)); }}
-                            style={{
-                              border: `1px solid ${C.blueBorder}`, color: C.blueText,
-                              background: C.blueBg, fontSize: 12, padding: "5px 12px",
-                              borderRadius: 6, cursor: "pointer", fontWeight: 600,
-                            }}
-                          >Increase Limit</button>
-                          <button
-                            onClick={() => resetBudget(id)}
-                            style={{
-                              border: `1px solid ${C.redBorder}`, color: C.redText,
-                              background: C.redBg, fontSize: 12, padding: "5px 12px",
-                              borderRadius: 6, cursor: "pointer", fontWeight: 600,
-                            }}
-                          >Reset Now</button>
-                        </div>
                       </div>
                     )}
+
+                    {/* Row 4 — Always visible actions */}
+                    <div style={{
+                      marginTop: 10, display: "flex", justifyContent: "flex-end", gap: 8,
+                    }}>
+                      <button
+                        onClick={() => resetBudget(id)}
+                        style={{
+                          border: `1px solid ${C.redBorder}`, color: C.redText,
+                          background: C.redBg, fontSize: 11, padding: "4px 10px",
+                          borderRadius: 6, cursor: "pointer", fontWeight: 600,
+                          fontFamily: FONT_SANS,
+                        }}
+                      >Reset Budget</button>
+                    </div>
                   </div>
                 );
               })}
