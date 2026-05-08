@@ -174,9 +174,60 @@ async def budget_status(request: Request):
     return JSONResponse(content=status)
 
 
+@app.post("/admin/migrate/budget-resets-agent")
+async def migrate_budget_resets_agent(request: Request):
+    """One-time migration: add agent_id column to budget_resets table."""
+    key = request.headers.get("Authorization", "")
+    if key != f"Bearer {os.environ.get('TOKENGUARD_ADMIN_KEY', '')}":
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("""
+            ALTER TABLE budget_resets 
+            ADD COLUMN IF NOT EXISTS agent_id TEXT DEFAULT NULL
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_budget_resets_agent
+            ON budget_resets(tenant_id, agent_id, reset_at DESC)
+        """)
+        conn.commit()
+        cur.close()
+        conn.close()
+        return JSONResponse({"migrated": True, "column_added": "agent_id"})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 @app.post("/budget/reset")
 async def budget_reset(request: Request):
     client_id = authenticate(request)
+
+    # Optional per-employee reset via agent_id in body
+    agent_id = None
+    try:
+        body = await request.json()
+        if isinstance(body, dict):
+            agent_id = body.get("agent_id")
+    except Exception:
+        agent_id = None
+
+    if agent_id:
+        try:
+            conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO budget_resets (tenant_id, agent_id, reset_at)
+                VALUES (%s::uuid, %s, now())
+            """, (client_id, agent_id))
+            conn.commit()
+            cur.close()
+            conn.close()
+            print(f"[Reset] Per-employee reset for {agent_id} in tenant {client_id}")
+        except Exception as e:
+            print(f"[Reset] Per-employee DB reset_at failed: {e}")
+        return JSONResponse(content={"reset": True, "agent_id": agent_id})
+
     reset_budget(client_id, "budget-001")
 
     # If admin key used, reset ALL real tenants (not client-default)
@@ -208,6 +259,30 @@ async def budget_reset(request: Request):
         print(f"[Reset] DB reset_at failed: {e}")
 
     return JSONResponse(content={"reset": True, "budget_id": "budget-001"})
+
+
+@app.post("/api/tenants/{tenant_id}/budget/reset-employee")
+async def reset_employee_budget(tenant_id: str, request: Request):
+    """Reset spend counter for one employee only."""
+    authenticate(request)
+    body = await request.json()
+    agent_id = body.get("agent_id")
+    if not agent_id:
+        return JSONResponse({"error": "agent_id required"}, status_code=400)
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO budget_resets (tenant_id, agent_id, reset_at)
+            VALUES (%s::uuid, %s, now())
+        """, (tenant_id, agent_id))
+        conn.commit()
+        cur.close()
+        conn.close()
+        print(f"[Reset] Per-employee reset for {agent_id} in tenant {tenant_id}")
+        return JSONResponse({"reset": True, "agent_id": agent_id})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 @app.post("/budget/reload")
@@ -976,45 +1051,6 @@ async def get_user_breakdown(tenant_id: str, request: Request):
         secure=True
     )
 
-    # Get last reset timestamp for this tenant
-    reset_at = None
-    try:
-        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT reset_at FROM budget_resets
-            WHERE tenant_id = %s::uuid
-            ORDER BY reset_at DESC
-            LIMIT 1
-        """, (tenant_id,))
-        row = cur.fetchone()
-        if row:
-            reset_at = row[0]
-        cur.close()
-        conn.close()
-    except Exception as e:
-        print(f"[Users] Could not fetch reset_at: {e}")
-
-    since = reset_at.strftime("%Y-%m-%d %H:%M:%S") if reset_at else None
-    time_filter = "AND timestamp >= {since:String}" if since else "AND timestamp >= now() - INTERVAL 30 DAY"
-
-    result = ch.query(f"""
-        SELECT
-            agent_id,
-            count() as total_calls,
-            sum(cost_usd) as total_cost,
-            countIf(cache_hit = 1) as cache_hits,
-            countIf(was_routed = 1) as routed_calls,
-            countIf(blocked = 1) as blocked_calls,
-            avg(latency_ms) as avg_latency_ms
-        FROM tokenguard.events
-        WHERE client_id = {{tenant_id:String}}
-        AND agent_id != '' AND agent_id != 'unknown'
-        {time_filter}
-        GROUP BY agent_id
-        ORDER BY total_cost DESC
-    """, parameters={"tenant_id": tenant_id, **({"since": since} if since else {})})
-
     # Fetch budget_usd and key_id per employee from Postgres (keyed by label = agent_id)
     budgets = {}
     key_ids = {}
@@ -1033,24 +1069,79 @@ async def get_user_breakdown(tenant_id: str, request: Request):
     except Exception as e:
         print(f"[Users] Could not fetch budgets: {e}")
 
-    # Build spend lookup from ClickHouse results
+    # Fetch tenant-wide reset_at and per-employee resets
+    tenant_reset_at = None
+    per_employee_resets = {}
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT reset_at FROM budget_resets
+            WHERE tenant_id = %s::uuid AND agent_id IS NULL
+            ORDER BY reset_at DESC
+            LIMIT 1
+        """, (tenant_id,))
+        row = cur.fetchone()
+        if row:
+            tenant_reset_at = row[0]
+        cur.execute("""
+            SELECT agent_id, MAX(reset_at) FROM budget_resets
+            WHERE tenant_id = %s::uuid AND agent_id IS NOT NULL
+            GROUP BY agent_id
+        """, (tenant_id,))
+        for r in cur.fetchall():
+            per_employee_resets[r[0]] = r[1]
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"[Users] Could not fetch resets: {e}")
+
+    def effective_since(label):
+        emp_reset = per_employee_resets.get(label)
+        if emp_reset and tenant_reset_at:
+            return max(emp_reset, tenant_reset_at)
+        return emp_reset or tenant_reset_at
+
+    # Query ClickHouse per-employee using their own effective reset timestamp
     spend_data = {}
-    for row in result.result_rows:
-        agent_id, calls, cost, cache_hits, routed, blocked, avg_latency = row
-        if not agent_id or agent_id in ("unknown", "seed"):
-            continue
-        cost_without = cost * 4.2 if routed > 0 else cost
-        spend_data[agent_id] = {
-            "api_calls": calls,
-            "cost_usd": round(float(cost), 6),
-            "cache_hits": cache_hits,
-            "routed_calls": routed,
-            "blocked_calls": blocked,
-            "avg_latency_ms": round(float(avg_latency), 0),
-            "estimated_cost_without_tokenguard": round(float(cost_without), 6),
-            "savings_usd": round(float(cost_without - cost), 6),
-            "status": "blocked" if blocked > 0 else "healthy",
-        }
+    for label in key_ids.keys():
+        since_ts = effective_since(label)
+        since = since_ts.strftime("%Y-%m-%d %H:%M:%S") if since_ts else None
+        time_filter = "AND timestamp >= {since:String}" if since else "AND timestamp >= now() - INTERVAL 30 DAY"
+        try:
+            emp_result = ch.query(f"""
+                SELECT
+                    count() as total_calls,
+                    sum(cost_usd) as total_cost,
+                    countIf(cache_hit = 1) as cache_hits,
+                    countIf(was_routed = 1) as routed_calls,
+                    countIf(blocked = 1) as blocked_calls,
+                    avg(latency_ms) as avg_latency_ms
+                FROM tokenguard.events
+                WHERE client_id = {{tenant_id:String}}
+                AND agent_id = {{agent_id:String}}
+                {time_filter}
+            """, parameters={"tenant_id": tenant_id, "agent_id": label, **({"since": since} if since else {})})
+            if not emp_result.result_rows:
+                continue
+            calls, cost, cache_hits, routed, blocked, avg_latency = emp_result.result_rows[0]
+            if not calls or calls == 0:
+                continue
+            cost = cost or 0
+            cost_without = cost * 4.2 if (routed or 0) > 0 else cost
+            spend_data[label] = {
+                "api_calls": calls,
+                "cost_usd": round(float(cost), 6),
+                "cache_hits": cache_hits or 0,
+                "routed_calls": routed or 0,
+                "blocked_calls": blocked or 0,
+                "avg_latency_ms": round(float(avg_latency or 0), 0),
+                "estimated_cost_without_tokenguard": round(float(cost_without), 6),
+                "savings_usd": round(float(cost_without - cost), 6),
+                "status": "blocked" if (blocked or 0) > 0 else "healthy",
+            }
+        except Exception as e:
+            print(f"[Users] ClickHouse query failed for {label}: {e}")
 
     # Build users list from Postgres keys as base (always show all active employees)
     users = []

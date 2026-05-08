@@ -543,6 +543,7 @@ function EmployeeKeyManager() {
   const [newKeyCopied, setNewKeyCopied] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [seedStatus, setSeedStatus] = useState<Record<string, string>>({});
+  const [resetSpendStatus, setResetSpendStatus] = useState<Record<string, "idle" | "confirm" | "resetting" | "done">>({});
 
   const load = async () => {
     setLoading(true);
@@ -590,6 +591,34 @@ function EmployeeKeyManager() {
       await load();
     } catch (e) { console.error(e); }
     setActionLoading(null);
+  };
+
+  const resetSpend = async (keyId: string, label: string) => {
+    const cur = resetSpendStatus[keyId] || "idle";
+    if (cur === "idle") {
+      setResetSpendStatus((s) => ({ ...s, [keyId]: "confirm" }));
+      setTimeout(() => {
+        setResetSpendStatus((s) => (s[keyId] === "confirm" ? { ...s, [keyId]: "idle" } : s));
+      }, 3000);
+      return;
+    }
+    if (cur !== "confirm") return;
+    setResetSpendStatus((s) => ({ ...s, [keyId]: "resetting" }));
+    try {
+      const { tenantId, apiKey } = await getTenantConfig();
+      await fetch(`${API_BASE}/api/tenants/${tenantId}/budget/reset-employee`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey || ""}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ agent_id: label }),
+      });
+      setResetSpendStatus((s) => ({ ...s, [keyId]: "done" }));
+      setTimeout(() => {
+        setResetSpendStatus((s) => ({ ...s, [keyId]: "idle" }));
+      }, 2000);
+    } catch (e) {
+      console.error(e);
+      setResetSpendStatus((s) => ({ ...s, [keyId]: "idle" }));
+    }
   };
 
   const revokeKey = async (keyId: string) => {
@@ -834,6 +863,25 @@ function EmployeeKeyManager() {
                   <button onClick={() => seedKey(k.id)} disabled={seedStatus[k.id] === "seeding"} style={btnBlueOutlineSm}>
                     {seedStatus[k.id] === "seeding" ? "…" : seedStatus[k.id] === "done" ? "✓" : seedStatus[k.id] === "error" ? "✗" : "Seed"}
                   </button>
+                  {(() => {
+                    const st = resetSpendStatus[k.id] || "idle";
+                    const isDone = st === "done";
+                    const isConfirm = st === "confirm";
+                    const isResetting = st === "resetting";
+                    const style: React.CSSProperties = isDone
+                      ? { background: C.greenBg, color: C.greenText, border: `1px solid ${C.greenBorder}`, fontSize: 11, fontWeight: 600, padding: "5px 11px", borderRadius: 6, cursor: "pointer", fontFamily: FONT_SANS }
+                      : { background: C.amberBg, color: C.amberText, border: `1px solid ${C.amber}`, fontSize: 11, fontWeight: 600, padding: "5px 11px", borderRadius: 6, cursor: "pointer", fontFamily: FONT_SANS };
+                    return (
+                      <button
+                        onClick={() => resetSpend(k.id, k.label)}
+                        disabled={isResetting}
+                        style={style}
+                        title="Reset spend counter for this employee"
+                      >
+                        {isResetting ? "…" : isDone ? "✓ Reset" : isConfirm ? "✓ Confirm?" : "Reset Spend"}
+                      </button>
+                    );
+                  })()}
                   {k.is_active ? (
                     <button onClick={() => revokeKey(k.id)} disabled={actionLoading === k.id} style={btnRedOutlineSm}>
                       {actionLoading === k.id ? "…" : "Revoke"}
