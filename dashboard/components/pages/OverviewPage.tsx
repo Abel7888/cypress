@@ -35,6 +35,8 @@ export default function OverviewPage({ setPage }: Props) {
   const [models, setModels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [dailyCap, setDailyCap] = useState<number | null>(null);
+  const [monthlyCap, setMonthlyCap] = useState<number | null>(null);
   const [, setTick] = useState(0);
   const [setupSteps, setSetupSteps] = useState({
     openaiKey: false, firstEmployee: false, firstCall: false, alertEmail: false, slackWebhook: false,
@@ -58,6 +60,16 @@ export default function OverviewPage({ setPage }: Props) {
       setUsers(us?.users || []);
       setModels(Array.isArray(mo) ? mo : []);
       setLastUpdated(new Date());
+
+      try {
+        const capsRes = await fetch(
+          `${API_BASE}/api/tenants/${tenantId}/caps`,
+          { headers: authHeaders }
+        );
+        const capsData = await capsRes.json();
+        if (capsData.daily_cap_usd != null) setDailyCap(Number(capsData.daily_cap_usd));
+        if (capsData.monthly_cap_usd != null) setMonthlyCap(Number(capsData.monthly_cap_usd));
+      } catch { /* noop */ }
     } catch (e) {
       console.error("Overview load error:", e);
       setOverview(null);
@@ -150,6 +162,8 @@ export default function OverviewPage({ setPage }: Props) {
         totalSavedCombined={totalSavedCombined} netBenefit={netBenefit} roiMultiple={roiMultiple}
         cacheHits={cacheHits} cacheHitRate={cacheHitRate} totalRoutedCalls={totalRoutedCalls}
         modelsActive={modelsActive} updatedLabel={updatedLabel} onRefresh={loadAll} nav={nav}
+        dailyCap={dailyCap} monthlyCap={monthlyCap}
+        totalSpent={users.reduce((s, u) => s + (u.cost_usd || 0), 0)}
       />
 
       {(warningUsers.length > 0 || blockedUsers.length > 0) && (
@@ -237,8 +251,14 @@ function SetupBar({ setupSteps, setupComplete, onDismiss, nav }: any) {
 }
 
 // ─── ROI HERO ───────────────────────────────────────────────────────
-function RoiHero({ totalSavedCombined, netBenefit, roiMultiple, cacheHits, cacheHitRate, totalRoutedCalls, modelsActive, updatedLabel, onRefresh, nav }: any) {
+function RoiHero({ totalSavedCombined, netBenefit, roiMultiple, cacheHits, cacheHitRate, totalRoutedCalls, modelsActive, updatedLabel, onRefresh, nav, dailyCap, monthlyCap, totalSpent }: any) {
   const positive = netBenefit >= 0;
+  const monthlyPct = monthlyCap && monthlyCap > 0 ? (totalSpent / monthlyCap) * 100 : 0;
+  const budgetColor = monthlyPct >= 100 ? C.red : monthlyPct >= 70 ? C.amber : C.green;
+  const budgetStatus = monthlyPct >= 100 ? "BLOCKED" : monthlyPct >= 70 ? "WARNING" : "HEALTHY";
+  const budgetStatusBg = monthlyPct >= 100 ? C.redBg : monthlyPct >= 70 ? C.amberBg2 : C.greenBg;
+  const budgetStatusFg = monthlyPct >= 100 ? C.redText : monthlyPct >= 70 ? C.amberText : C.greenText;
+  const budgetStatusBd = monthlyPct >= 100 ? C.redBorder : monthlyPct >= 70 ? C.amberBorder : C.greenBorder;
   return (
     <div style={{ background: C.card, border: `1px solid ${C.border}`, borderLeft: `4px solid ${C.green}`, borderRadius: 16, overflow: "hidden" }}>
       <div style={{ padding: "24px 24px 0" }}>
@@ -254,7 +274,7 @@ function RoiHero({ totalSavedCombined, netBenefit, roiMultiple, cacheHits, cache
         </div>
       </div>
       <div style={{ padding: "0 24px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1, background: C.border, borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 1, background: C.border, borderRadius: 12, overflow: "hidden" }}>
           <RoiCell label="TOKENGUARD FEE" value="$199" valueColor={C.textDim} sub="Monthly subscription" big={28} />
           <RoiCell label="AI COSTS SAVED" value={fmtMoney(totalSavedCombined, 2)} valueColor={C.cyan} sub="Routing + caching" big={28} subColor={C.textMuted} />
           <RoiCell label="NET IN YOUR POCKET" labelColor={C.greenText}
@@ -267,6 +287,17 @@ function RoiHero({ totalSavedCombined, netBenefit, roiMultiple, cacheHits, cache
               : { text: "BUILDING VALUE", bg: C.amberBg2, fg: C.amberText, bd: C.amberBorder }} />
           <RoiCell label="ROI MULTIPLE" value={`${roiMultiple.toFixed(1)}x`} valueColor={C.purple}
             sub={`$${roiMultiple.toFixed(2)} saved per $1 spent`} big={28} subColor={C.textMuted} />
+          <RoiCell
+            label="TEAM BUDGET"
+            labelColor={budgetColor}
+            value={monthlyCap ? `${fmtMoney(totalSpent, 2)} of ${fmtMoney(monthlyCap, 0)}` : "No limit set"}
+            valueColor={budgetColor}
+            sub={monthlyCap ? `${monthlyPct.toFixed(0)}% used this month` : "Set in Settings"}
+            subColor={budgetColor}
+            big={22}
+            pill={monthlyCap ? { text: budgetStatus, bg: budgetStatusBg, fg: budgetStatusFg, bd: budgetStatusBd } : undefined}
+            onClick={() => nav("budgets")}
+          />
         </div>
       </div>
       <div style={{ marginTop: 16, padding: "14px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", background: C.rowAlt, borderTop: `1px solid ${C.border}`, gap: 12, flexWrap: "wrap" }}>
@@ -282,9 +313,16 @@ function RoiHero({ totalSavedCombined, netBenefit, roiMultiple, cacheHits, cache
   );
 }
 
-function RoiCell({ label, labelColor, value, valueColor, sub, subColor, big, hero, pill }: any) {
+function RoiCell({ label, labelColor, value, valueColor, sub, subColor, big, hero, pill, onClick }: any) {
   return (
-    <div style={{ background: hero || "#fff", padding: 20, textAlign: "center" }}>
+    <div
+      onClick={onClick}
+      style={{
+        background: hero || "#fff", padding: 20, textAlign: "center",
+        cursor: onClick ? "pointer" : "default",
+        transition: onClick ? "background 0.15s" : undefined,
+      }}
+    >
       <div style={{ fontSize: 10, fontWeight: 700, color: labelColor || C.textDim, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
       <div style={{ fontSize: big, fontFamily: FONT_MONO, fontWeight: big >= 32 ? 800 : 700, color: valueColor, lineHeight: 1 }}>{value}</div>
       <div style={{ fontSize: 11, color: subColor || C.textDim, marginTop: 6 }}>{sub}</div>
