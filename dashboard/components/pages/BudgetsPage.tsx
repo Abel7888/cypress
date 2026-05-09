@@ -622,16 +622,80 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                   <span style={{ color: C.text, fontWeight: 600 }}>{dailyCap != null ? `$${dailyCap.toFixed(2)}/day` : "No limit set"}</span>
                 </span>
               </div>
-              <div style={{
-                marginTop: 10, padding: "10px 14px",
-                background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8,
-                display: "flex", justifyContent: "space-between", alignItems: "center",
-              }}>
-                <span style={{ fontSize: 12, color: "#64748B" }}>Monthly cap (30 days)</span>
-                <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: "#0F172A" }}>
-                  {monthlyCap != null ? `$${monthlyCap.toFixed(2)}` : "No limit set"}
-                </span>
-              </div>
+              {/* Monthly cap bar */}
+              {(() => {
+                const totalSpent = userBudgets.reduce((s, u) => s + (u.cost_usd || 0), 0);
+                const monthlyPct = monthlyCap && monthlyCap > 0
+                  ? (totalSpent / monthlyCap) * 100
+                  : 0;
+                const monthlyColor = colorForPct(monthlyPct);
+                const monthlyStatus = statusOf(monthlyPct);
+                return (
+                  <div style={{ marginTop: 14 }}>
+                    {/* Monthly header */}
+                    <div style={{
+                      display: "flex", alignItems: "center",
+                      justifyContent: "space-between", marginBottom: 8,
+                    }}>
+                      <div style={{ fontSize: 12, color: C.textMuted }}>
+                        Monthly aggregate spend
+                      </div>
+                      <StatusBadge status={monthlyStatus} />
+                    </div>
+                    {/* Monthly bar */}
+                    <Bar pct={monthlyPct} color={monthlyColor} height={10} />
+                    {/* Monthly labels */}
+                    <div style={{
+                      display: "flex", justifyContent: "space-between", marginTop: 8,
+                      fontSize: 12, fontFamily: FONT_MONO,
+                    }}>
+                      <span>
+                        <span style={{ color: C.textMuted }}>Spent </span>
+                        <span style={{ color: C.text, fontWeight: 600 }}>
+                          {fmtMoney(totalSpent, 4)}
+                        </span>
+                      </span>
+                      <span style={{ color: monthlyColor, fontWeight: 600 }}>
+                        {monthlyPct.toFixed(0)}% of monthly cap
+                      </span>
+                      <span>
+                        <span style={{ color: C.textMuted }}>Limit </span>
+                        <span style={{ color: C.text, fontWeight: 600 }}>
+                          {monthlyCap != null ? `$${monthlyCap.toFixed(2)}/mo` : "No limit set"}
+                        </span>
+                      </span>
+                    </div>
+                    {/* Blocked banner at 100% */}
+                    {monthlyPct >= 100 && (
+                      <div style={{
+                        marginTop: 10, background: C.redBg2,
+                        border: `1px solid ${C.redBorder}`,
+                        borderRadius: 8, padding: "10px 14px",
+                        display: "flex", alignItems: "center", gap: 8,
+                      }}>
+                        <span style={{ fontSize: 12, color: C.redText, fontWeight: 600 }}>
+                          🔴 Monthly budget reached — all AI calls are blocked.
+                          Adjust your limit in Settings.
+                        </span>
+                      </div>
+                    )}
+                    {/* Warning banner at 70-99% */}
+                    {monthlyPct >= 70 && monthlyPct < 100 && (
+                      <div style={{
+                        marginTop: 10, background: C.amberBg,
+                        border: `1px solid ${C.amberBorder}`,
+                        borderRadius: 8, padding: "10px 14px",
+                        display: "flex", alignItems: "center", gap: 8,
+                      }}>
+                        <span style={{ fontSize: 12, color: C.amberText }}>
+                          ⚠️ Team is at {monthlyPct.toFixed(0)}% of monthly budget.
+                          {monthlyCap && ` $${(monthlyCap - totalSpent).toFixed(2)} remaining.`}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
               <div style={{ marginTop: 10 }}>
                 <a
                   href="mailto:support@tokenguard.io?subject=Increase%20account%20budget"
