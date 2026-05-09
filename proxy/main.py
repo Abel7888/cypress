@@ -109,43 +109,60 @@ def _send_account_alert(
     tenant_id: str, tenant_name: str,
     threshold: int, spent: float, cap: float
 ):
-    """Send Slack alert for account budget threshold."""
-    pct = int((spent / cap) * 100) if cap > 0 else 0
-    is_blocked = threshold >= 100
+    import threading
 
-    if is_blocked:
-        title = f"🚨 Team budget BLOCKED — {tenant_name}"
-        detail = (
-            f"Your team has used ${spent:.4f} of ${cap:.2f} "
-            f"monthly budget ({pct}%).\n"
-            f"ALL API calls are now blocked.\n"
-            f"Go to Settings → Account Limits to increase your cap."
-        )
-    else:
-        title = f"⚠️ Team at {threshold}% budget — {tenant_name}"
-        detail = (
-            f"Your team has used ${spent:.4f} of ${cap:.2f} "
-            f"monthly budget ({pct}%).\n"
-            f"Go to your TokenGuard dashboard to review spend."
-        )
-
-    # Slack webhook
-    slack_url = os.getenv("SLACK_WEBHOOK_URL")
-    if slack_url:
+    def _send():
         try:
-            payload = _json.dumps({
-                "text": f"*{title}*\n{detail}"
-            }).encode("utf-8")
-            req = urllib.request.Request(
-                slack_url,
-                data=payload,
-                headers={"Content-Type": "application/json"},
-                method="POST"
+            dashboard_url = os.getenv("DASHBOARD_URL", "")
+            slack_webhook = os.getenv("SLACK_WEBHOOK_URL", "")
+            alert_email = os.getenv("ALERT_EMAIL", "")
+
+            if not dashboard_url:
+                print(f"[AccountAlert] DASHBOARD_URL not set — skipped")
+                return
+
+            # Try to get admin email from tenants table
+            try:
+                conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+                cur = conn.cursor()
+                cur.execute(
+                    "SELECT email FROM tenants WHERE id = %s",
+                    (tenant_id,)
+                )
+                row = cur.fetchone()
+                cur.close()
+                conn.close()
+                if row and row[0]:
+                    alert_email = row[0]
+            except Exception as e:
+                print(f"[AccountAlert] Could not fetch tenant email: {e}")
+
+            payload = {
+                "tenant_id": tenant_id,
+                "employee_name": f"Account ({tenant_name})",
+                "budget_usd": cap,
+                "spent_usd": round(spent, 6),
+                "percentage": round((spent / cap * 100) if cap > 0 else 0, 1),
+                "threshold": threshold,
+                "company": tenant_name,
+                "slack_webhook_url": slack_webhook or None,
+                "alert_email": alert_email or None,
+            }
+
+            import httpx
+            httpx.post(
+                f"{dashboard_url}/api/alerts",
+                json=payload,
+                timeout=10,
             )
-            urllib.request.urlopen(req, timeout=5)
-            print(f"[Alert] Slack sent — tenant={tenant_id} threshold={threshold}%")
+            print(
+                f"[AccountAlert] Sent — tenant={tenant_id} "
+                f"threshold={threshold}%"
+            )
         except Exception as e:
-            print(f"[Alert] Slack failed: {e}")
+            print(f"[AccountAlert] Failed: {e}")
+
+    threading.Thread(target=_send, daemon=True).start()
 
 def check_account_cap(tenant_id: str, tenant_name: str) -> dict:
     """
@@ -265,25 +282,9 @@ def authenticate(request: Request):
         if tenant:
             tenant_id, tenant_name, key_id, budget_usd, label = tenant
             request.state.agent_label = label
+            request.state.tenant_name = tenant_name
+            request.state.tenant_id = str(tenant_id)
             print(f"[Auth] Authenticated: {tenant_name} key={key_id} budget=${budget_usd}")
-
-            # Account-level monthly cap check
-            cap_result = check_account_cap(str(tenant_id), tenant_name)
-            if cap_result["blocked"]:
-                raise HTTPException(
-                    status_code=429,
-                    detail={
-                        "error": "account_budget_exceeded",
-                        "message": (
-                            "Account monthly budget limit reached. "
-                            "Contact your administrator."
-                        ),
-                        "spent_usd": cap_result["spent"],
-                        "cap_usd": cap_result["cap"],
-                        "pct_used": round(cap_result["pct"], 1)
-                    }
-                )
-
             return str(tenant_id)
         else:
             raise HTTPException(status_code=403, detail="Invalid API key")
@@ -546,6 +547,28 @@ async def call_anthropic(body: dict, api_key: str) -> dict:
 @app.post("/v1/chat/completions")
 async def proxy_completion(request: Request):
     client_id = authenticate(request)
+
+    # Account-level monthly cap — only blocks actual AI calls
+    _tenant_name = getattr(request.state, "tenant_name", "Unknown")
+    _tenant_id_str = getattr(request.state, "tenant_id", client_id)
+    cap_result = check_account_cap(_tenant_id_str, _tenant_name)
+    if cap_result["blocked"]:
+        return JSONResponse(
+            status_code=429,
+            content={
+                "error": {
+                    "message": (
+                        "Account monthly budget limit reached. "
+                        "Contact your administrator."
+                    ),
+                    "type": "account_budget_exceeded",
+                    "spent_usd": cap_result["spent"],
+                    "cap_usd": cap_result["cap"],
+                    "pct_used": round(cap_result["pct"], 1)
+                }
+            }
+        )
+
     body = await request.json()
     start_time = time.time()
 
