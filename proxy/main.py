@@ -8,6 +8,9 @@ from datetime import datetime
 from dotenv import load_dotenv
 import psycopg2
 import hashlib
+import urllib.request
+import json as _json
+import clickhouse_connect
 
 load_dotenv()
 
@@ -78,6 +81,149 @@ def load_tenant_budgets():
 
 load_tenant_budgets()
 
+def get_ch_client():
+    """Get a ClickHouse client using same config as logger.py"""
+    return clickhouse_connect.get_client(
+        host=os.getenv("CLICKHOUSE_HOST"),
+        port=int(os.getenv("CLICKHOUSE_PORT", 8443)),
+        username=os.getenv("CLICKHOUSE_USER", "default"),
+        password=os.getenv("CLICKHOUSE_PASSWORD"),
+        secure=True
+    )
+
+# Tracks alerts already sent today per tenant+threshold
+# Key: "{tenant_id}:{threshold}" Value: "YYYY-MM-DD"
+_account_alerts_sent: dict = {}
+
+def _already_alerted(tenant_id: str, threshold: int) -> bool:
+    key = f"{tenant_id}:{threshold}"
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    return _account_alerts_sent.get(key) == today
+
+def _mark_alerted(tenant_id: str, threshold: int):
+    key = f"{tenant_id}:{threshold}"
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    _account_alerts_sent[key] = today
+
+def _send_account_alert(
+    tenant_id: str, tenant_name: str,
+    threshold: int, spent: float, cap: float
+):
+    """Send Slack alert for account budget threshold."""
+    pct = int((spent / cap) * 100) if cap > 0 else 0
+    is_blocked = threshold >= 100
+
+    if is_blocked:
+        title = f"🚨 Team budget BLOCKED — {tenant_name}"
+        detail = (
+            f"Your team has used ${spent:.4f} of ${cap:.2f} "
+            f"monthly budget ({pct}%).\n"
+            f"ALL API calls are now blocked.\n"
+            f"Go to Settings → Account Limits to increase your cap."
+        )
+    else:
+        title = f"⚠️ Team at {threshold}% budget — {tenant_name}"
+        detail = (
+            f"Your team has used ${spent:.4f} of ${cap:.2f} "
+            f"monthly budget ({pct}%).\n"
+            f"Go to your TokenGuard dashboard to review spend."
+        )
+
+    # Slack webhook
+    slack_url = os.getenv("SLACK_WEBHOOK_URL")
+    if slack_url:
+        try:
+            payload = _json.dumps({
+                "text": f"*{title}*\n{detail}"
+            }).encode("utf-8")
+            req = urllib.request.Request(
+                slack_url,
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST"
+            )
+            urllib.request.urlopen(req, timeout=5)
+            print(f"[Alert] Slack sent — tenant={tenant_id} threshold={threshold}%")
+        except Exception as e:
+            print(f"[Alert] Slack failed: {e}")
+
+def check_account_cap(tenant_id: str, tenant_name: str) -> dict:
+    """
+    Check tenant monthly cap against real ClickHouse spend.
+    Returns {"blocked": bool, "spent": float, "cap": float, "pct": float}
+    If no cap set → always returns blocked=False.
+    Fails open — if anything errors, allows the request through.
+    """
+    try:
+        # Get monthly cap from Postgres
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT monthly_cap_usd FROM tenants WHERE id = %s",
+            (tenant_id,)
+        )
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        monthly_cap = float(row[0]) if row and row[0] else None
+        if not monthly_cap or monthly_cap <= 0:
+            return {"blocked": False, "spent": 0.0, "cap": 0.0, "pct": 0.0}
+
+        # Get total spend this month from ClickHouse
+        billing_month = datetime.utcnow().strftime("%Y-%m")
+        ch = get_ch_client()
+        result = ch.query(
+            """
+            SELECT sum(cost_usd)
+            FROM tokenguard.events
+            WHERE client_id = {tenant_id:String}
+            AND toYYYYMM(timestamp) = toYYYYMM(toDateTime({month:String}))
+            """,
+            parameters={
+                "tenant_id": tenant_id,
+                "month": f"{billing_month}-01"
+            }
+        )
+        spent = float(result.result_rows[0][0]) if (
+            result.result_rows and result.result_rows[0][0]
+        ) else 0.0
+
+        pct = (spent / monthly_cap) * 100
+
+        print(
+            f"[AccountCap] tenant={tenant_id} "
+            f"spent=${spent:.4f} cap=${monthly_cap:.2f} "
+            f"pct={pct:.1f}%"
+        )
+
+        # Send alerts at 70% and 90% — once per day per threshold
+        for threshold in [70, 90]:
+            if pct >= threshold and not _already_alerted(tenant_id, threshold):
+                _send_account_alert(
+                    tenant_id, tenant_name, threshold, spent, monthly_cap
+                )
+                _mark_alerted(tenant_id, threshold)
+
+        # Hard block at 100%
+        blocked = pct >= 100
+        if blocked and not _already_alerted(tenant_id, 100):
+            _send_account_alert(
+                tenant_id, tenant_name, 100, spent, monthly_cap
+            )
+            _mark_alerted(tenant_id, 100)
+
+        return {
+            "blocked": blocked,
+            "spent": spent,
+            "cap": monthly_cap,
+            "pct": pct
+        }
+
+    except Exception as e:
+        print(f"[AccountCap] Check failed, allowing request: {e}")
+        return {"blocked": False, "spent": 0.0, "cap": 0.0, "pct": 0.0}
+
 def get_litellm_url():
     return os.getenv("LITELLM_URL", "http://localhost:4000")
 
@@ -120,6 +266,24 @@ def authenticate(request: Request):
             tenant_id, tenant_name, key_id, budget_usd, label = tenant
             request.state.agent_label = label
             print(f"[Auth] Authenticated: {tenant_name} key={key_id} budget=${budget_usd}")
+
+            # Account-level monthly cap check
+            cap_result = check_account_cap(str(tenant_id), tenant_name)
+            if cap_result["blocked"]:
+                raise HTTPException(
+                    status_code=429,
+                    detail={
+                        "error": "account_budget_exceeded",
+                        "message": (
+                            "Account monthly budget limit reached. "
+                            "Contact your administrator."
+                        ),
+                        "spent_usd": cap_result["spent"],
+                        "cap_usd": cap_result["cap"],
+                        "pct_used": round(cap_result["pct"], 1)
+                    }
+                )
+
             return str(tenant_id)
         else:
             raise HTTPException(status_code=403, detail="Invalid API key")
