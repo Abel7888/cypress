@@ -103,8 +103,6 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
   const [loaded, setLoaded] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
   const [confirmingRemove, setConfirmingRemove] = useState<string | null>(null);
   const [confirmingResetAll, setConfirmingResetAll] = useState(false);
@@ -204,26 +202,6 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2000);
-  };
-
-  // ─── Apply template ──────────────────────────────────────────────────────
-  const applyTemplate = async () => {
-    if (!selectedTemplate || selectedEmployees.size === 0) return;
-    const amounts: Record<string, number> = { Engineering: 50, Marketing: 20, Executive: 9999 };
-    const amt = amounts[selectedTemplate] ?? 0;
-    const ids = Array.from(selectedEmployees);
-    const { tenantId: applyTid } = await getTenantConfig();
-    await Promise.all(ids.map((id) =>
-      fetch(`${API_BASE}/api/tenants/${applyTid}/keys/${id}/budget`, {
-        method: "PATCH",
-        headers: { ...HEADERS, "Content-Type": "application/json" },
-        body: JSON.stringify({ budget_usd: amt }),
-      }).catch(() => null)
-    ));
-    setSelectedEmployees(new Set());
-    setSelectedTemplate(null);
-    await reload();
-    showToast(`Applied ${selectedTemplate} preset to ${ids.length} ${ids.length === 1 ? "employee" : "employees"}`);
   };
 
   const resetAll = async () => {
@@ -476,107 +454,6 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
             </div>
           </Card>
 
-          {/* ═══ SECTION 3 — BUDGET TEMPLATES ═════════════════════════════ */}
-          <Card>
-            <CardHeader
-              title="Budget Templates"
-              subtitle="One click to apply a spending preset to your entire team or selected members."
-            />
-            <div style={{ padding: "0 20px 20px" }}>
-              <div style={{
-                display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20,
-              }}>
-                <TemplateCard
-                  title="Engineering" amount="$50 / day" amountColor={C.blue}
-                  desc="Heavy AI usage · code generation · analysis"
-                  tag="Recommended" tagColor="green"
-                  selected={selectedTemplate === "Engineering"}
-                  onClick={() => setSelectedTemplate(selectedTemplate === "Engineering" ? null : "Engineering")}
-                />
-                <TemplateCard
-                  title="Marketing" amount="$20 / day" amountColor={C.purple}
-                  desc="Moderate usage · copy writing · research"
-                  selected={selectedTemplate === "Marketing"}
-                  onClick={() => setSelectedTemplate(selectedTemplate === "Marketing" ? null : "Marketing")}
-                />
-                <TemplateCard
-                  title="Executive" amount="Unlimited" amountColor={C.green}
-                  desc="No spending cap · full model access"
-                  selected={selectedTemplate === "Executive"}
-                  onClick={() => setSelectedTemplate(selectedTemplate === "Executive" ? null : "Executive")}
-                />
-              </div>
-
-              {/* Employee selector chips */}
-              <div style={{
-                fontSize: 10, fontWeight: 700, color: C.textDim, letterSpacing: "0.08em",
-                textTransform: "uppercase", marginBottom: 8,
-              }}>
-                SELECT EMPLOYEES
-              </div>
-              <div style={{ position: "relative", minHeight: 120 }}>
-                <div style={{ position: "absolute", inset: 0, zIndex: 10, borderRadius: 10, background: "rgba(10,20,50,0.85)", backdropFilter: "blur(3px)", border: "1px solid #1e3a6e", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: 20 }}>
-                  <div style={{ fontSize: 22 }}>🔒</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#F0F4FF" }}>Department Budgeting</div>
-                  <div style={{ fontSize: 11, color: "#6B7FA3", textAlign: "center", maxWidth: 220 }}>Group employees by department and apply budgets at scale. Available on Pro.</div>
-                  <button onClick={() => alert("To upgrade to Pro, email us at support@cypressai.xyz")} style={{ marginTop: 4, background: "#4F8EF7", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, padding: "8px 20px", cursor: "pointer" }}>Upgrade to Pro</button>
-                </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
-                {userBudgets.map((u) => {
-                  const id = keyIdOf(u);
-                  const sel = selectedEmployees.has(id);
-                  return (
-                    <button
-                      key={id || nameOf(u)}
-                      onClick={() => {
-                        const next = new Set(selectedEmployees);
-                        if (sel) next.delete(id); else next.add(id);
-                        setSelectedEmployees(next);
-                      }}
-                      style={{
-                        background: sel ? C.blueBg : C.rowAlt,
-                        border: `1px solid ${sel ? C.blueBorder : C.border}`,
-                        color: sel ? C.blueText : C.textMuted,
-                        fontWeight: sel ? 600 : 500,
-                        fontSize: 12, padding: "6px 12px", borderRadius: 999,
-                        cursor: "pointer", fontFamily: FONT_SANS,
-                      }}
-                    >{nameOf(u)}</button>
-                  );
-                })}
-                {userBudgets.length > 1 && (
-                  <button
-                    onClick={() => {
-                      if (selectedEmployees.size === userBudgets.length) setSelectedEmployees(new Set());
-                      else setSelectedEmployees(new Set(userBudgets.map(keyIdOf)));
-                    }}
-                    style={{
-                      background: "transparent", border: `1px dashed ${C.border}`,
-                      color: C.textMuted, fontSize: 12, padding: "6px 12px", borderRadius: 999,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {selectedEmployees.size === userBudgets.length ? "Clear all" : "Select all"}
-                  </button>
-                )}
-              </div>
-              </div>
-
-              <button
-                disabled={!selectedTemplate || selectedEmployees.size === 0}
-                onClick={applyTemplate}
-                style={{
-                  ...btnBlueFilled,
-                  padding: "10px 20px", fontSize: 13,
-                  opacity: !selectedTemplate || selectedEmployees.size === 0 ? 0.5 : 1,
-                  cursor: !selectedTemplate || selectedEmployees.size === 0 ? "not-allowed" : "pointer",
-                }}
-              >
-                Apply to selected ({selectedEmployees.size} {selectedEmployees.size === 1 ? "employee" : "employees"})
-              </button>
-            </div>
-          </Card>
-
           {/* ═══ SECTION 4 — SPEND FORECAST + SAVINGS OPPORTUNITY ═════════ */}
           <ForecastSection users={userBudgets} />
 
@@ -774,45 +651,6 @@ function CardHeader({ title, subtitle, right }: { title: string; subtitle?: stri
       </div>
       {right}
     </div>
-  );
-}
-
-function TemplateCard({
-  title, amount, amountColor, desc, tag, tagColor, selected, onClick,
-}: {
-  title: string; amount: string; amountColor: string; desc: string;
-  tag?: string; tagColor?: "green";
-  selected: boolean; onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        textAlign: "left", cursor: "pointer", fontFamily: FONT_SANS,
-        background: selected ? C.blueBg : C.rowAlt,
-        border: selected ? `2px solid ${C.blue}` : `1px solid ${C.border}`,
-        borderRadius: 12, padding: selected ? 17 : 18,
-        transition: "border-color 0.15s, background 0.15s",
-        position: "relative",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{title}</div>
-        {tag && (
-          <span style={{
-            fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 999,
-            background: tagColor === "green" ? C.greenBg : C.blueBg,
-            border: `1px solid ${tagColor === "green" ? C.greenBorder : C.blueBorder}`,
-            color: tagColor === "green" ? C.greenText : C.blueText,
-            textTransform: "uppercase", letterSpacing: "0.06em",
-          }}>{tag}</span>
-        )}
-      </div>
-      <div style={{
-        fontSize: 22, fontWeight: 700, color: amountColor, fontFamily: FONT_MONO, marginTop: 8,
-      }}>{amount}</div>
-      <div style={{ fontSize: 11, color: C.textMuted, marginTop: 6, lineHeight: 1.4 }}>{desc}</div>
-    </button>
   );
 }
 
