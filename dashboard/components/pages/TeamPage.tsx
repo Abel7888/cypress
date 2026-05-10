@@ -111,8 +111,11 @@ export default function TeamPage({ setPage }: { setPage?: (p: string) => void })
   // ─── Fetch users every 30s ─────────────────────────────────────────────
   async function loadUsers() {
     try {
-      const data = await fetch(`${API_BASE}/api/tenants/${TENANT_ID}/users`, { headers: HEADERS })
-        .then((r) => r.json());
+      const { tenantId, apiKey } = await getTenantConfig();
+      const data = await fetch(
+        `${API_BASE}/api/tenants/${tenantId}/users`,
+        { headers: { Authorization: `Bearer ${apiKey || ""}` } }
+      ).then((r) => r.json());
       const arr: any[] = data?.users || [];
       if (arr.length === 0) {
         setUsers([]);
