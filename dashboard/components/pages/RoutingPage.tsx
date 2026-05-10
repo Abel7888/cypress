@@ -427,32 +427,44 @@ export default function RoutingPage() {
           <div style={{ fontSize: 13, color: C.textDim, textAlign: "center", padding: "40px 0" }}>No routing data yet</div>
         ) : (
           (() => {
-            // Classify models by tier
             const isServed = (name: string) => /mini|haiku|cache|free/i.test(name);
-            const requested = models.filter((m: any) => !isServed(m.model || ""));
-            const served    = models.filter((m: any) => isServed(m.model || "")).concat([{ model: "CACHE", calls: cacheHits, savings: 0 }]);
-            const W = 720, H = 220;
-            const leftX = 120, rightX = 600;
-            const nodeW = 140, nodeH = 42;
-            const reqY = (i: number) => 20 + i * ((H - 40) / Math.max(requested.length, 1));
-            const srvY = (i: number) => 20 + i * ((H - 40) / Math.max(served.length, 1));
 
-            const edges: { x1: number; y1: number; x2: number; y2: number; count: number; saved: number; label: string }[] = [];
-            requested.forEach((req: any, ri: number) => {
-              served.forEach((srv: any, si: number) => {
-                // Rough heuristic edge: split requested calls evenly among served nodes.
-                const fraction = 1 / Math.max(served.length, 1);
-                const cnt = Math.floor((req.calls || 0) * fraction);
-                if (cnt <= 0) return;
-                edges.push({
-                  x1: leftX + nodeW, y1: reqY(ri) + nodeH / 2,
-                  x2: rightX,        y2: srvY(si) + nodeH / 2,
-                  count: cnt,
-                  saved: (totalSavedByRouting / Math.max(requested.length * served.length, 1)),
-                  label: `${cnt.toLocaleString()} calls`,
-                });
-              });
-            });
+            // Filter out empty model strings and zero-call nodes
+            const requested = models
+              .filter((m: any) => !isServed(m.model || "") && (m.model || "").trim() !== "" && (m.calls || 0) > 0);
+            const servedRaw = models
+              .filter((m: any) => isServed(m.model || "") && (m.model || "").trim() !== "" && (m.calls || 0) > 0);
+            // Only add CACHE node if there are actual cache hits
+            const served = cacheHits > 0
+              ? servedRaw.concat([{ model: "CACHE", calls: cacheHits, savings: 0 }])
+              : servedRaw;
+
+            // If no served models at all, show empty state
+            if (served.length === 0) {
+              return (
+                <div style={{ fontSize: 13, color: C.textDim, textAlign: "center", padding: "40px 0" }}>
+                  No routing flow data yet — make API calls through the proxy to see model traffic here.
+                </div>
+              );
+            }
+
+            // If no requested models, show served-only view (all traffic going direct to efficient models)
+            const showRequestedCol = requested.length > 0;
+
+            // Wider canvas to fit long model names, taller to space nodes better
+            const nodeW = 180, nodeH = 52;
+            const W = showRequestedCol ? 760 : 400;
+            const H = Math.max(240, Math.max(showRequestedCol ? requested.length : 0, served.length) * 70 + 40);
+
+            // If no requested column, centre the served nodes
+            const leftX = showRequestedCol ? 80 : 0;
+            const rightX = showRequestedCol ? 560 : 120;
+
+            const reqY = (i: number) => 30 + i * ((H - 60) / Math.max(requested.length, 1));
+            const srvY = (i: number) => 30 + i * ((H - 60) / Math.max(served.length, 1));
+
+            // Helper: truncate model name to fit node width at 9px monospace (~22 chars)
+            const truncate = (s: string, max = 22) => s.length > max ? s.slice(0, max - 1) + "…" : s;
 
             return (
               <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: "block" }}>
@@ -461,43 +473,88 @@ export default function RoutingPage() {
                     <path d="M0,0 L0,6 L8,3 z" fill={C.textDim} />
                   </marker>
                 </defs>
-                {/* Edges */}
-                {edges.map((e, i) => {
-                  const midX = (e.x1 + e.x2) / 2;
-                  const midY = (e.y1 + e.y2) / 2;
-                  return (
-                    <g key={i}>
-                      <line x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} stroke={C.border} strokeWidth={Math.max(1, Math.min(5, (e.count / Math.max(totalRuleCalls, 1)) * 20))} markerEnd="url(#tg-arrow)" />
-                      <text x={midX} y={midY - 6} textAnchor="middle" style={{ fontSize: 10, fill: C.textMuted, fontFamily: FONT_MONO }}>{e.label}</text>
-                      <text x={midX} y={midY + 8} textAnchor="middle" style={{ fontSize: 10, fill: C.green, fontFamily: FONT_MONO }}>${e.saved.toFixed(4)}</text>
-                    </g>
-                  );
-                })}
-                {/* Requested nodes */}
-                {requested.map((m: any, i: number) => {
+
+                {/* Edges — only when both columns present */}
+                {showRequestedCol && (() => {
+                  const edges: { x1: number; y1: number; x2: number; y2: number; count: number; saved: number; label: string }[] = [];
+                  requested.forEach((req: any, ri: number) => {
+                    served.forEach((srv: any, si: number) => {
+                      const fraction = 1 / Math.max(served.length, 1);
+                      const cnt = Math.floor((req.calls || 0) * fraction);
+                      if (cnt <= 0) return;
+                      edges.push({
+                        x1: leftX + nodeW, y1: reqY(ri) + nodeH / 2,
+                        x2: rightX,        y2: srvY(si) + nodeH / 2,
+                        count: cnt,
+                        saved: totalSavedByRouting / Math.max(requested.length * served.length, 1),
+                        label: `${cnt.toLocaleString()} calls`,
+                      });
+                    });
+                  });
+                  return edges.map((e, i) => {
+                    const midX = (e.x1 + e.x2) / 2;
+                    const midY = (e.y1 + e.y2) / 2;
+                    const sw = Math.max(1, Math.min(5, (e.count / Math.max(totalRuleCalls, 1)) * 20));
+                    return (
+                      <g key={i}>
+                        <line x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} stroke={C.border} strokeWidth={sw} markerEnd="url(#tg-arrow)" />
+                        <text x={midX} y={midY - 6} textAnchor="middle" style={{ fontSize: 10, fill: C.textMuted, fontFamily: FONT_MONO }}>{e.label}</text>
+                        <text x={midX} y={midY + 8} textAnchor="middle" style={{ fontSize: 10, fill: C.green, fontFamily: FONT_MONO }}>${e.saved.toFixed(4)}</text>
+                      </g>
+                    );
+                  });
+                })()}
+
+                {/* Requested nodes — only when data exists */}
+                {showRequestedCol && requested.map((m: any, i: number) => {
                   const y = reqY(i);
                   return (
                     <g key={`r${i}`}>
                       <rect x={leftX} y={y} rx={8} ry={8} width={nodeW} height={nodeH} fill={C.redBg} stroke={C.redBorder} />
-                      <text x={leftX + nodeW / 2} y={y + 18} textAnchor="middle" style={{ fontSize: 11, fill: C.text, fontFamily: FONT_MONO }}>{m.model}</text>
-                      <text x={leftX + nodeW / 2} y={y + 32} textAnchor="middle" style={{ fontSize: 10, fill: C.textDim }}>{(m.calls || 0).toLocaleString()} calls</text>
+                      <text x={leftX + nodeW / 2} y={y + 19} textAnchor="middle"
+                        style={{ fontSize: 9, fill: C.text, fontFamily: FONT_MONO, fontWeight: 600 }}>
+                        {truncate(m.model)}
+                      </text>
+                      <text x={leftX + nodeW / 2} y={y + 35} textAnchor="middle"
+                        style={{ fontSize: 10, fill: C.textDim }}>
+                        {(m.calls || 0).toLocaleString()} calls
+                      </text>
                     </g>
                   );
                 })}
+
                 {/* Served nodes */}
                 {served.map((m: any, i: number) => {
                   const y = srvY(i);
+                  const isCache = m.model === "CACHE";
                   return (
                     <g key={`s${i}`}>
-                      <rect x={rightX} y={y} rx={8} ry={8} width={nodeW} height={nodeH} fill={C.greenBg} stroke={C.greenBorder} />
-                      <text x={rightX + nodeW / 2} y={y + 18} textAnchor="middle" style={{ fontSize: 11, fill: C.text, fontFamily: FONT_MONO }}>{m.model}</text>
-                      <text x={rightX + nodeW / 2} y={y + 32} textAnchor="middle" style={{ fontSize: 10, fill: C.textDim }}>{(m.calls || 0).toLocaleString()} calls</text>
+                      <rect x={rightX} y={y} rx={8} ry={8} width={nodeW} height={nodeH}
+                        fill={isCache ? C.blueBg : C.greenBg}
+                        stroke={isCache ? C.blueBorder : C.greenBorder} />
+                      <text x={rightX + nodeW / 2} y={y + 19} textAnchor="middle"
+                        style={{ fontSize: 9, fill: C.text, fontFamily: FONT_MONO, fontWeight: 600 }}>
+                        {truncate(m.model)}
+                      </text>
+                      <text x={rightX + nodeW / 2} y={y + 35} textAnchor="middle"
+                        style={{ fontSize: 10, fill: C.textDim }}>
+                        {(m.calls || 0).toLocaleString()} calls
+                      </text>
                     </g>
                   );
                 })}
+
                 {/* Column labels */}
-                <text x={leftX + nodeW / 2} y={10} textAnchor="middle" style={{ fontSize: 9, fill: C.textDim, letterSpacing: "0.08em" }}>REQUESTED</text>
-                <text x={rightX + nodeW / 2} y={10} textAnchor="middle" style={{ fontSize: 9, fill: C.textDim, letterSpacing: "0.08em" }}>SERVED</text>
+                {showRequestedCol && (
+                  <text x={leftX + nodeW / 2} y={16} textAnchor="middle"
+                    style={{ fontSize: 9, fill: C.textDim, letterSpacing: "0.08em" }}>
+                    REQUESTED
+                  </text>
+                )}
+                <text x={rightX + nodeW / 2} y={16} textAnchor="middle"
+                  style={{ fontSize: 9, fill: C.textDim, letterSpacing: "0.08em" }}>
+                  SERVED
+                </text>
               </svg>
             );
           })()
