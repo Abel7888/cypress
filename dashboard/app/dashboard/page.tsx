@@ -24,11 +24,9 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", 
-      width: "100vw", height: "100vh", overflow: "hidden" }}>
+    <div className="flex flex-col w-screen h-screen overflow-hidden">
       <TrialBanner />
-      <div style={{ display: "flex", flex: 1, overflow: "hidden",
-        width: "100%" }}>
+      <div className="flex flex-1 overflow-hidden w-full">
         <Dashboard />
       </div>
     </div>
