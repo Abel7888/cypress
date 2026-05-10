@@ -24,13 +24,13 @@ export default async function DashboardPage() {
   }
 
   return (
-    <>
+    <div style={{ display: "flex", flexDirection: "column", 
+      width: "100vw", height: "100vh", overflow: "hidden" }}>
       <TrialBanner />
-      <div className="flex h-screen overflow-hidden">
+      <div style={{ display: "flex", flex: 1, overflow: "hidden",
+        width: "100%" }}>
         <Dashboard />
       </div>
-    </>
+    </div>
   )
 }
-
-
