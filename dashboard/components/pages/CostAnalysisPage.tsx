@@ -85,7 +85,7 @@ function RecentCallsPanel({ agentId }: { agentId: string }) {
         const time = new Date(c.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
         return (
           <div key={i} style={{
-            display: "grid", gridTemplateColumns: "44px 1fr 80px 70px", gap: 8, alignItems: "center",
+            display: "grid", gridTemplateColumns: "44px 1fr 70px 60px 70px", gap: 8, alignItems: "center",
             background: C.rowAlt, borderRadius: 8, padding: "8px 12px",
             border: `1px solid ${isBlocked ? C.redBorder : C.border}`,
           }}>
@@ -100,6 +100,9 @@ function RecentCallsPanel({ agentId }: { agentId: string }) {
             <div style={{ fontSize: 11, fontFamily: FONT_MONO, color: isBlocked ? C.red : C.blue }}>
               {isBlocked ? "—" : `$${(c.cost_usd || 0).toFixed(6)}`}
             </div>
+            <div style={{ fontSize: 11, fontFamily: FONT_MONO, color: C.green, fontWeight: 600 }}>
+              {c.saved_usd > 0 ? `-$${(c.saved_usd).toFixed(4)}` : ""}
+            </div>
             <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 20, background: tone.bg, color: tone.color, border: `1px solid ${tone.border}`, textAlign: "center", letterSpacing: "0.04em" }}>{tone.label}</span>
           </div>
         );
@@ -109,31 +112,86 @@ function RecentCallsPanel({ agentId }: { agentId: string }) {
 }
 
 // ─── 7-DAY SPARKLINE ─────────────────────────────────────────────────────────
-function SevenDaySparkline({ totalCost }: { totalCost: number }) {
-  // Heuristic: synthesise a 7-day distribution around average daily spend.
-  const avg = totalCost / 7;
-  const todayIdx = (new Date().getDay() + 6) % 7; // Mon=0..Sun=6
-  const factors = [0.9, 1.1, 0.7, 1.3, 1.5, 0.6, 0.8];
-  const days = factors.map((f, i) => ({ day: ["M","T","W","T","F","S","S"][i], value: Math.max(0, avg * f), today: i === todayIdx }));
-  const maxVal = Math.max(...days.map(d => d.value), 0.000001);
+function SevenDaySparkline({ apiKey }: { apiKey: string | null }) {
+  const [trends, setTrends] = useState<{ date: string; cost: number; savings: number; requests: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!apiKey) return;
+    fetch(`${API_BASE}/api/dashboard/cost-trends?days=7`, {
+      headers: { Authorization: `Bearer ${apiKey}` }
+    })
+      .then(r => r.json())
+      .then(data => { setTrends(Array.isArray(data) ? data.slice(-7) : []); })
+      .catch(() => setTrends([]))
+      .finally(() => setLoading(false));
+  }, [apiKey]);
+
+  if (loading) return (
+    <div style={{ color: C.textDim, fontSize: 11, padding: "20px 0", textAlign: "center" }}>
+      Loading spend trend…
+    </div>
+  );
+
+  if (trends.length === 0) return (
+    <div style={{ color: C.textDim, fontSize: 11, padding: "20px 0", textAlign: "center" }}>
+      No trend data yet — spend will appear here after your first API calls.
+    </div>
+  );
+
+  const maxCost       = Math.max(...trends.map(d => d.cost), 0.000001);
+  const avgDaily      = trends.reduce((s, d) => s + d.cost, 0) / Math.max(trends.length, 1);
+  const avgSavings    = trends.reduce((s, d) => s + d.savings, 0) / Math.max(trends.length, 1);
+  const projMonthly   = avgDaily * 30;
+  const projSavings   = avgSavings * 30;
+
   return (
     <div>
-      <div style={{ fontSize: 9, color: C.textDim, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>7-Day Spend Trend</div>
+      <div style={{ fontSize: 9, color: C.textDim, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>
+        7-Day Spend · Real Data
+      </div>
       <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 90 }}>
-        {days.map((d, i) => {
-          const h = (d.value / maxVal) * 80;
-          const ratio = d.value / maxVal;
-          const color = ratio > 0.7 ? C.red : ratio > 0.4 ? C.amber : C.green;
+        {trends.map((d, i) => {
+          const h       = (d.cost / maxCost) * 80;
+          const isToday = i === trends.length - 1;
+          const ratio   = d.cost / maxCost;
+          const color   = ratio > 0.7 ? C.red : ratio > 0.4 ? C.amber : C.green;
           return (
             <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-              <div style={{ width: d.today ? 30 : 22, height: Math.max(h, 2), background: color, borderRadius: 4, border: d.today ? `2px solid ${C.text}` : "none", transition: "height 0.4s ease" }} />
-              <div style={{ fontSize: 9, color: d.today ? C.text : C.textDim, fontWeight: d.today ? 700 : 500 }}>{d.day}</div>
+              <div
+                title={`${d.date} · $${d.cost.toFixed(4)} · ${d.requests} calls · saved $${d.savings.toFixed(4)}`}
+                style={{
+                  width: isToday ? 30 : 22,
+                  height: Math.max(h, 3),
+                  background: color,
+                  borderRadius: 4,
+                  border: isToday ? `2px solid ${C.text}` : "none",
+                  transition: "height 0.4s ease",
+                  cursor: "default",
+                }}
+              />
+              <div style={{ fontSize: 9, color: isToday ? C.text : C.textDim, fontWeight: isToday ? 700 : 500 }}>
+                {d.date.slice(-5)}
+              </div>
             </div>
           );
         })}
       </div>
-      <div style={{ fontSize: 11, color: C.textMuted, fontFamily: FONT_MONO, marginTop: 10 }}>
-        Avg daily spend: ${avg.toFixed(4)}/day
+      <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 6 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontFamily: FONT_MONO }}>
+          <span style={{ color: C.textMuted }}>Avg daily spend</span>
+          <span style={{ color: C.blue, fontWeight: 600 }}>${avgDaily.toFixed(4)}/day</span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontFamily: FONT_MONO }}>
+          <span style={{ color: C.textMuted }}>Projected this month</span>
+          <span style={{ color: C.text, fontWeight: 600 }}>${projMonthly.toFixed(2)}</span>
+        </div>
+        {projSavings > 0 && (
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontFamily: FONT_MONO }}>
+            <span style={{ color: C.textMuted }}>Projected savings</span>
+            <span style={{ color: C.green, fontWeight: 700 }}>${projSavings.toFixed(2)} saved</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -204,6 +262,7 @@ export default function CostAnalysisPage() {
   const [selectedUser, setSelectedUser] = useState<string>("all");
   const [userDetail, setUserDetail] = useState<any>(null);
   const [search, setSearch] = useState("");
+  const [apiKey, setApiKey] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -222,6 +281,7 @@ export default function CostAnalysisPage() {
   useEffect(() => {
     const load = async () => {
       const { tenantId, apiKey } = await getTenantConfig();
+      setApiKey(apiKey);
       const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
 
     async function loadUsers() {
@@ -484,7 +544,7 @@ export default function CostAnalysisPage() {
                 <RecentCallsPanel agentId={detailEmp.employee} />
               </div>
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 16 }}>
-                <SevenDaySparkline totalCost={empCost} />
+                <SevenDaySparkline apiKey={apiKey} />
               </div>
             </div>
           </div>
@@ -637,7 +697,12 @@ export default function CostAnalysisPage() {
                       : "Kept on premium model — complexity required it"}
                   </div>
                   <div style={{ fontSize: 11, color: C.textDim, marginTop: 2 }}>
-                    {playgroundResult.tokens} tokens · {playgroundResult.was_routed ? "router detected this prompt didn't need premium reasoning" : "router determined the premium model was the right call"}
+                    {playgroundResult.tokens} tokens · {playgroundResult.was_routed
+                      ? `routed from ${playgroundResult.original_model} → ${playgroundResult.routed_model} · complexity score below threshold` 
+                      : playgroundResult.original_model === playgroundResult.routed_model
+                        ? `served by ${playgroundResult.routed_model} · complexity score above threshold — premium reasoning required` 
+                        : `served by ${playgroundResult.routed_model}` 
+                    }
                   </div>
                 </div>
               </div>
@@ -682,6 +747,14 @@ export default function CostAnalysisPage() {
                 <div style={{ fontSize: 13, color: C.text, lineHeight: 1.7, fontFamily: "inherit", whiteSpace: "pre-wrap" }}>{playgroundResult.answer}</div>
               </div>
             )}
+          </div>
+        )}
+        {playgroundResult && (
+          <div style={{ marginTop: 8, padding: "8px 14px", borderRadius: 8, background: C.rowAlt, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 11, color: C.textDim }}>ℹ</span>
+            <span style={{ fontSize: 10, color: C.textDim, lineHeight: 1.5 }}>
+              Cost calculated using blended input/output token rate per model · Routing decisions use TokenGuard's 7-signal complexity scorer — tools, code markers, JSON mode, token count, conversation depth, output length, and complexity keywords · Same engine applied to all your team's live traffic
+            </span>
           </div>
         )}
       </div>

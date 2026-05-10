@@ -10,7 +10,7 @@ redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
 redis_client = redis.from_url(redis_url, decode_responses=False)
 print(f"[Cache] Connected to Redis: {redis_url[:30]}...")
 
-CACHE_TTL_SECONDS = 86400
+CACHE_TTL_SECONDS = 86400  # 24 hours
 
 
 def extract_prompt_text(body: dict) -> str:
@@ -54,8 +54,9 @@ def store_in_cache(body: dict, response: dict, client_id: str):
         prompt_hash = hashlib.md5(prompt_text.strip().lower().encode()).hexdigest()
         cache_key = f"tg:cache:{client_id}:{prompt_hash}"
         entry = {
-            "response": response,
-            "cached_at": datetime.utcnow().isoformat()
+            "response":  response,
+            "cached_at": datetime.utcnow().isoformat(),
+            "model":     response.get("model", "unknown"),
         }
         redis_client.setex(cache_key, CACHE_TTL_SECONDS, json.dumps(entry))
         print(f"[Cache] STORED - {cache_key}")
@@ -64,16 +65,26 @@ def store_in_cache(body: dict, response: dict, client_id: str):
 
 
 def get_cache_stats(client_id: str) -> dict:
-    keys = redis_client.keys(f"tg:cache:{client_id}:*")
+    """
+    Count cached prompts for a tenant using non-blocking SCAN.
+    Safe at any Redis keyspace size — unlike KEYS which blocks the event loop.
+    """
+    keys = list(redis_client.scan_iter(f"tg:cache:{client_id}:*"))
     return {
-        "client_id": client_id,
+        "client_id":      client_id,
         "cached_prompts": len(keys),
-        "note": "exact-match cache active"
+        "ttl_hours":      CACHE_TTL_SECONDS // 3600,
+        "note":           "exact-match cache · 24hr TTL",
     }
 
 
 def clear_cache(client_id: str) -> int:
-    keys = redis_client.keys(f"tg:cache:{client_id}:*")
+    """
+    Delete all cached prompts for a tenant using non-blocking SCAN.
+    Returns count of deleted entries.
+    """
+    keys = list(redis_client.scan_iter(f"tg:cache:{client_id}:*"))
     if keys:
         redis_client.delete(*keys)
+    print(f"[Cache] Cleared {len(keys)} entries for {client_id}")
     return len(keys)

@@ -125,10 +125,16 @@ async def get_agents(request: Request, days: int = 30) -> list[AgentBreakdown]:
 
 @router.get("/agent-recent")
 async def get_agent_recent(request: Request, agent_id: str, limit: int = 8):
-    """Get recent calls for a specific agent."""
+    """
+    Get recent calls for a specific employee.
+    Returns real call history with routing decisions, costs, and per-call savings.
+    Powers the Recent Calls panel in the employee deep-dive on Cost Analysis page.
+    """
     tenant_id = getattr(request.state, "tenant_id", "unknown")
     try:
         import clickhouse_connect, os
+        from router import MODEL_PRICING
+
         client = clickhouse_connect.get_client(
             host=os.getenv("CLICKHOUSE_HOST"),
             port=int(os.getenv("CLICKHOUSE_PORT", 8443)),
@@ -136,31 +142,79 @@ async def get_agent_recent(request: Request, agent_id: str, limit: int = 8):
             password=os.getenv("CLICKHOUSE_PASSWORD"),
             secure=True
         )
+
         result = client.query(
             """
-            SELECT timestamp, request_model, routed_model, total_cost_usd,
-                   was_downgraded, cache_hit, 0 as blocked, latency_ms
-            FROM tokenguard.llm_events
-            WHERE agent_id = {agent_id:String}
+            SELECT
+                timestamp,
+                model_requested,
+                model_used,
+                cost_usd,
+                was_routed,
+                cache_hit,
+                blocked,
+                latency_ms
+            FROM tokenguard.events
+            WHERE agent_id    = {agent_id:String}
+            AND   client_id   = {tenant_id:String}
             ORDER BY timestamp DESC
             LIMIT {limit:Int32}
             """,
-            parameters={"agent_id": agent_id, "limit": limit}
+            parameters={"agent_id": agent_id, "tenant_id": tenant_id, "limit": limit}
         )
+
         rows = []
         for r in result.result_rows:
+            model_requested = str(r[1] or "")
+            model_used      = str(r[2] or "")
+            cost_usd        = float(r[3] or 0)
+            was_routed      = bool(r[4])
+            cache_hit       = bool(r[5])
+            blocked         = bool(r[6])
+            latency_ms      = int(r[7] or 0)
+
+            # Compute real per-call saving from actual model pricing
+            saved_usd = 0.0
+            savings_pct = 0
+            if was_routed and model_requested and model_used and model_requested != model_used:
+                req_p  = MODEL_PRICING.get(model_requested, {})
+                used_p = MODEL_PRICING.get(model_used, {})
+                if req_p and used_p:
+                    req_avg  = (req_p["input"]  + req_p["output"])  / 2
+                    used_avg = (used_p["input"] + used_p["output"]) / 2
+                    if req_avg > 0 and used_avg < req_avg:
+                        cost_without = cost_usd * (req_avg / used_avg)
+                        saved_usd    = round(cost_without - cost_usd, 6)
+                        savings_pct  = round((saved_usd / cost_without) * 100)
+
+            # Routing label drives the UI badge color
+            if cache_hit:
+                routing_label = "cached"
+            elif blocked:
+                routing_label = "blocked"
+            elif was_routed:
+                routing_label = "routed"
+            else:
+                routing_label = "direct"
+
             rows.append({
-                "timestamp": str(r[0]),
-                "model_requested": r[1],
-                "model_used": r[2],
-                "cost_usd": float(r[3]),
-                "was_routed": bool(r[4]),
-                "cache_hit": bool(r[5]),
-                "blocked": bool(r[6]),
-                "latency_ms": int(r[7]),
+                "timestamp":       str(r[0]),
+                "model_requested": model_requested,
+                "model_used":      model_used,
+                "cost_usd":        cost_usd,
+                "was_routed":      was_routed,
+                "cache_hit":       cache_hit,
+                "blocked":         blocked,
+                "latency_ms":      latency_ms,
+                "saved_usd":       saved_usd,
+                "savings_pct":     savings_pct,
+                "routing_label":   routing_label,
             })
+
         return rows
+
     except Exception as e:
+        print(f"[agent-recent] Error: {e}")
         return []
 
 @router.get("/recommendations")

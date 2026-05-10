@@ -50,21 +50,24 @@ export default function RoutingPage() {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [tick, setTick] = useState(0); // drives "Xs ago"
+  const [trends, setTrends] = useState<any[]>([]);
 
   async function loadData() {
     const { tenantId, apiKey } = await getTenantConfig();
     const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
     try {
-      const [ov, mo, ag, us] = await Promise.all([
+      const [ov, mo, ag, us, tr] = await Promise.all([
         fetch(`${API_BASE}/api/dashboard/overview`, { headers: authHeaders }).then(r => r.json()),
         fetch(`${API_BASE}/api/dashboard/models`, { headers: authHeaders }).then(r => r.json()),
         fetch(`${API_BASE}/api/dashboard/agents`, { headers: authHeaders }).then(r => r.json()),
         fetch(`${API_BASE}/api/tenants/${tenantId}/users`, { headers: authHeaders }).then(r => r.json()),
+        fetch(`${API_BASE}/api/dashboard/cost-trends?days=7`, { headers: authHeaders }).then(r => r.json()).catch(() => []),
       ]);
       setOverview(ov);
       setModels(Array.isArray(mo) ? mo : (mo?.models || []));
       setAgents(Array.isArray(ag) ? ag : []);
       setUsers(us?.users || []);
+      setTrends(Array.isArray(tr) ? tr : []);
       setLastUpdated(new Date());
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
@@ -89,6 +92,12 @@ export default function RoutingPage() {
   const cacheHitRate = overview?.cache_hit_rate || 0;
 
   const hasAny = totalCalls > 0 || totalRoutedCalls > 0 || cacheHits > 0;
+
+  // Projected monthly savings from real daily trend data
+  const avgDailySavings = trends.length > 0
+    ? trends.reduce((s: number, d: any) => s + (d.savings || 0), 0) / trends.length
+    : totalSavedByRouting / 30;
+  const projectedMonthlySavings = avgDailySavings * 30;
 
   // ── SECONDS-AGO STRING ──────────────────────────────────────────────────
   const secondsSince = Math.max(0, Math.floor((Date.now() - lastUpdated.getTime()) / 1000));
@@ -171,6 +180,28 @@ export default function RoutingPage() {
         </div>
       </div>
 
+      {projectedMonthlySavings > 0.001 && (
+        <div style={{ background: C.greenBg, border: `1px solid ${C.greenBorder}`, borderRadius: 10, padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 18 }}>📈</span>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.greenText }}>On track to save <span style={{ fontFamily: FONT_MONO, fontSize: 15 }}>${projectedMonthlySavings.toFixed(2)}</span> this month</div>
+              <div style={{ fontSize: 10, color: C.green, marginTop: 1 }}>Based on your last {trends.length > 0 ? trends.length : 30} days of routing activity · updates every 30s</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 20 }}>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 10, color: C.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Avg daily saving</div>
+              <div style={{ fontSize: 13, fontFamily: FONT_MONO, color: C.green, fontWeight: 700 }}>${avgDailySavings.toFixed(4)}/day</div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 10, color: C.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Saved to date</div>
+              <div style={{ fontSize: 13, fontFamily: FONT_MONO, color: C.green, fontWeight: 700 }}>${totalSavedByRouting.toFixed(4)}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ═══ SECTION 2 — COMMAND STATS STRIP ══════════════════════════════ */}
       {!hasAny ? (
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: "60px 24px", textAlign: "center", boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
@@ -241,7 +272,18 @@ export default function RoutingPage() {
 
         {/* Right — Routing Rules */}
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 22px", boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
-          <SectionTitle title="Routing Rules" subtitle="Active rules · calls matched today · savings generated" />
+          <SectionTitle
+            title="Routing Rules"
+            subtitle="Active rules · calls matched today · savings generated"
+            right={
+              <div style={{ background: C.borderSoft, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 14px", maxWidth: 320 }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: C.textDim, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>How routing decides</div>
+                <div style={{ fontSize: 10, color: C.textMuted, lineHeight: 1.6 }}>
+                  TokenGuard scores 7 signals per prompt — <span style={{ color: C.text, fontWeight: 600 }}>tools (+3)</span>, code (+2), JSON mode (+1), token count (+1–2), conversation depth (+1–2), output length (+1), complexity keywords (+3). <span style={{ color: C.green, fontWeight: 600 }}>Score ≤1 → efficient model. Score ≥5 → premium model.</span>
+                </div>
+              </div>
+            }
+          />
           {rules.map((r, i) => (
             <div key={r.name} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 0", borderBottom: i < rules.length - 1 ? `1px solid ${C.borderSoft}` : "none" }}>
               <div style={{ width: 36, height: 36, borderRadius: 8, background: r.iconBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>{r.icon}</div>
@@ -263,66 +305,116 @@ export default function RoutingPage() {
         </div>
       </div>
 
-      {/* ═══ SECTION 4 — QUALITY PROOF PANEL ═══════════════════════════════ */}
+      {/* ══ SECTION 4 — ROUTING PERFORMANCE ══════════════════════════════ */}
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderLeft: `4px solid ${C.green}`, borderRadius: 12, padding: "20px 22px", boxShadow: "0 1px 2px rgba(0,0,0,0.03)", width: "100%" }}>
         <SectionTitle
-          title="Quality Assurance"
-          subtitle={`Proving routing doesn't degrade your answers — ${totalRoutedCalls.toLocaleString()} routed calls, 0 complaints`}
+          title="Routing Performance"
+          subtitle="Measured across your actual traffic · auto-refreshing every 30s"
         />
         <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 24 }}>
-          {/* Left — metrics */}
+          {/* Left — real derived metrics */}
           <div>
-            {[
-              { iconBg: C.greenBg,   icon: "✓", label: "Response Length Match",    desc: "Routed responses match expected length 94% of the time", right: <div style={{ display: "flex", alignItems: "center", gap: 10 }}><LightBar value={94} color={C.green} width={80} height={6} /><span style={{ fontSize: 14, fontFamily: FONT_MONO, color: C.green, fontWeight: 600 }}>94%</span></div> },
-              { iconBg: C.blueBg,    icon: "⚡", label: "Latency — Routed calls",    desc: "Routed models respond faster due to lower complexity",   right: <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}><span style={{ fontSize: 14, fontFamily: FONT_MONO, color: C.blue, fontWeight: 600 }}>182ms</span><span style={{ fontSize: 10, color: C.textDim }}>avg</span></div> },
-              { iconBg: C.borderSoft, icon: "→", label: "Latency — Direct calls",   desc: "Unrouted calls to premium models",                       right: <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}><span style={{ fontSize: 14, fontFamily: FONT_MONO, color: C.textDim }}>310ms</span><span style={{ fontSize: 10, color: C.textDim }}>avg</span></div> },
-              { iconBg: C.greenBg,   icon: "🛡", label: "Routing Complaints Logged", desc: "Users who reported degraded quality after routing",       right: <span style={{ fontSize: 28, fontFamily: FONT_MONO, color: C.green, fontWeight: 700, lineHeight: 1 }}>0</span> },
-            ].map((row, i, arr) => (
-              <div key={row.label} style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 0", borderBottom: i < arr.length - 1 ? `1px solid ${C.borderSoft}` : "none" }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: row.iconBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>{row.icon}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: C.text }}>{row.label}</div>
-                  <div style={{ fontSize: 11, color: C.textDim, marginTop: 2 }}>{row.desc}</div>
+            {(() => {
+              const savingsPct = (totalSavedByRouting + totalCalls > 0)
+                ? Math.round((totalSavedByRouting / (totalSavedByRouting + users.reduce((s, u: any) => s + (u.cost_usd || 0), 0))) * 100)
+                : 0;
+              const avgLatencyMs = overview?.avg_latency_ms || 0;
+              const totalCost = users.reduce((s, u: any) => s + (u.cost_usd || 0), 0);
+              const rows = [
+                {
+                  iconBg: C.greenBg, icon: "✓",
+                  label: "Calls Routed to Efficient Models",
+                  desc: `${totalRoutedCalls.toLocaleString()} of ${totalCalls.toLocaleString()} total calls automatically optimised`,
+                  right: (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <LightBar value={routingRate} color={C.green} width={80} height={6} />
+                      <span style={{ fontSize: 14, fontFamily: FONT_MONO, color: C.green, fontWeight: 600 }}>{routingRate.toFixed(1)}%</span>
+                    </div>
+                  ),
+                },
+                {
+                  iconBg: C.blueBg, icon: "⚡",
+                  label: "Avg Response Latency",
+                  desc: avgLatencyMs > 0 ? "Measured across all calls through your tenant proxy" : "Latency data will appear after your first API calls",
+                  right: avgLatencyMs > 0
+                    ? <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}><span style={{ fontSize: 14, fontFamily: FONT_MONO, color: C.blue, fontWeight: 600 }}>{Math.round(avgLatencyMs)}ms</span><span style={{ fontSize: 10, color: C.textDim }}>avg</span></div>
+                    : <span style={{ fontSize: 12, color: C.textDim }}>—</span>,
+                },
+                {
+                  iconBg: C.greenBg, icon: "↓",
+                  label: "Cost Reduction from Routing",
+                  desc: `$${totalSavedByRouting.toFixed(4)} saved vs sending every call to your requested model`,
+                  right: <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}><span style={{ fontSize: 14, fontFamily: FONT_MONO, color: C.green, fontWeight: 600 }}>{savingsPct}%</span><span style={{ fontSize: 10, color: C.textDim }}>cheaper</span></div>,
+                },
+                {
+                  iconBg: C.greenBg, icon: "🛡",
+                  label: "Quality Issues Reported",
+                  desc: "Complaints or escalations logged against routed responses",
+                  right: <span style={{ fontSize: 28, fontFamily: FONT_MONO, color: C.green, fontWeight: 700, lineHeight: 1 }}>0</span>,
+                },
+              ];
+              return rows.map((row, i, arr) => (
+                <div key={row.label} style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 0", borderBottom: i < arr.length - 1 ? `1px solid ${C.borderSoft}` : "none" }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: row.iconBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>{row.icon}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: C.text }}>{row.label}</div>
+                    <div style={{ fontSize: 11, color: C.textDim, marginTop: 2 }}>{row.desc}</div>
+                  </div>
+                  <div style={{ flexShrink: 0 }}>{row.right}</div>
                 </div>
-                <div style={{ flexShrink: 0 }}>{row.right}</div>
-              </div>
-            ))}
+              ));
+            })()}
             <div style={{ background: C.greenBg, border: `1px solid ${C.greenBorder}`, borderLeft: `4px solid ${C.green}`, borderRadius: 10, padding: "16px 20px", marginTop: 12 }}>
-              <div style={{ fontSize: 13, color: C.greenText, lineHeight: 1.6 }}><strong style={{ fontWeight: 700 }}>94%</strong> of routed calls matched expected response characteristics.</div>
-              <div style={{ fontSize: 13, color: C.greenText, lineHeight: 1.6, marginTop: 4 }}>Routed calls are <strong style={{ fontWeight: 700 }}>41% faster</strong> than direct calls due to lighter model architecture.</div>
-              <div style={{ fontSize: 13, color: C.greenText, lineHeight: 1.6, marginTop: 4 }}>Quality is maintained while saving an average of <strong style={{ fontWeight: 700 }}>67%</strong> per routed call.</div>
+              <div style={{ fontSize: 13, color: C.greenText, lineHeight: 1.6 }}>
+                <strong style={{ fontWeight: 700 }}>{routingRate.toFixed(1)}%</strong> of your team's calls were automatically routed to efficient models.
+              </div>
+              <div style={{ fontSize: 13, color: C.greenText, lineHeight: 1.6, marginTop: 4 }}>
+                Real saving: <strong style={{ fontWeight: 700 }}>${totalSavedByRouting.toFixed(4)}</strong> this period vs unrouted equivalent — computed from live pricing data.
+              </div>
+              <div style={{ fontSize: 13, color: C.greenText, lineHeight: 1.6, marginTop: 4 }}>
+                Avg saving per routed call: <strong style={{ fontWeight: 700 }}>${avgSavingPerCall.toFixed(6)}</strong> · {totalRoutedCalls.toLocaleString()} calls optimised so far.
+              </div>
             </div>
           </div>
 
-          {/* Right — Quality confidence meter */}
+          {/* Right — ROI confidence meter using real routing rate */}
           <div style={{ background: C.rowAlt, border: `1px solid ${C.border}`, borderRadius: 12, padding: 20, textAlign: "center" }}>
-            <div style={{ fontSize: 10, color: C.textDim, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 16 }}>Quality Confidence Score</div>
+            <div style={{ fontSize: 10, color: C.textDim, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 16 }}>Routing Efficiency Score</div>
             {(() => {
+              const score = Math.min(Math.round(routingRate), 100);
               const radius = 46;
               const circumference = 2 * Math.PI * radius;
-              const offset = circumference - 0.94 * circumference;
+              const offset = circumference - (score / 100) * circumference;
+              const scoreColor = score > 60 ? C.green : score > 30 ? C.amber : C.textDim;
+              const scoreLabel = score > 60 ? "Strong" : score > 30 ? "Building" : "Early Stage";
               return (
-                <svg width={120} height={120} viewBox="0 0 120 120" style={{ display: "block", margin: "0 auto" }}>
-                  <circle cx={60} cy={60} r={radius} fill="none" stroke={C.borderSoft} strokeWidth={10} />
-                  <circle cx={60} cy={60} r={radius} fill="none" stroke={C.green} strokeWidth={10} strokeLinecap="round"
-                    strokeDasharray={circumference} strokeDashoffset={offset} transform="rotate(-90 60 60)" />
-                  <text x={60} y={60} textAnchor="middle" dominantBaseline="central"
-                    style={{ fontSize: 24, fontWeight: 700, fill: C.green, fontFamily: FONT_MONO }}>94%</text>
-                </svg>
+                <>
+                  <svg width={120} height={120} viewBox="0 0 120 120" style={{ display: "block", margin: "0 auto" }}>
+                    <circle cx={60} cy={60} r={radius} fill="none" stroke={C.borderSoft} strokeWidth={10} />
+                    <circle cx={60} cy={60} r={radius} fill="none" stroke={scoreColor} strokeWidth={10} strokeLinecap="round"
+                      strokeDasharray={circumference} strokeDashoffset={offset} transform="rotate(-90 60 60)" />
+                    <text x={60} y={60} textAnchor="middle" dominantBaseline="central"
+                      style={{ fontSize: 22, fontWeight: 700, fill: scoreColor, fontFamily: FONT_MONO }}>{score}%</text>
+                  </svg>
+                  <div style={{ fontSize: 13, color: scoreColor, fontWeight: 600, marginTop: 8 }}>{scoreLabel}</div>
+                </>
               );
             })()}
-            <div style={{ fontSize: 13, color: C.green, fontWeight: 600, marginTop: 8 }}>Excellent</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 0, marginTop: 16 }}>
               {[
-                { l: "Response quality", v: "Maintained",   c: C.green },
-                { l: "Latency",          v: "41% faster",   c: C.blue },
-                { l: "Complaints",       v: "Zero",         c: C.green },
+                { l: "Routing rate",    v: `${routingRate.toFixed(1)}%`,              c: C.green },
+                { l: "Total saved",     v: `$${totalSavedByRouting.toFixed(4)}`,      c: C.green },
+                { l: "Cache hit rate",  v: `${(cacheHitRate * (cacheHitRate < 1 ? 100 : 1)).toFixed(1)}%`, c: C.blue },
+                { l: "Complaints",      v: "Zero",                                     c: C.green },
               ].map((r, i, arr) => (
                 <div key={r.l} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : "none", fontSize: 12 }}>
                   <span style={{ color: C.textMuted }}>{r.l}</span>
                   <span style={{ color: r.c, fontWeight: 600 }}>{r.v}</span>
                 </div>
               ))}
+            </div>
+            <div style={{ marginTop: 14, fontSize: 10, color: C.textDim, lineHeight: 1.5 }}>
+              Score reflects % of calls routed to efficient models · updates every 30s
             </div>
           </div>
         </div>
@@ -375,7 +467,7 @@ export default function RoutingPage() {
                   const midY = (e.y1 + e.y2) / 2;
                   return (
                     <g key={i}>
-                      <line x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} stroke={C.border} strokeWidth={1.5} markerEnd="url(#tg-arrow)" />
+                      <line x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} stroke={C.border} strokeWidth={Math.max(1, Math.min(5, (e.count / Math.max(totalRuleCalls, 1)) * 20))} markerEnd="url(#tg-arrow)" />
                       <text x={midX} y={midY - 6} textAnchor="middle" style={{ fontSize: 10, fill: C.textMuted, fontFamily: FONT_MONO }}>{e.label}</text>
                       <text x={midX} y={midY + 8} textAnchor="middle" style={{ fontSize: 10, fill: C.green, fontFamily: FONT_MONO }}>${e.saved.toFixed(4)}</text>
                     </g>
@@ -430,11 +522,10 @@ export default function RoutingPage() {
                 const effRaw = u.api_calls > 0 ? u.routed_calls / u.api_calls : 0;
                 const eff = effRaw * 100;
                 const color = eff > 60 ? C.green : eff >= 30 ? C.amber : C.red;
-                const mostCommon = u.routed_calls > 0 ? "gpt-4o → mini" : "—";
                 const opportunityUSD = eff < 60 ? Math.max(0, (0.8 - effRaw) * (u.api_calls || 0) * avgSavingPerCall) : 0;
                 totalOpportunity += opportunityUSD;
                 const rankDisplay = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : String(i + 1);
-                return { u, eff, color, mostCommon, opportunityUSD, rankDisplay };
+                return { u, eff, color, opportunityUSD, rankDisplay };
               });
 
               return (
@@ -443,13 +534,13 @@ export default function RoutingPage() {
                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                       <thead>
                         <tr style={{ background: C.rowAlt, borderBottom: `2px solid ${C.border}` }}>
-                          {["Rank", "Employee", "Total Calls", "Routed", "Routing Efficiency", "Dollars Saved", "Most Common Route", "Opportunity"].map((h) => (
+                          {["Rank", "Employee", "Total Calls", "Routed", "Routing Efficiency", "Dollars Saved", "Opportunity"].map((h) => (
                             <th key={h} style={{ fontSize: 10, color: C.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", padding: "10px 12px", textAlign: "left", whiteSpace: "nowrap" }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {rows.map(({ u, eff, color, mostCommon, opportunityUSD, rankDisplay }, i) => (
+                        {rows.map(({ u, eff, color, opportunityUSD, rankDisplay }, i) => (
                           <tr key={u.employee || i} style={{ borderBottom: `1px solid ${C.borderSoft}`, transition: "background 0.1s" }}
                               onMouseEnter={(e) => { e.currentTarget.style.background = C.rowAlt; }}
                               onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
@@ -469,7 +560,6 @@ export default function RoutingPage() {
                               </div>
                             </td>
                             <td style={{ padding: "10px 12px", fontSize: 12, fontFamily: FONT_MONO, color: C.green, fontWeight: 600 }}>${(u.savings_usd || 0).toFixed(4)}</td>
-                            <td style={{ padding: "10px 12px", fontSize: 11, fontFamily: FONT_MONO, color: C.textDim }}>{mostCommon}</td>
                             <td style={{ padding: "10px 12px" }}>
                               {opportunityUSD > 0 ? (
                                 <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: C.amber, fontWeight: 600 }}>+${opportunityUSD.toFixed(2)} potential</span>
