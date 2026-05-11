@@ -38,10 +38,14 @@ function Sidebar({
   page,
   setPage,
   overview,
+  setAssistantInput,
+  setAssistantOpen,
 }: {
   page: string;
   setPage: (p: string) => void;
   overview: any;
+  setAssistantInput: (s: string) => void;
+  setAssistantOpen: (b: boolean) => void;
 }) {
   const [sidebarUsers, setSidebarUsers] = useState<any[]>([]);
   const [proxyLatency, setProxyLatency] = useState<number | null>(null);
@@ -166,6 +170,11 @@ function Sidebar({
             fontWeight: 600,
             color: "#065F46",
             fontFamily: FONTS.mono,
+            cursor: "pointer",
+          }}
+          onClick={() => {
+            setAssistantInput(`Explain my savings of $${totalSaved.toFixed(2)} and how it was calculated`);
+            setAssistantOpen(true);
           }}
         >
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981", display: "inline-block" }} />
@@ -174,7 +183,13 @@ function Sidebar({
       </div>
 
       {/* Spend widget */}
-      <div style={{ padding: "12px 16px", borderBottom: "1px solid #F1F5F9" }}>
+      <div
+        style={{ padding: "12px 16px", borderBottom: "1px solid #F1F5F9", cursor: "pointer" }}
+        onClick={() => {
+          setAssistantInput(`I spent $${todaySpend.toFixed(4)} this period. Where is most of it going?`);
+          setAssistantOpen(true);
+        }}
+      >
         <div style={{ fontSize: 9, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: 4 }}>
           TODAY'S SPEND
         </div>
@@ -438,7 +453,52 @@ export default function Dashboard() {
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 1000,
-          system: `You are a cost optimization assistant for TokenGuard. Answer concisely. Format dollar amounts with $. Current data: ${JSON.stringify({ overview, tenantUsers })}`,
+          system: `You are the TokenGuard Routing Intelligence Assistant — a financial advisor for AI costs, not a generic chatbot.
+
+TENANT DATA (real numbers — always use these, never guess):
+- Total AI spend this period: $${overview?.total_cost_usd?.toFixed(4) || "0"}
+- Saved by TokenGuard routing: $${overview?.total_savings_usd?.toFixed(4) || "0"}
+- Total API calls: ${overview?.total_requests || 0}
+- Cache hit rate: ${overview?.cache_hit_rate?.toFixed(1) || "0"}%
+- Avg response latency: ${overview?.avg_latency_ms?.toFixed(0) || "0"}ms
+- Current page user is viewing: ${page}
+
+EMPLOYEES (${tenantUsers.length} total):
+${tenantUsers.map(u => `- ${u.employee}: $${(u.cost_usd||0).toFixed(4)} spent, ${u.api_calls||0} calls, ${u.routed_calls||0} routed, $${(u.savings_usd||0).toFixed(4)} saved, status: ${u.status}`).join('\n')}
+
+MODELS IN USE:
+${models.map(m => `- ${m.model}: $${(m.cost||0).toFixed(4)} (${m.percentage?.toFixed(0)||0}% of spend, ${m.requests||0} calls)`).join('\n')}
+
+HOW TOKENGUARD ROUTING WORKS (explain this when asked):
+TokenGuard scores every prompt across 7 signals before deciding which model to use: tool use (+3pts), code markers (+2pts), JSON mode (+1pt), token count (+1-2pts), conversation depth (+1-2pts), output length (+1pt), complexity keywords like "architect/implement/distributed" (+3pts).
+Score ≤1 = route to efficient model. Score ≥5 = keep on premium model.
+Routing stays within the same provider by default (OpenAI→OpenAI, Anthropic→Anthropic) to respect data governance.
+
+PRICING (use for simulations — verified May 2026):
+OpenAI:
+- gpt-4.1: $2.00/M input, $8.00/M output (recommended production model, replaces gpt-4o)
+- gpt-4o: $2.50/M input, $10.00/M output (legacy, still available)
+- gpt-4.1-mini: $0.40/M input, $1.60/M output (replaces gpt-4o-mini for most tasks)
+- gpt-4o-mini: $0.15/M input, $0.60/M output (legacy budget option)
+- gpt-4.1-nano: $0.10/M input, $0.40/M output (cheapest OpenAI option)
+
+Anthropic:
+- claude-opus-4-6: $5.00/M input, $25.00/M output (was $15/$75 — 67% price drop)
+- claude-sonnet-4-6: $3.00/M input, $15.00/M output
+- claude-haiku-4-5: $1.00/M input, $5.00/M output
+
+Google:
+- gemini-2.5-pro: $1.25/M input, $10.00/M output
+- gemini-2.5-flash: $0.15/M input, $0.60/M output
+- gemini-2.5-flash-lite: $0.10/M input, $0.40/M output (cheapest major-provider model)
+
+RULES:
+1. Always cite specific employee names and dollar amounts from the data above
+2. When you identify a saving opportunity, quantify it in dollars per month
+3. When asked to simulate ("what if we moved to Haiku?"), calculate from actual call volumes above
+4. Never make up numbers not in the data above
+5. Be concise — 3-5 sentences max unless the question needs more
+6. When the user is on a specific page, bias answers toward that page's data`,
           messages: [...assistantMessages, userMsg].map((m) => ({ role: m.role, content: m.content })),
         }),
       });
@@ -459,6 +519,34 @@ export default function Dashboard() {
   });
 
   const pageMeta = PAGE_META[page] || { title: page, subtitle: "" };
+
+  const assistantChips = page === "routing"
+    ? [
+        "What's our routing rate and is it good?",
+        "Which employees have the worst routing efficiency?",
+        "How much would we save at 60% routing rate?",
+        "Explain how the routing decision works",
+      ]
+    : page === "cost-analysis"
+    ? [
+        "Who spent the most this period?",
+        "Simulate moving everything to Haiku",
+        "Which model costs us the most?",
+        "Which employee has the most untapped savings?",
+      ]
+    : page === "budgets"
+    ? [
+        "Who is closest to their budget limit?",
+        "Should I increase any budgets?",
+        "Which employee gets blocked most often?",
+        "What budget would prevent all blocks?",
+      ]
+    : [
+        "Are we wasting money anywhere?",
+        "What's our projected spend this month?",
+        "Which employee saves us the most?",
+        "Simulate switching simple tasks to Haiku",
+      ];
 
   const renderPage = () => {
     // Pages manage their own data fetching internally; props are passed for
@@ -497,7 +585,7 @@ export default function Dashboard() {
 
       <div style={{ display: "flex", height: "100vh", background: "#F8FAFC", fontFamily: FONTS.sans, overflow: "hidden" }}>
         {/* Sidebar */}
-        <Sidebar page={page} setPage={setPage} overview={overview} />
+        <Sidebar page={page} setPage={setPage} overview={overview} setAssistantInput={setAssistantInput} setAssistantOpen={setAssistantOpen} />
 
         {/* Main */}
         <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
@@ -730,14 +818,14 @@ export default function Dashboard() {
         <div style={{ padding: "16px 20px", borderBottom: "1px solid #E2E8F0", display: "flex", alignItems: "flex-start" }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#0F172A" }}>✦ AI Assistant</div>
-            <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 2 }}>Powered by Claude</div>
+            <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 2 }}>Powered by Claude · {tenantUsers.length} employees · live data</div>
           </div>
           <button onClick={() => setAssistantOpen(false)} style={{ background: "transparent", border: "none", color: "#94A3B8", fontSize: 20, cursor: "pointer" }}>✕</button>
         </div>
 
         {/* Chips */}
         <div style={{ padding: "10px 20px", borderBottom: "1px solid #F1F5F9", display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {["Who spent the most this week?", "Simulate switching to Haiku", "Why did costs spike?", "Least efficient employee?"].map((chip) => (
+          {assistantChips.map((chip) => (
             <button
               key={chip}
               onClick={() => sendAssistantMessage(chip)}
