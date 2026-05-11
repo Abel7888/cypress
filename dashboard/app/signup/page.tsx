@@ -220,7 +220,7 @@ function SignUpInner() {
                 "Cancel anytime",
               ].map((f, i) => (
                 <div key={i} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: C.textMuted, padding: "4px 0" }}>
-                  <span style={{ color: C.green }}>âœ“</span>
+                  <span style={{ color: C.green }}>&#10003;</span>
                   <span>{f}</span>
                 </div>
               ))}
@@ -484,7 +484,7 @@ function SuccessView({ email, onHome }: { email: string; onHome: () => void }) {
         background: `${C.green}18`, color: C.green,
         display: "flex", alignItems: "center", justifyContent: "center",
         margin: "8px auto 16px", fontSize: 26, fontWeight: 700,
-      }}>âœ“</div>
+      }}>✓</div>
       <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: C.text }}>
         Request Received! ðŸŽ‰
       </h2>

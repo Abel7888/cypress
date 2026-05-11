@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { COLORS, FONTS, API_BASE, API_KEY, TENANT_ID, HEADERS, getTenantConfig } from "./constants";
+import { Logo } from "./brand";
 import OverviewPage from "./pages/OverviewPage";
 import CostAnalysisPage from "./pages/CostAnalysisPage";
 import BudgetsPage from "./pages/BudgetsPage";
@@ -147,14 +148,8 @@ function Sidebar({
     >
       {/* Logo */}
       <div style={{ padding: "20px 16px 12px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-          <span style={{ fontSize: 20 }}>🛡️</span>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#0F172A" }}>TokenGuard</div>
-            <div style={{ fontSize: 9, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-              AI COST CONTROL
-            </div>
-          </div>
+        <div style={{ marginBottom: 8 }}>
+          <Logo size={28} />
         </div>
         {/* Net benefit pill */}
         <div
@@ -178,7 +173,7 @@ function Sidebar({
           }}
         >
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981", display: "inline-block" }} />
-          {totalSaved > 0 ? `+$${totalSaved.toFixed(2)} saved this month` : "+$— saved this month"}
+          {totalSaved > 0 ? `+$${totalSaved.toFixed(2)} saved this month` : "Routing active"}
         </div>
       </div>
 
@@ -519,6 +514,9 @@ RULES:
   });
 
   const pageMeta = PAGE_META[page] || { title: page, subtitle: "" };
+  const companyName = typeof window !== "undefined"
+    ? (localStorage.getItem("tg_company") || "")
+    : "";
 
   const assistantChips = page === "routing"
     ? [
@@ -604,7 +602,9 @@ RULES:
           >
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: "#0F172A" }}>{pageMeta.title}</div>
-              <div style={{ fontSize: 11, color: "#94A3B8" }}>{pageMeta.subtitle}</div>
+              <div style={{ fontSize: 11, color: "#94A3B8" }}>
+                {companyName ? `${companyName} · ` : ""}{pageMeta.subtitle}
+              </div>
             </div>
             <button
               onClick={() => setAssistantOpen(true)}

@@ -242,6 +242,7 @@ function OnboardingPage() {
   const [tenantId, setTenantId] = useState("");
   const [masterKey, setMasterKey] = useState("");
   const [masterKeyCopied, setMasterKeyCopied] = useState(false);
+  const [keyVisible, setKeyVisible] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createdEmployeeKeys, setCreatedEmployeeKeys] = useState<{ name: string; sent: boolean }[]>([]);
 
@@ -901,7 +902,7 @@ function OnboardingPage() {
             <div>
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 6 }}>You're in.</div>
-                <div style={{ fontSize: 14, color: C.textMuted }}>Copy your master key now — we also emailed it to {adminEmail}.</div>
+                <div style={{ fontSize: 14, color: C.textMuted }}>Copy your master key now and store it securely — it controls all API access for your account.</div>
               </div>
 
               {/* Master key display */}
@@ -909,20 +910,26 @@ function OnboardingPage() {
                 <div style={{ padding: "16px 18px" }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: C.green, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>✓ Master key — copy this now</div>
                   <div style={{ fontFamily: MONO, fontSize: 12, color: C.text, wordBreak: "break-all", lineHeight: 1.7, background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
-                    {masterKey || "tg-generating..."}
+                    {masterKey
+                      ? (keyVisible
+                          ? masterKey
+                          : masterKey.slice(0, 8) + "••••••••••••••••" + masterKey.slice(-4))
+                      : "tg-generating..."}
                   </div>
-                  <button
-                    onClick={copyKey}
-                    style={{
-                      width: "100%", padding: "10px",
-                      background: masterKeyCopied ? C.green : C.blue,
-                      border: "none", borderRadius: 8,
-                      color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer",
-                      fontFamily: SANS,
-                    }}
-                  >
-                    {masterKeyCopied ? "✓ Copied!" : "Copy master key"}
-                  </button>
+                  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                    <button
+                      onClick={() => setKeyVisible(v => !v)}
+                      style={{ background: "transparent", border: "1px solid #E2E8F0", color: "#64748B", fontSize: 12, fontWeight: 600, padding: "6px 12px", borderRadius: 6, cursor: "pointer" }}
+                    >
+                      {keyVisible ? "Hide" : "👁 View"}
+                    </button>
+                    <button
+                      onClick={copyKey}
+                      style={{ background: "#3B82F6", color: "#FFF", border: "none", fontSize: 12, fontWeight: 600, padding: "6px 12px", borderRadius: 6, cursor: "pointer" }}
+                    >
+                      {masterKeyCopied ? "✓ Copied!" : "Copy key"}
+                    </button>
+                  </div>
                 </div>
               </Card>
 
@@ -963,7 +970,7 @@ function OnboardingPage() {
                         </div>
                         <span style={{ fontSize: 13, fontWeight: 500, color: C.text }}>{emp.name}</span>
                       </div>
-                      <span style={{ fontSize: 12, color: C.green, fontWeight: 600 }}>✓ key sent</span>
+                      <span style={{ fontSize: 12, color: C.green, fontWeight: 600 }}>✓ key ready</span>
                     </div>
                   ))}
                   <div style={{ fontSize: 12, color: C.textMuted, padding: "8px 0" }}>
