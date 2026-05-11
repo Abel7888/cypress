@@ -25,9 +25,9 @@ const getBudgetPct = (u: any) => u.budget_usd > 0 ? Math.min((u.cost_usd / u.bud
 const getBudgetPctRaw = (u: any) => u.budget_usd > 0 ? (u.cost_usd / u.budget_usd) * 100 : 0;
 const timeAgo = (s: number) => s < 60 ? `${s}s ago` : s < 3600 ? `${Math.floor(s/60)}m ago` : `${Math.floor(s/3600)}h ago`;
 
-type Props = { setPage?: (p: string) => void };
+type Props = { setPage?: (p: string) => void; onStatClick?: (message: string) => void };
 
-export default function OverviewPage({ setPage }: Props) {
+export default function OverviewPage({ setPage, onStatClick }: Props) {
   const nav = (p: string) => { if (setPage) setPage(p); };
   const [overview, setOverview] = useState<any>(null);
   const [trends, setTrends] = useState<any[]>([]);
@@ -103,6 +103,7 @@ export default function OverviewPage({ setPage }: Props) {
   const cacheHits        = overview?.cache_hits || 0;
   const cacheHitRate     = overview?.cache_hit_rate || 0;
   const totalRoutedCalls = users.reduce((s, u) => s + (u.routed_calls || 0), 0);
+  const routingRate      = totalRequests > 0 ? Math.round((totalRoutedCalls / totalRequests) * 100) : 0;
   const totalSaved       = users.reduce((s, u) => s + (u.savings_usd || 0), 0);
   const cacheSaved       = cacheHits * 0.00005;
   const totalSavedCombined = totalSaved + cacheSaved;
@@ -187,8 +188,10 @@ export default function OverviewPage({ setPage }: Props) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
         <StatCard label="TOTAL SPEND"    value={fmtMoney(totalCost, 4)}        sub="All time · real spend"       color={C.blue}   icon="💰" />
         <StatCard label="TOTAL REQUESTS" value={fmtInt(totalRequests)}          sub="API calls + cache hits"      color={C.cyan}   icon="⚡" />
-        <StatCard label="CACHE HIT RATE" value={`${cacheHitRate.toFixed(1)}%`}  sub={`${fmtInt(cacheHits)} free responses`} color={C.green}  icon="♻" />
-        <StatCard label="ROUTED CALLS"   value={fmtInt(totalRoutedCalls)}       sub="served cheaper than requested" color={C.purple} icon="↔" />
+        <StatCard label="CACHE HIT RATE" value={`${cacheHitRate.toFixed(1)}%`}  sub={`${fmtInt(cacheHits)} free responses`} color={C.green}  icon="♻"
+          onClick={onStatClick ? () => onStatClick(`My cache hit rate is ${cacheHitRate.toFixed(1)}%. Is that good and how can I improve it?`) : undefined} />
+        <StatCard label="ROUTED CALLS"   value={fmtInt(totalRoutedCalls)}       sub="served cheaper than requested" color={C.purple} icon="↔"
+          onClick={onStatClick ? () => onStatClick(`My routing rate is ${routingRate}%. What does that mean and how do I improve it?`) : undefined} />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
@@ -352,9 +355,9 @@ function AlertBanner({ tone, emoji, title, detail, actionLabel, onAction, onDism
 }
 
 // ─── STAT CARD ──────────────────────────────────────────────────────
-function StatCard({ label, value, sub, color, icon }: { label: string; value: string; sub: string; color: string; icon: string }) {
+function StatCard({ label, value, sub, color, icon, onClick }: { label: string; value: string; sub: string; color: string; icon: string; onClick?: () => void }) {
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 18, display: "flex", flexDirection: "column", gap: 6, position: "relative", overflow: "hidden" }}>
+    <div onClick={onClick} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 18, display: "flex", flexDirection: "column", gap: 6, position: "relative", overflow: "hidden", cursor: onClick ? "pointer" : undefined }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: C.textDim, letterSpacing: "0.08em", textTransform: "uppercase" }}>{label}</span>
         <span style={{ width: 28, height: 28, borderRadius: 8, background: color + "15", color, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>{icon}</span>

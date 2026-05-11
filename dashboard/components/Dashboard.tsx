@@ -557,7 +557,7 @@ RULES:
     const AnyROI = ROIReportPage as any;
     switch (page) {
       case "overview":
-        return <AnyOverview overview={overview} tenantUsers={tenantUsers} models={models} setPage={setPage} />;
+        return <AnyOverview overview={overview} tenantUsers={tenantUsers} models={models} setPage={setPage} onStatClick={(message: string) => { setAssistantInput(message); setAssistantOpen(true); }} />;
       case "cost-analysis":
         return <CostAnalysisPage />;
       case "budgets":
@@ -571,7 +571,7 @@ RULES:
       case "settings":
         return <SettingsPage />;
       default:
-        return <AnyOverview overview={overview} tenantUsers={tenantUsers} models={models} setPage={setPage} />;
+        return <AnyOverview overview={overview} tenantUsers={tenantUsers} models={models} setPage={setPage} onStatClick={(message: string) => { setAssistantInput(message); setAssistantOpen(true); }} />;
     }
   };
 
