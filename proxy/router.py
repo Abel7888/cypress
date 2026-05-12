@@ -169,9 +169,9 @@ def classify_complexity(signals: ComplexitySignals, prompt_text: str = "") -> st
     if any(kw in text_lower for kw in COMPLEX_KEYWORDS):
         score += 3
 
-    if score >= 5:
+    if score >= 6:
         return "complex"
-    elif score >= 2:
+    elif score >= 3:
         return "moderate"
     return "simple"
 
