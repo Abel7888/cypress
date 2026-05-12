@@ -230,6 +230,31 @@ export default function CostAnalysisPage() {
 
   const runPlayground = async () => {
     if (!playgroundPrompt.trim()) return;
+
+    // Check if tenant has provider keys configured
+    const { tenantId, apiKey: tgKey } = await getTenantConfig();
+    if (!tgKey) {
+      setPlaygroundResult({
+        error: true,
+        errorMessage: "No API key found. Please complete onboarding or add a provider key in Settings.",
+      });
+      setPlaygroundLoading(false);
+      return;
+    }
+
+    // Check localStorage for saved provider keys as secondary signal
+    const hasProvider = localStorage.getItem("tg_provider_openai") ||
+                        localStorage.getItem("tg_provider_anthropic") ||
+                        localStorage.getItem("tg_provider_google");
+    if (!hasProvider) {
+      setPlaygroundResult({
+        error: true,
+        errorMessage: "Add your OpenAI or Anthropic API key in Settings → Provider Keys before using the Route Tester.",
+      });
+      setPlaygroundLoading(false);
+      return;
+    }
+
     setPlaygroundLoading(true);
     setPlaygroundResult(null);
     const { apiKey } = await getTenantConfig();
@@ -681,7 +706,26 @@ export default function CostAnalysisPage() {
         </div>
 
         {/* Result panel */}
-        {playgroundResult && (
+        {playgroundResult?.error && (
+          <div style={{
+            marginTop: 16, borderRadius: 12, padding: 20,
+            background: "#FEF2F2",
+            border: "1px solid #FECACA",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 20 }}>⚠️</span>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#991B1B" }}>
+                  Provider key required
+                </div>
+                <div style={{ fontSize: 12, color: "#B91C1C", marginTop: 4 }}>
+                  {playgroundResult.errorMessage}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {playgroundResult && !playgroundResult.error && (
           <div style={{
             marginTop: 16, borderRadius: 12, padding: 20,
             background: playgroundResult.was_routed ? C.greenBg : C.blueBg,
@@ -749,7 +793,7 @@ export default function CostAnalysisPage() {
             )}
           </div>
         )}
-        {playgroundResult && (
+        {playgroundResult && !playgroundResult.error && (
           <div style={{ marginTop: 8, padding: "8px 14px", borderRadius: 8, background: C.rowAlt, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 11, color: C.textDim }}>ℹ</span>
             <span style={{ fontSize: 10, color: C.textDim, lineHeight: 1.5 }}>

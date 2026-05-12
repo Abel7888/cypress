@@ -359,6 +359,13 @@ function OnboardingPage() {
   };
 
   const testConnection = async () => {
+    if (savedProviders.size === 0) {
+      setTestStatus("failed");
+      setTestResult({
+        error: "Add and save at least one provider API key in Step 2 before testing.",
+      });
+      return;
+    }
     setTestStatus("testing");
     const start = Date.now();
     try {
@@ -370,7 +377,14 @@ function OnboardingPage() {
       const data = await res.json();
       const latency = Date.now() - start;
       if (data.id) {
-        setTestResult({ latency, model: data.model, routed: data.model !== "gpt-4o" });
+        setTestResult({
+          latency,
+          model: data.model,
+          routed: data.model !== "gpt-4o",
+          latencyLabel: latency > 5000
+            ? `${(latency / 1000).toFixed(1)}s — proxy warming up, next calls will be faster`
+            : `${latency}ms — proxy live`,
+        });
         setTestStatus("success");
       } else {
         setTestStatus("failed");
@@ -405,13 +419,28 @@ function OnboardingPage() {
   };
 
   // ── Provider helpers ─────────────────────────────────────────────────────────
-  const saveProvider = (id: string) => {
+  const saveProvider = async (id: string) => {
     const key = providerInputs[id] || "";
     if (!key.trim()) return;
     setProviderKeys(prev => ({ ...prev, [id]: key }));
     setSavedProviders(prev => new Set(Array.from(prev).concat(id)));
     setExpandedProvider(null);
     localStorage.setItem(`tg_provider_${id}`, key);
+    if (tenantId && masterKey) {
+      try {
+        await fetch(`${API_BASE}/api/tenants/${tenantId}/provider-keys`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${masterKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ provider: id, api_key: key }),
+        });
+        console.log(`[onboarding] Provider key saved to proxy for ${id}`);
+      } catch (e) {
+        console.warn("[onboarding] Could not save provider key to proxy:", e);
+      }
+    }
   };
 
   const removeProvider = (id: string) => {
@@ -1080,7 +1109,7 @@ function OnboardingPage() {
                         { label: "Requested", value: "gpt-4o" },
                         { label: "Served", value: testResult?.model || "gpt-4o-mini", highlight: true },
                         { label: "Cost", value: "$0.000043" },
-                        { label: "Latency", value: `${testResult?.latency || 340}ms` },
+                        { label: "Latency", value: testResult?.latencyLabel || `${testResult?.latency || 340}ms` },
                       ].map((r, i) => (
                         <div key={i} style={{ padding: "8px 10px", background: C.card, border: `1px solid ${C.greenBorder}`, borderRadius: 7 }}>
                           <div style={{ fontSize: 10, color: C.greenText, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 3 }}>{r.label}</div>
@@ -1098,7 +1127,7 @@ function OnboardingPage() {
                 {testStatus === "failed" && (
                   <div style={{ background: C.redBg, border: `1px solid ${C.redBorder}`, borderRadius: 10, padding: "14px 16px" }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: C.red, marginBottom: 4 }}>Connection failed</div>
-                    <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 10 }}>Check your key was copied correctly and try again.</div>
+                    <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 10 }}>{testResult?.error || "Connection failed — check your provider key and try again."}</div>
                     <button onClick={() => setTestStatus("idle")} style={{ fontSize: 12, color: C.blue, background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: SANS }}>Try again →</button>
                   </div>
                 )}
