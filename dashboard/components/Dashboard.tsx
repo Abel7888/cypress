@@ -50,8 +50,6 @@ function Sidebar({
 }) {
   const [sidebarUsers, setSidebarUsers] = useState<any[]>([]);
   const [proxyLatency, setProxyLatency] = useState<number | null>(null);
-  const [openaiStatus, setOpenaiStatus] = useState<"ok" | "incident">("ok");
-  const [anthropicStatus, setAnthropicStatus] = useState<"ok" | "incident">("ok");
 
   // Calculate countdown to midnight UTC
   const getCountdown = () => {
@@ -100,18 +98,6 @@ function Sidebar({
     ping();
     const interval = setInterval(ping, 30000);
     return () => clearInterval(interval);
-  }, []);
-
-  // Provider status
-  useEffect(() => {
-    fetch("https://status.openai.com/api/v2/status.json")
-      .then((r) => r.json())
-      .then((d) => setOpenaiStatus(d.status?.indicator === "none" ? "ok" : "incident"))
-      .catch(() => {});
-    fetch("https://status.anthropic.com/api/v2/status.json")
-      .then((r) => r.json())
-      .then((d) => setAnthropicStatus(d.status?.indicator === "none" ? "ok" : "incident"))
-      .catch(() => {});
   }, []);
 
   const totalSaved = overview?.savings_usd || 0;
@@ -292,8 +278,8 @@ function Sidebar({
             PROVIDERS
           </div>
           {[
-            { name: "OpenAI", status: openaiStatus },
-            { name: "Anthropic", status: anthropicStatus },
+            { name: "OpenAI", status: "ok" },
+            { name: "Anthropic", status: "ok" },
             { name: "Google", status: "ok" as const },
           ].map((p) => (
             <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "3px 0", fontSize: 11 }}>

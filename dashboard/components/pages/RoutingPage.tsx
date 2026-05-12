@@ -236,9 +236,8 @@ export default function RoutingPage() {
         {/* Left — Live Routing Feed */}
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 22px", boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
           <SectionTitle
-            title="Live Routing Decisions"
-            subtitle="Real-time decisions · auto-refreshing"
-            right={<div style={{ display: "flex", alignItems: "center", gap: 6 }}><PulseDot /><span style={{ fontSize: 11, color: C.green, fontWeight: 600 }}>Live</span></div>}
+            title="Routing Summary"
+            subtitle="Derived from your routing activity · auto-refreshing every 30s"
           />
           {routingEvents.length === 0 ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 16px", textAlign: "center" }}>

@@ -867,7 +867,7 @@ function EmployeeKeyManager() {
                 </div>
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <button onClick={() => seedKey(k.id)} disabled={seedStatus[k.id] === "seeding"} style={btnBlueOutlineSm}>
-                    {seedStatus[k.id] === "seeding" ? "…" : seedStatus[k.id] === "done" ? "✓" : seedStatus[k.id] === "error" ? "✗" : "Seed"}
+                    {seedStatus[k.id] === "seeding" ? "…" : seedStatus[k.id] === "done" ? "✓" : seedStatus[k.id] === "error" ? "✗" : "Test"}
                   </button>
                   {(() => {
                     const rs = resetSpendStatus[k.id] || "idle";
@@ -906,17 +906,7 @@ function EmployeeKeyManager() {
                   <button
                     onClick={() => deleteKey(k.id)}
                     disabled={actionLoading === k.id + "-del"}
-                    style={{
-                      background: "transparent",
-                      color: "#94A3B8",
-                      border: "1px solid #E2E8F0",
-                      fontSize: 11,
-                      fontWeight: 500,
-                      padding: "5px 10px",
-                      borderRadius: 6,
-                      cursor: "pointer",
-                      fontFamily: "'Inter', system-ui, sans-serif",
-                    }}
+                    style={btnRedOutlineSm}
                   >
                     {actionLoading === k.id + "-del" ? "…" : "Delete"}
                   </button>
