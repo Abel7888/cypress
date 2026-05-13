@@ -48,7 +48,7 @@ const STEPS = [
   "Intent",
   "Workspace",
   "Providers",
-  "Team",
+  "Assets",
   "Keys",
   "Go Live",
 ];
@@ -495,7 +495,7 @@ function OnboardingPage() {
       <div style={{ background: C.card, borderBottom: `1px solid ${C.border}`, padding: "0 32px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: C.blueBg, border: `1px solid ${C.blueBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🛡️</div>
-          <span style={{ fontSize: 16, fontWeight: 700, color: C.text, letterSpacing: "-0.02em" }}>TokenGuard</span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: C.text, letterSpacing: "-0.02em" }}>Cypress Vision</span>
         </div>
         <div style={{ fontSize: 12, color: C.textMuted }}>
           Questions? <a href="mailto:support@tokenguard.io" style={{ color: C.blue, textDecoration: "none" }}>support@tokenguard.io</a>
@@ -637,7 +637,7 @@ function OnboardingPage() {
               <Card style={{ padding: "14px 18px", borderLeft: `4px solid ${C.blue}` }}>
                 <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.08em" }}>Your plan</div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Starter — $199/mo</div>
-                <div style={{ fontSize: 13, color: C.textMuted }}>Up to 10 employees · unlimited API calls</div>
+                <div style={{ fontSize: 13, color: C.textMuted }}>Up to 10 assets · unlimited API calls</div>
               </Card>
               {[
                 { title: "Master key generated", desc: "One admin key to manage your entire team" },
@@ -664,7 +664,7 @@ function OnboardingPage() {
           <div>
             <div style={{ marginBottom: 28 }}>
               <div style={{ fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 8 }}>Connect your AI providers</div>
-              <div style={{ fontSize: 14, color: C.textMuted }}>TokenGuard sits in front of all of them. Your keys stay yours — encrypted at rest, never logged.</div>
+              <div style={{ fontSize: 14, color: C.textMuted }}>Cypress Vision sits in front of all of them. Your keys stay yours — encrypted at rest, never logged.</div>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
@@ -746,7 +746,7 @@ function OnboardingPage() {
                   {[
                     { title: "You own the keys", desc: "Your provider relationship and billing stays yours. We never see your invoices." },
                     { title: "Encrypted at rest", desc: "Keys are AES-256 encrypted. We never log them." },
-                    { title: "Instant routing", desc: "Once connected, TokenGuard routes calls between providers automatically." },
+                    { title: "Instant routing", desc: "Once connected, Cypress Vision routes calls between providers automatically." },
                   ].map((f, i) => (
                     <div key={i} style={{ display: "flex", gap: 10, padding: "8px 0", borderBottom: i < 2 ? `1px solid ${C.borderSoft}` : "none" }}>
                       <span style={{ fontSize: 13, color: C.green, flexShrink: 0 }}>✓</span>
@@ -816,7 +816,7 @@ function OnboardingPage() {
 
                 <div style={{ marginTop: 14, padding: "10px 14px", background: C.blueBg, border: `1px solid ${C.blueBorder}`, borderRadius: 8 }}>
                   <span style={{ fontSize: 12, color: C.blueText2 }}>Starter plan: </span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: C.blue }}>{employees.filter(e => e.name.trim()).length} / {seats} employees added</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: C.blue }}>{employees.filter(e => e.name.trim()).length} / {seats} assets added</span>
                 </div>
               </div>
 
@@ -886,7 +886,7 @@ function OnboardingPage() {
                       ))}
                     </div>
                     <PrimaryBtn onClick={applyTemplate} style={{ width: "100%", padding: "10px", fontSize: 13 }}>
-                      Apply {selectedTemplate} template {selectedEmployees.size > 0 ? `to ${selectedEmployees.size} employees` : "to all employees"}
+                      Apply {selectedTemplate} template {selectedEmployees.size > 0 ? `to ${selectedEmployees.size} assets` : "to all assets"}
                     </PrimaryBtn>
                   </div>
                 )}
@@ -911,8 +911,8 @@ function OnboardingPage() {
               <div style={{ marginTop: 16, padding: "16px 20px", background: C.greenBg, border: `1px solid ${C.greenBorder}`, borderRadius: 10 }}>
                 {[
                   `${company} workspace created`,
-                  `${employees.filter(e => e.name.trim()).length} employee keys generated`,
-                  "Budget enforcement active",
+                  `${employees.filter(e => e.name.trim()).length} asset keys generated`,
+                  "Spend Guards active",
                   "Alerts configured",
                   "Dashboard ready",
                 ].map((msg, i) => (
@@ -969,7 +969,7 @@ function OnboardingPage() {
                   {[
                     { label: "Company", value: company },
                     { label: "Plan", value: "Starter — $199/mo" },
-                    { label: "Employees", value: `${employees.filter(e => e.name.trim()).length} keys created` },
+                    { label: "Assets", value: `${employees.filter(e => e.name.trim()).length} keys created` },
                     { label: "Tenant ID", value: tenantId, mono: true },
                   ].map((r, i, arr) => (
                     <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "7px 0", borderBottom: i < arr.length - 1 ? `1px solid ${C.borderSoft}` : "none" }}>
@@ -1008,15 +1008,15 @@ function OnboardingPage() {
                 </div>
               ) : (
                 <div style={{ padding: "24px", background: C.rowAlt, border: `1px solid ${C.border}`, borderRadius: 10, textAlign: "center", color: C.textMuted, fontSize: 13, marginBottom: 24 }}>
-                  No employees added — you can add them from the Team page.
+                  No assets added — you can add them from the Assets page.
                 </div>
               )}
 
               {/* What was created */}
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
-                  { icon: "🔑", title: "Master key", desc: "Full admin access — manage all employees and budgets" },
-                  { icon: "🛡️", title: "Budget enforcement", desc: "Active immediately — nobody can overspend" },
+                  { icon: "🔑", title: "Master key", desc: "Full admin access — manage all assets and budgets" },
+                  { icon: "🛡️", title: "Spend Guards", desc: "Active immediately — nobody can overspend" },
                   { icon: "📊", title: "Dashboard access", desc: "See every call, every dollar, in real time" },
                 ].map((f, i) => (
                   <div key={i} style={{ display: "flex", gap: 12, padding: "12px 14px", background: C.rowAlt, border: `1px solid ${C.border}`, borderRadius: 10 }}>
@@ -1119,7 +1119,7 @@ function OnboardingPage() {
                     </div>
                     {testResult?.routed && (
                       <div style={{ marginTop: 10, fontSize: 12, color: C.greenText, fontWeight: 600 }}>
-                        TokenGuard just saved you money on your very first call. ↑
+                        Cypress Vision just saved you money on your very first call. ↑
                       </div>
                     )}
                   </div>
@@ -1146,10 +1146,10 @@ function OnboardingPage() {
               <div style={{ fontSize: 13, fontWeight: 600, color: C.textDim, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 16 }}>You're protected from day one</div>
 
               {[
-                { icon: "⚡", color: C.blueBg, border: C.blueBorder, title: "Every call goes through TokenGuard", desc: "Routing, caching, and budget checks happen automatically on every request." },
+                { icon: "⚡", color: C.blueBg, border: C.blueBorder, title: "Every call goes through Cypress Vision", desc: "Routing, caching, and budget checks happen automatically on every request." },
                 { icon: "🛡️", color: C.greenBg, border: C.greenBorder, title: "Budgets enforced immediately", desc: "Nobody on your team can spend over their daily limit. Blocks before the bill arrives." },
                 { icon: "💰", color: "#FFFBEB", border: C.amberBorder, title: "Savings start now", desc: "Simple prompts are already being routed to cheaper models automatically." },
-                { icon: "📊", color: C.purpleBg, border: "#DDD6FE", title: "Full visibility from call #1", desc: "Every employee, every model, every dollar tracked in real time." },
+                { icon: "📊", color: C.purpleBg, border: "#DDD6FE", title: "Full visibility from call #1", desc: "Every asset, every model, every dollar tracked in real time." },
               ].map((f, i) => (
                 <div key={i} style={{ display: "flex", gap: 14, padding: "16px", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, marginBottom: 10 }}>
                   <div style={{ width: 36, height: 36, borderRadius: 9, background: f.color, border: `1px solid ${f.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>

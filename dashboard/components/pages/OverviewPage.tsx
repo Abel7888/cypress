@@ -223,7 +223,7 @@ export default function OverviewPage({ setPage, onStatClick }: Props) {
 function SetupBar({ setupSteps, setupComplete, onDismiss, nav }: any) {
   const steps = [
     { key: "openaiKey",     label: "OpenAI key",     done: setupSteps.openaiKey,     target: "settings" },
-    { key: "firstEmployee", label: "Add employee",   done: setupSteps.firstEmployee, target: "settings" },
+    { key: "firstEmployee", label: "Add asset",      done: setupSteps.firstEmployee, target: "settings" },
     { key: "firstCall",     label: "First API call", done: setupSteps.firstCall,     target: "settings" },
     { key: "alertEmail",    label: "Alert email",    done: setupSteps.alertEmail,    target: "settings" },
     { key: "slackWebhook",  label: "Slack webhook",  done: setupSteps.slackWebhook,  target: "settings" },
@@ -278,7 +278,7 @@ function RoiHero({ totalSavedCombined, netBenefit, roiMultiple, cacheHits, cache
       </div>
       <div style={{ padding: "0 24px" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 1, background: C.border, borderRadius: 12, overflow: "hidden" }}>
-          <RoiCell label="TOKENGUARD FEE" value="$199" valueColor={C.textDim} sub="Monthly subscription" big={28} />
+          <RoiCell label="CYPRESS VISION FEE" value="$199" valueColor={C.textDim} sub="Monthly subscription" big={28} />
           <RoiCell label="AI COSTS SAVED" value={fmtMoney(totalSavedCombined, 2)} valueColor={C.cyan} sub="Routing + caching" big={28} subColor={C.textMuted} />
           <RoiCell label="NET IN YOUR POCKET" labelColor={C.greenText}
             value={`${positive ? "+" : ""}${fmtMoney(netBenefit, 2)}`}
@@ -527,16 +527,16 @@ function TeamStatusCard({ users, healthyCount, warningCount, blockedCount, total
   return (
     <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 20 }}>
       <div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Team Status</div>
-        <div style={{ fontSize: 11, color: C.textDim, marginTop: 2 }}>Budget health across all employees.</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Asset Status</div>
+        <div style={{ fontSize: 11, color: C.textDim, marginTop: 2 }}>Budget health across all assets.</div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginTop: 14, marginBottom: 16 }}>
-        <MiniStat value={healthyCount} sub="employees"         color={C.green} />
+        <MiniStat value={healthyCount} sub="assets"            color={C.green} />
         <MiniStat value={warningCount} sub="approaching limit" color={C.amber} />
         <MiniStat value={blockedCount} sub="access blocked"    color={C.red} />
       </div>
       {users.length === 0 ? (
-        <div style={{ textAlign: "center", color: C.textDim, fontSize: 12, padding: 24 }}>No employees yet.</div>
+        <div style={{ textAlign: "center", color: C.textDim, fontSize: 12, padding: 24 }}>No assets yet.</div>
       ) : (
         <div>
           {sorted.map((u: any) => {
@@ -556,9 +556,9 @@ function TeamStatusCard({ users, healthyCount, warningCount, blockedCount, total
       )}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.border}`, gap: 12, flexWrap: "wrap" }}>
         <span style={{ fontSize: 12, color: C.textMuted }}>
-          Total team spend today: <span style={{ fontFamily: FONT_MONO, color: C.text }}>{fmtMoney(totalSpend, 4)}</span>
+          Total asset spend today: <span style={{ fontFamily: FONT_MONO, color: C.text }}>{fmtMoney(totalSpend, 4)}</span>
         </span>
-        <button onClick={() => nav("team")} style={{ background: "none", border: "none", color: C.blue, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: FONT_SANS }}>View Team →</button>
+        <button onClick={() => nav("team")} style={{ background: "none", border: "none", color: C.blue, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: FONT_SANS }}>View Assets →</button>
       </div>
     </div>
   );
@@ -614,7 +614,7 @@ function ModelIntelligenceCard({ models, nav }: { models: any[]; nav: (p: string
       )}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.border}`, gap: 12, flexWrap: "wrap" }}>
         <span style={{ fontSize: 12, color: C.textMuted }}>{withCalls.length} models active this period</span>
-        <button onClick={() => nav("routing")} style={{ background: "none", border: "none", color: C.blue, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: FONT_SANS }}>View routing details →</button>
+        <button onClick={() => nav("routing")} style={{ background: "none", border: "none", color: C.blue, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: FONT_SANS }}>View Auto-Router →</button>
       </div>
     </div>
   );
@@ -628,7 +628,7 @@ function RecommendedActions({ users, warningUsers, blockedUsers, cacheHitRate, n
   if (blockedUsers.length > 0) {
     candidates.push({
       id: "blocked", priority: 100, iconBg: C.redBg2, iconColor: C.red, icon: "🔴",
-      title: `${blockedUsers.length} Employee${blockedUsers.length > 1 ? "s" : ""} Blocked`, titleColor: C.redText,
+      title: `${blockedUsers.length} Asset${blockedUsers.length > 1 ? "s" : ""} Blocked`, titleColor: C.redText,
       desc: `${blockedUsers.map((u: any) => u.employee).join(", ")} ${blockedUsers.length > 1 ? "have" : "has"} hit their daily budget limit and can't make API calls. Reset their budget or increase their limit.`,
       descColor: C.redText, cta: "Manage Budgets →", ctaTone: "red", onClick: () => nav("budgets"),
     });
@@ -637,7 +637,7 @@ function RecommendedActions({ users, warningUsers, blockedUsers, cacheHitRate, n
     const u = warningUsers[0];
     candidates.push({
       id: "warning", priority: 90, iconBg: C.amberBg2, iconColor: C.amber, icon: "⚠",
-      title: `${warningUsers.length} Employee${warningUsers.length > 1 ? "s" : ""} Approaching Limit`,
+      title: `${warningUsers.length} Asset${warningUsers.length > 1 ? "s" : ""} Approaching Limit`,
       desc: `${u.employee} is at ${getBudgetPct(u).toFixed(0)}% of their daily budget. Consider increasing their limit or they'll be blocked soon.`,
       descColor: C.amberText, cta: "Adjust Budget →", ctaTone: "amber", onClick: () => nav("budgets"),
     });
@@ -665,14 +665,14 @@ function RecommendedActions({ users, warningUsers, blockedUsers, cacheHitRate, n
       id: "routing", priority: 60, iconBg: C.purpleBg2, iconColor: C.purple, icon: "↔",
       title: "Improve Routing Efficiency",
       desc: `${lowEfficiencyUser.employee} is only routing ${eff}% of calls. At 80% efficiency they'd save an extra ${fmtMoney(extra, 2)} this month.`,
-      cta: "View Routing →", onClick: () => nav("routing"),
+      cta: "View Auto-Router →", onClick: () => nav("routing"),
     });
   }
   if (netBenefit > 0) {
     candidates.push({
       id: "roi", priority: 30, iconBg: C.greenBg2, iconColor: C.green, icon: "💰",
       title: "You're ROI Positive This Month", titleColor: C.greenText,
-      desc: `TokenGuard has saved you ${fmtMoney(totalSavedCombined, 2)} against a $${monthlyFee} subscription cost. Net benefit: ${fmtMoney(netBenefit, 2)} in your pocket.`,
+      desc: `Cypress Vision has saved you ${fmtMoney(totalSavedCombined, 2)} against a $${monthlyFee} subscription cost. Net benefit: ${fmtMoney(netBenefit, 2)} in your pocket.`,
       descColor: C.greenText, cta: "View Full ROI Report →", ctaTone: "green", onClick: () => nav("roi"),
     });
   }
@@ -680,7 +680,7 @@ function RecommendedActions({ users, warningUsers, blockedUsers, cacheHitRate, n
     candidates.push({
       id: "ok", priority: 0, iconBg: C.greenBg2, iconColor: C.green, icon: "✓",
       title: "Everything Looks Great", titleColor: C.greenText,
-      desc: "Your team is operating efficiently, budgets are healthy, and TokenGuard is saving you money. Keep it up.",
+      desc: "Your team is operating efficiently, budgets are healthy, and Cypress Vision is saving you money. Keep it up.",
       cta: "", onClick: () => {},
     });
   }
@@ -690,7 +690,7 @@ function RecommendedActions({ users, warningUsers, blockedUsers, cacheHitRate, n
     <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 20 }}>
       <div style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Recommended Actions</div>
-        <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>What to do right now to get more value from TokenGuard.</div>
+        <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>What to do right now to get more value from Cypress Vision.</div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
         {top3.map((a: any) => <ActionCard key={a.id} a={a} />)}
@@ -734,7 +734,7 @@ function RecentActivityTimeline({ totalRoutedCalls, totalSaved, cacheHits, cache
         <button onClick={() => nav("cost-analysis")} style={{ background: "none", border: "none", color: C.blue, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: FONT_SANS }}>View all →</button>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 16 }}>
-        <SummaryCard iconBg={C.purpleBg2} iconColor={C.purple} icon="↔" title="Routing"
+        <SummaryCard iconBg={C.purpleBg2} iconColor={C.purple} icon="↔" title="Auto-Router"
           value={fmtInt(totalRoutedCalls)} valueColor={C.purple}
           sub="calls routed to cheaper models"
           extra={`${fmtMoney(totalSaved, 2)} saved`} extraColor={C.green} />
@@ -746,7 +746,7 @@ function RecentActivityTimeline({ totalRoutedCalls, totalSaved, cacheHits, cache
           iconBg={blockedCount > 0 ? C.redBg2 : warningCount > 0 ? C.amberBg2 : C.greenBg2}
           iconColor={eventsColor} icon="🛡" title="Budget Events"
           value={String(events)} valueColor={eventsColor}
-          sub={events === 0 ? "All employees within budget" : `${blockedCount} blocked · ${warningCount} warning`}
+          sub={events === 0 ? "All assets within budget" : `${blockedCount} blocked · ${warningCount} warning`}
           extra={events > 0 ? "Review →" : undefined} extraColor={C.blue}
           extraOnClick={events > 0 ? () => nav("budgets") : undefined} />
       </div>

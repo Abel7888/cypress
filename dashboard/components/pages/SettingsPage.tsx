@@ -85,7 +85,7 @@ export default function SettingsPage() {
             Settings
           </h1>
           <div style={{ fontSize: 13, color: C.textMuted }}>
-            Configure your TokenGuard workspace — security, alerts, routing, and integrations
+            Configure your Cypress Vision workspace — security, alerts, routing, and integrations
           </div>
         </div>
         <ProxyStatusPill status={proxyStatus} latency={proxyLatency} />
@@ -215,7 +215,7 @@ function AccountLimitsCard() {
           <div>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Account Spending Limits</div>
             <div style={{ fontSize: 12, color: C.textMuted }}>
-              Set daily and monthly caps for your entire team. All employee keys are blocked when the team cap is hit.
+              Set daily and monthly caps for your entire team. All asset keys are blocked when the team cap is hit.
             </div>
           </div>
         </div>
@@ -274,7 +274,7 @@ function AccountLimitsCard() {
               background: C.amberBg, border: `1px solid ${C.amberBorder}`,
               borderRadius: 8, padding: "10px 14px", fontSize: 12, color: C.amberText,
             }}>
-              ⚡ When the monthly cap is reached, all employee API calls will be blocked until the next billing period or an admin raises the limit.
+              ⚡ When the monthly cap is reached, all asset API calls will be blocked until the next billing period or an admin raises the limit.
             </div>
           </div>
         )}
@@ -312,7 +312,7 @@ function MasterKeyCard() {
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Master API Key</div>
             <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>
-              Full admin access to your TokenGuard workspace. Never share this key or commit it to version control.
+              Full admin access to your Cypress Vision workspace. Never share this key or commit it to version control.
             </div>
           </div>
         </div>
@@ -362,7 +362,7 @@ function MasterKeyCard() {
 
         {/* Capability badges */}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
-          {["✓ Full dashboard access", "✓ Manage all employee keys", "✓ View billing and ROI data"].map((c, i) => (
+          {["✓ Full dashboard access", "✓ Manage all asset keys", "✓ View billing and ROI data"].map((c, i) => (
             <span key={i} style={{
               background: C.greenBg2, color: C.greenText, fontSize: 11, fontWeight: 600,
               padding: "4px 12px", borderRadius: 999,
@@ -440,12 +440,12 @@ function ProviderKeysCard() {
         <div style={{ marginBottom: 6 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Provider API Keys</div>
           <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>
-            Your own OpenAI, Anthropic, and Google keys — you pay them directly. TokenGuard never sees your bills.
+            Your own OpenAI, Anthropic, and Google keys — you pay them directly. Cypress Vision never sees your bills.
           </div>
         </div>
 
         <InfoBanner variant="blue" icon="ℹ" style={{ marginTop: 14 }}>
-          TokenGuard proxies your calls using your own API keys. You keep full control of your provider relationships and billing.
+          Cypress Vision proxies your calls using your own API keys. You keep full control of your provider relationships and billing.
         </InfoBanner>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 4 }}>
@@ -529,7 +529,7 @@ function ProviderKeysCard() {
   );
 }
 
-// ─── EMPLOYEE KEY MANAGER (logic preserved, visual rewrite) ─────────────
+// ─── ASSET KEY MANAGER (logic preserved, visual rewrite) ────────────────
 function EmployeeKeyManager() {
   const [keys, setKeys] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -579,7 +579,7 @@ function EmployeeKeyManager() {
   };
 
   const deleteKey = async (keyId: string) => {
-    if (!window.confirm("Permanently delete this employee and all their data? This cannot be undone.")) return;
+    if (!window.confirm("Permanently delete this asset and all their data? This cannot be undone.")) return;
     setActionLoading(keyId + "-del");
     const { tenantId, apiKey } = await getTenantConfig();
     const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
@@ -709,13 +709,13 @@ function EmployeeKeyManager() {
           gap: 16, marginBottom: 14, flexWrap: "wrap",
         }}>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Employee API Keys</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Asset API Keys</div>
             <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>
-              One unique key per team member — individual budgets, individual accountability.
+              One unique key per asset — individual budgets, individual accountability.
             </div>
           </div>
           <button onClick={() => setAdding(v => !v)} style={btnBlueFilled}>
-            ＋ Add Employee
+            ＋ Add Asset
           </button>
         </div>
 
@@ -751,7 +751,7 @@ function EmployeeKeyManager() {
           </div>
         )}
 
-        {/* Add employee form */}
+        {/* Add asset form */}
         {adding && (
           <div style={{
             background: C.rowAlt, border: `1px solid ${C.border}`, borderRadius: 10,
@@ -795,7 +795,7 @@ function EmployeeKeyManager() {
             color: C.textMuted, fontSize: 13, textAlign: "center", padding: 32,
             background: C.rowAlt, border: `1px dashed ${C.border}`, borderRadius: 10,
           }}>
-            No employee keys yet — click <strong style={{ color: C.text }}>Add Employee</strong> to create one.
+            No asset keys yet — click <strong style={{ color: C.text }}>Add Asset</strong> to create one.
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -804,7 +804,7 @@ function EmployeeKeyManager() {
               gap: 12, padding: "0 12px 6px",
               borderBottom: `2px solid ${C.border}`,
             }}>
-              {["Employee", "Key Preview", "Created", "Status", "Budget", "Actions"].map(h => (
+              {["Asset", "Key Preview", "Created", "Status", "Budget", "Actions"].map(h => (
                 <div key={h} style={{
                   fontSize: 10, color: C.textDim, fontWeight: 600,
                   textTransform: "uppercase", letterSpacing: "0.06em",
@@ -962,7 +962,7 @@ function NotificationsTab() {
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Alert Channels</div>
             <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>
-              Where we send budget alerts — you get notified before employees get blocked, not after.
+              Where we send budget alerts — you get notified before assets get blocked, not after.
             </div>
           </div>
 
@@ -1034,7 +1034,7 @@ function NotificationsTab() {
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Alert Thresholds</div>
             <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>
-              When we notify you — we alert at 3 levels so you're never surprised by a blocked employee.
+              When we notify you — we alert at 3 levels so you're never surprised by a blocked asset.
             </div>
           </div>
 
@@ -1042,21 +1042,21 @@ function NotificationsTab() {
             <ThresholdRow
               bg={C.amberBg} bd={C.amberBorder} dot={C.amber} fg={C.amberText}
               title="70% — Early Warning"
-              desc="Employee is still working but approaching their limit. Time to check in."
+              desc="Asset is still working but approaching their limit. Time to check in."
               preview="Sarah used 70% of her $50 daily budget — $15.00 remaining"
               on={alert70} onChange={setAlert70}
             />
             <ThresholdRow
               bg={C.orangeBg} bd={C.orangeBorder} dot={C.orange} fg={C.orangeText}
               title="90% — Urgent Alert"
-              desc="Employee has 10% of budget left. They'll be blocked soon without action."
+              desc="Asset has 10% of budget left. They'll be blocked soon without action."
               preview="Marcus used 90% of his $50 daily budget — $5.00 remaining · at risk of being blocked"
               on={alert90} onChange={setAlert90}
             />
             <ThresholdRow
               bg={C.redBg} bd={C.redBorder} dot={C.red} fg={C.redText}
               title="100% — Access Blocked"
-              desc="Employee has been blocked. All their API calls are now rejected until midnight."
+              desc="Asset has been blocked. All their API calls are now rejected until midnight."
               preview="Jamie has been blocked — daily budget reached · access resumes at midnight UTC"
               on={alert100} onChange={setAlert100}
             />
@@ -1068,7 +1068,7 @@ function NotificationsTab() {
           }}>
             <IconCircle bg={C.blueBg2} color={C.blue} size={20} fontSize={11}>ℹ</IconCircle>
             <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.5 }}>
-              Alerts are sent to both your admin email and Slack channel simultaneously. Budget resets at midnight UTC — blocked employees automatically regain access.
+              Alerts are sent to both your admin email and Slack channel simultaneously. Budget resets at midnight UTC — blocked assets automatically regain access.
             </div>
           </div>
         </CardInner>
@@ -1156,7 +1156,7 @@ function ProxyTab({ status, latency }: { status: "checking" | "live" | "down"; l
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Proxy Configuration</div>
             <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>
-              Your TokenGuard proxy endpoint — the one URL your team changes to get full cost control.
+              Your Cypress Vision proxy endpoint — the one URL your team changes to get full cost control.
             </div>
           </div>
 
@@ -1235,19 +1235,19 @@ function ProxyTab({ status, latency }: { status: "checking" | "live" | "down"; l
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Routing Configuration</div>
             <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>
-              How TokenGuard decides which model handles each request.
+              How Cypress Vision decides which model handles each request.
             </div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14, marginBottom: 20 }}>
             <RoutingRule iconBg={C.blueBg2} iconColor={C.blue} icon="⚡"
-              name="Auto routing" desc="TokenGuard classifies each prompt and picks the cheapest capable model." />
+              name="Auto routing" desc="Cypress Vision classifies each prompt and picks the cheapest capable model." />
             <RoutingRule iconBg={C.purpleBg2} iconColor={C.purple} icon="↓"
               name="Simple tasks → gpt-4o-mini" desc="Factual Q&A, short summaries, classification." />
             <RoutingRule iconBg={C.redBg2} iconColor={C.red} icon="↑"
               name="Complex tasks → gpt-4o" desc="Multi-step reasoning, code generation, deep analysis." />
             <RoutingRule iconBg={C.greenBg2} iconColor={C.green} icon="🛡"
-              name="Budget enforcement" desc="Blocks requests once a user reaches their daily cap." />
+              name="Spend Guards" desc="Blocks requests once a user reaches their daily cap." />
             <RoutingRule iconBg={C.amberBg2} iconColor={C.amberText} icon="🔍"
               name="Keyword detection" desc="Escalates sensitive keywords to more capable models." />
           </div>
@@ -1495,7 +1495,7 @@ function BillingTab({ overview, users }: { overview: any; users: any[] }) {
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Current Plan</div>
             <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>
-              Your TokenGuard subscription details.
+              Your Cypress Vision subscription details.
             </div>
           </div>
 
@@ -1525,9 +1525,9 @@ function BillingTab({ overview, users }: { overview: any; users: any[] }) {
           {/* Features */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
             {[
-              "Up to 10 employees",
+              "Up to 10 assets",
               "Unlimited API calls",
-              "Real-time budget enforcement",
+              "Real-time Spend Guards",
               "Intelligent model routing",
               "Email and Slack alerts",
               "ClickHouse analytics",
@@ -1544,10 +1544,10 @@ function BillingTab({ overview, users }: { overview: any; users: any[] }) {
             background: C.blueBg, border: `1px solid ${C.blueBorder}`, borderRadius: 10, padding: 16,
           }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: C.blueText2, marginBottom: 4 }}>
-              Need more than 10 employees?
+              Need more than 10 assets?
             </div>
             <div style={{ fontSize: 12, color: C.blue, lineHeight: 1.5, marginBottom: 12 }}>
-              Our Growth and Enterprise plans support unlimited employees, custom routing rules, SSO, and dedicated support.
+              Our Growth and Enterprise plans support unlimited assets, custom routing rules, SSO, and dedicated support.
             </div>
             <button style={{ ...btnBlueFilled, padding: "9px 18px" }}>Schedule a call →</button>
           </div>
@@ -1566,7 +1566,7 @@ function BillingTab({ overview, users }: { overview: any; users: any[] }) {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 14 }}>
             <UsageRow label="API Calls"        value={totalRequests.toLocaleString()}        color={C.text} />
-            <UsageRow label="Employees Active" value={`${users.length}`} suffix="/ 10"       color={C.text} />
+            <UsageRow label="Assets Active"   value={`${users.length}`} suffix="/ 10"       color={C.text} />
             <UsageRow label="Cache Hit Rate"   value={`${cacheHitRate.toFixed(1)}%`}         color={C.green} />
             <UsageRow label="Routing Rate"     value={`${routingRate.toFixed(1)}%`}          color={C.purple} />
             <UsageRow label="Total AI Spend"   value={`$${totalCost.toFixed(2)}`}            color={C.blue} />
@@ -1579,7 +1579,7 @@ function BillingTab({ overview, users }: { overview: any; users: any[] }) {
             padding: "12px 14px", marginTop: 12,
           }}>
             <div style={{ fontSize: 12, color: C.greenText, lineHeight: 1.5 }}>
-              This period TokenGuard saved you <strong>${totalSaved.toFixed(2)}</strong> — that's{" "}
+              This period Cypress Vision saved you <strong>${totalSaved.toFixed(2)}</strong> — that's{" "}
               <strong>${Math.max(0, netValue).toFixed(2)}</strong> more than we cost.
             </div>
           </div>

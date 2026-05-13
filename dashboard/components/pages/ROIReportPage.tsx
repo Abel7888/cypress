@@ -152,11 +152,11 @@ export default function ROIReportPage() {
   const monthYear = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
 
   // ── Email + PDF actions ──────────────────────────────────────────────────
-  const emailSubject = `TokenGuard ROI Report — ${monthYear}`;
+  const emailSubject = `Cypress Vision ROI Report — ${monthYear}`;
   const emailBody = [
-    `TokenGuard ROI Report — ${monthYear}`,
+    `Cypress Vision ROI Report — ${monthYear}`,
     ``,
-    `TokenGuard fee:    $${fee.toFixed(2)}`,
+    `Cypress Vision fee:    $${fee.toFixed(2)}`,
     `AI costs saved:    $${savings.toFixed(2)}`,
     `Net in pocket:     ${net >= 0 ? "+" : "-"}$${Math.abs(net).toFixed(2)}`,
     `ROI multiple:      ${roi.toFixed(1)}x`,
@@ -175,7 +175,7 @@ export default function ROIReportPage() {
         <div style={{ fontSize: 48, marginBottom: 16 }}>📈</div>
         <div style={{ fontSize: 18, fontWeight: 600, color: C.text, marginBottom: 8 }}>Your ROI report will appear here</div>
         <div style={{ fontSize: 14, color: C.textMuted, maxWidth: 400, lineHeight: 1.6, marginBottom: 24 }}>
-          Make your first API call through the TokenGuard proxy to start tracking savings. Most customers see ROI within the first week.
+          Make your first API call through the Cypress Vision proxy to start tracking savings. Most customers see ROI within the first week.
         </div>
         <div style={{ background: C.rowAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: 12, fontFamily: FONT_MONO, fontSize: 13, color: C.text, marginBottom: 16, maxWidth: 520, width: "100%" }}>
           {proxyUrl}
@@ -212,7 +212,7 @@ export default function ROIReportPage() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1, background: C.border, borderRadius: 12, overflow: "hidden", marginBottom: 24 }}>
           {/* Col 1 */}
           <div style={{ background: C.card, padding: 24, textAlign: "center" }}>
-            <div style={{ fontSize: 10, color: C.textDim, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>TokenGuard Fee</div>
+            <div style={{ fontSize: 10, color: C.textDim, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>Cypress Vision Fee</div>
             <div style={{ fontSize: 32, fontFamily: FONT_MONO, fontWeight: 700, color: C.textDim, lineHeight: 1, marginBottom: 6 }}>${fee}</div>
             <div style={{ fontSize: 11, color: C.textDim }}>Monthly subscription</div>
           </div>
@@ -407,7 +407,7 @@ export default function ROIReportPage() {
           ) : null}
 
           {sortedUsers.length === 0 ? (
-            <div style={{ fontSize: 12, color: C.textDim, padding: "12px 0" }}>No team data yet.</div>
+            <div style={{ fontSize: 12, color: C.textDim, padding: "12px 0" }}>No asset data yet.</div>
           ) : sortedUsers.slice(0, 5).map((u: any, i: number) => {
             const eff = u.api_calls > 0 ? Math.round(((u.routed_calls || 0) / u.api_calls) * 100) : 0;
             return (
@@ -429,7 +429,7 @@ export default function ROIReportPage() {
 
           {/* Left */}
           <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 20 }}>What TokenGuard delivered this month</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 20 }}>What Cypress Vision delivered this month</div>
 
             {[
               `Saved $${savings.toFixed(2)} in AI costs through intelligent routing and caching`,
@@ -444,7 +444,7 @@ export default function ROIReportPage() {
             ))}
 
             <div style={{ fontSize: 12, color: C.textMuted, fontStyle: "italic", marginTop: 8 }}>
-              At this rate, TokenGuard will save you ${annualSavings.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} over the next 12 months.
+              At this rate, Cypress Vision will save you ${annualSavings.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} over the next 12 months.
             </div>
           </div>
 

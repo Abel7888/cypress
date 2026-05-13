@@ -54,7 +54,7 @@ async function sendSlackAlert(webhookUrl: string, payload: AlertPayload, msg: Re
           type: "header",
           text: {
             type: "plain_text",
-            text: `${msg.emoji} TokenGuard Budget Alert — ${payload.company}`,
+            text: `${msg.emoji} Cypress Vision Spend Alert — ${payload.company}`,
           },
         },
         {
@@ -99,8 +99,8 @@ async function sendEmailAlert(email: string, payload: AlertPayload, msg: ReturnT
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
           <span style="font-size: 32px;">🛡️</span>
           <div>
-            <div style="font-size: 20px; font-weight: 800; color: #0D1220;">TokenGuard</div>
-            <div style="font-size: 12px; color: #6B7FA3;">AI COST CONTROL</div>
+            <div style="font-size: 20px; font-weight: 800; color: #0D1220;">Cypress Vision</div>
+            <div style="font-size: 12px; color: #6B7FA3;">AI SPEND MANAGEMENT</div>
           </div>
         </div>
         <div style="background: #F8FAFC; border-left: 4px solid ${msg.color}; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
@@ -109,7 +109,7 @@ async function sendEmailAlert(email: string, payload: AlertPayload, msg: ReturnT
         </div>
         <div style="background: #F8FAFC; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
           <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0;">
-            <span style="color: #6B7FA3; font-size: 13px;">Employee</span>
+            <span style="color: #6B7FA3; font-size: 13px;">Asset</span>
             <span style="font-weight: 600; font-size: 13px;">${payload.employee_name}</span>
           </div>
           <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #E2E8F0;">
@@ -129,7 +129,7 @@ async function sendEmailAlert(email: string, payload: AlertPayload, msg: ReturnT
           View Dashboard →
         </a>
         <div style="margin-top: 24px; font-size: 12px; color: #6B7FA3; text-align: center;">
-          TokenGuard · AI Cost Control · <a href="mailto:support@tokenguard.io" style="color: #4F8EF7;">support@tokenguard.io</a>
+          Cypress Vision · AI spend management · <a href="mailto:support@tokenguard.io" style="color: #4F8EF7;">support@tokenguard.io</a>
         </div>
       </div>
     `,

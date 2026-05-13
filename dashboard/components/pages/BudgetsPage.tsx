@@ -195,8 +195,8 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
       });
       setConfirmingRemove(null);
       await reload();
-      showToast("Employee removed from budget view");
-    } catch (err) { console.error("hideEmployee error:", err); showToast("Error removing employee"); }
+      showToast("Asset removed from budget view");
+    } catch (err) { console.error("hideEmployee error:", err); showToast("Error removing asset"); }
   };
 
   const showToast = (msg: string) => {
@@ -213,7 +213,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
         body: JSON.stringify({ tenant_id: tenantId }),
       });
       await reload();
-      showToast("All employee budgets reset");
+      showToast("All asset budgets reset");
     } catch { /* noop */ }
   };
 
@@ -283,18 +283,18 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
         background: C.card, border: `1px solid ${C.border}`, borderRadius: 12,
         display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", overflow: "hidden",
       }}>
-        <StatCell label="HEALTHY EMPLOYEES" value={String(stats.healthy)} sub="employees" color={C.green} divider />
+        <StatCell label="HEALTHY ASSETS" value={String(stats.healthy)} sub="assets" color={C.green} divider />
         <StatCell label="APPROACHING LIMIT" value={String(stats.warning)} sub="need attention" color={C.amber} divider />
         <StatCell label="BLOCKED TODAY" value={String(stats.blocked)} sub="access blocked" color={C.red} divider />
         <StatCell label="TOTAL SPEND TODAY" value={fmtMoney(stats.todaySpend, 2)} sub="across team" color={C.blue} />
       </div>
 
-      {/* ═══ SECTION 2 — EMPLOYEE BUDGETS ═════════════════════════════ */}
+      {/* ═══ SECTION 2 — ASSET BUDGETS ════════════════════════════════ */}
       {true && (
         <>
           <Card>
             <CardHeader
-              title="Employee Budgets"
+              title="Asset Budgets"
               subtitle="Daily spend caps · resets at midnight UTC"
               right={
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
@@ -307,7 +307,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                       }
                       if (nav) { nav("settings"); } else { window.location.hash = "settings"; }
                     }}>
-                      ＋ Add Employee
+                      ＋ Add Asset
                     </button>
                     {confirmingResetAll ? (
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -461,7 +461,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
           <Card>
             <CardHeader
               title="Account Budget"
-              subtitle="Overall spend enforcement across all employees."
+              subtitle="Overall spend enforcement across all assets."
             />
             <div style={{ padding: "0 20px 20px" }}>
               {accountTotals.limit === 0 && (
@@ -471,7 +471,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                   display: "flex", alignItems: "center", gap: 8,
                 }}>
                   <span>⚠</span>
-                  <span>No company budget set yet. Add employees and set their daily budgets — the account total updates automatically.</span>
+                  <span>No company budget set yet. Add assets and set their daily budgets — the account total updates automatically.</span>
                 </div>
               )}
               <div style={{
@@ -665,7 +665,7 @@ function EmptyCard() {
         No budget data yet
       </div>
       <div style={{ fontSize: 13, color: C.textMuted, maxWidth: 460, margin: "0 auto" }}>
-        Make your first API call through the proxy and employee budgets will appear here automatically.
+        Make your first API call through the proxy and asset budgets will appear here automatically.
       </div>
     </div>
   );
@@ -736,7 +736,7 @@ function ForecastSection({ users }: { users: U[] }) {
 
           {rows.length === 0 ? (
             <div style={{ fontSize: 12, color: C.textMuted, padding: "12px 0" }}>
-              No employees yet.
+              No assets yet.
             </div>
           ) : rows.map(({ u, projected, label, color }) => (
             <div key={keyIdOf(u) || nameOf(u)} style={{

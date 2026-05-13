@@ -29,7 +29,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex h-16 items-center gap-2 border-b px-6">
         <Shield className="h-7 w-7 text-primary" />
-        <span className="text-lg font-bold tracking-tight">TokenGuard</span>
+        <span className="text-lg font-bold tracking-tight">Cypress Vision</span>
       </div>
 
       {/* Navigation */}

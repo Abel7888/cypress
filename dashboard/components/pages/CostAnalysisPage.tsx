@@ -493,8 +493,9 @@ export default function CostAnalysisPage() {
             </div>
           </>
         )}
+      </div>
 
-        {/* ═══ SECTION 3 — EMPLOYEE DEEP DIVE ═════════════════════════════ */}
+      {/* ═══ SECTION 3 — EMPLOYEE DEEP DIVE ═════════════════════════════ */}
         {detailEmp && (
           <div style={{ borderTop: `2px solid ${C.border}`, marginTop: 20, paddingTop: 24 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 12, flexWrap: "wrap" }}>
@@ -574,7 +575,6 @@ export default function CostAnalysisPage() {
             </div>
           </div>
         )}
-      </div>
 
       {/* ═══ SECTION 4 — MODEL COST INTELLIGENCE ══════════════════════════ */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, width: "100%" }}>

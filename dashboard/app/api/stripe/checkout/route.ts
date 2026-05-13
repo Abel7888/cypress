@@ -10,9 +10,9 @@ const PLAN_PRICE_IDS: Record<string, string | undefined> = {
 };
 
 const PLAN_FALLBACK: Record<string, { name: string; unit_amount: number }> = {
-  starter: { name: "TokenGuard Starter", unit_amount: 19900 },
-  growth: { name: "TokenGuard Growth", unit_amount: 39900 },
-  business: { name: "TokenGuard Business", unit_amount: 79900 },
+  starter: { name: "Cypress Vision Starter", unit_amount: 19900 },
+  growth: { name: "Cypress Vision Growth", unit_amount: 39900 },
+  business: { name: "Cypress Vision Business", unit_amount: 79900 },
 };
 
 export async function POST(req: NextRequest) {

@@ -160,7 +160,7 @@ export default function RoutingPage() {
 
   // ── EMPTY STATE ─────────────────────────────────────────────────────────
   if (loading) {
-    return <div style={{ padding: 60, textAlign: "center", color: C.textDim, fontSize: 13, fontFamily: FONT_SANS }}>Loading routing intelligence…</div>;
+    return <div style={{ padding: 60, textAlign: "center", color: C.textDim, fontSize: 13, fontFamily: FONT_SANS }}>Loading auto-router…</div>;
   }
 
   return (
@@ -170,7 +170,7 @@ export default function RoutingPage() {
       {/* ═══ SECTION 1 — LIVE OPS HEADER ═══════════════════════════════════ */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, gap: 12, flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontSize: 11, color: C.textDim, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" }}>Routing Intelligence</div>
+          <div style={{ fontSize: 11, color: C.textDim, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" }}>Auto-Router</div>
           <div style={{ fontSize: 14, color: C.textMuted, marginTop: 2 }}>Every routing decision · every dollar saved · in real time</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -208,7 +208,7 @@ export default function RoutingPage() {
           <div style={{ fontSize: 40, marginBottom: 12 }}>↔</div>
           <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 6 }}>No routing data yet</div>
           <div style={{ fontSize: 12, color: C.textMuted, maxWidth: 480, margin: "0 auto", lineHeight: 1.6 }}>
-            Make API calls through the TokenGuard proxy to see routing decisions appear here in real time.
+            Make API calls through the Cypress Vision proxy to see routing decisions appear here in real time.
           </div>
           <div style={{ marginTop: 16, fontSize: 12, fontFamily: FONT_MONO, background: C.text, color: "#fff", padding: "8px 14px", borderRadius: 6, display: "inline-block" }}>{API_BASE}</div>
         </div>
@@ -269,16 +269,16 @@ export default function RoutingPage() {
           )}
         </div>
 
-        {/* Right — Routing Rules */}
+        {/* Right — Dispatch Rules */}
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 22px", boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
           <SectionTitle
-            title="Routing Rules"
+            title="Dispatch Rules"
             subtitle="Active rules · calls matched today · savings generated"
             right={
               <div style={{ background: C.borderSoft, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 14px", maxWidth: 320 }}>
                 <div style={{ fontSize: 9, fontWeight: 700, color: C.textDim, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>How routing decides</div>
                 <div style={{ fontSize: 10, color: C.textMuted, lineHeight: 1.6 }}>
-                  TokenGuard scores 7 signals per prompt — <span style={{ color: C.text, fontWeight: 600 }}>tools (+3)</span>, code (+2), JSON mode (+1), token count (+1–2), conversation depth (+1–2), output length (+1), complexity keywords (+3). <span style={{ color: C.green, fontWeight: 600 }}>Score ≤1 → efficient model. Score ≥5 → premium model.</span>
+                  Cypress Vision scores 7 signals per prompt — <span style={{ color: C.text, fontWeight: 600 }}>tools (+3)</span>, code (+2), JSON mode (+1), token count (+1–2), conversation depth (+1–2), output length (+1), complexity keywords (+3). <span style={{ color: C.green, fontWeight: 600 }}>Score ≤1 → efficient model. Score ≥5 → premium model.</span>
                 </div>
               </div>
             }
@@ -560,11 +560,11 @@ export default function RoutingPage() {
         )}
       </div>
 
-      {/* ═══ SECTION 6 — EMPLOYEE ROUTING LEADERBOARD ══════════════════════ */}
+      {/* ═══ SECTION 6 — ASSET PERFORMANCE LEADERBOARD ════════════════════ */}
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 22px", boxShadow: "0 1px 2px rgba(0,0,0,0.03)", width: "100%" }}>
-        <SectionTitle title="Employee Routing Efficiency" subtitle="Ranked by savings ratio — who's generating the most value per dollar spent." />
+        <SectionTitle title="Asset Performance" subtitle="Ranked by savings ratio — who's generating the most value per dollar spent." />
         {users.length === 0 ? (
-          <div style={{ fontSize: 13, color: C.textDim, textAlign: "center", padding: "32px 0" }}>No employees yet.</div>
+          <div style={{ fontSize: 13, color: C.textDim, textAlign: "center", padding: "32px 0" }}>No assets yet.</div>
         ) : (
           <>
             {(() => {
@@ -590,7 +590,7 @@ export default function RoutingPage() {
                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                       <thead>
                         <tr style={{ background: C.rowAlt, borderBottom: `2px solid ${C.border}` }}>
-                          {["Rank", "Employee", "Total Calls", "Routed", "Routing Efficiency", "Dollars Saved", "Opportunity"].map((h) => (
+                          {["Rank", "Asset", "Total Calls", "Routed", "Routing Efficiency", "Dollars Saved", "Opportunity"].map((h) => (
                             <th key={h} style={{ fontSize: 10, color: C.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", padding: "10px 12px", textAlign: "left", whiteSpace: "nowrap" }}>{h}</th>
                           ))}
                         </tr>
@@ -629,7 +629,7 @@ export default function RoutingPage() {
                     </table>
                   </div>
                   <div style={{ background: C.rowAlt, borderTop: `2px solid ${C.border}`, padding: 12, marginTop: 0, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 12, color: C.textMuted }}>{users.length} employees · {totalRoutedCalls.toLocaleString()} total routed calls</span>
+                    <span style={{ fontSize: 12, color: C.textMuted }}>{users.length} assets · {totalRoutedCalls.toLocaleString()} total routed calls</span>
                     <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                       <span style={{ fontSize: 13, fontFamily: FONT_MONO, color: C.green, fontWeight: 700 }}>Total saved by routing: ${totalSavedByRouting.toFixed(2)}</span>
                       <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: C.amber }}>Total opportunity: +${totalOpportunity.toFixed(2)}</span>

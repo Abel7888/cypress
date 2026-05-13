@@ -6,9 +6,9 @@ import { BRAND as C, Logo, LogoMark } from "@/components/brand";
 import { createClient, SUPABASE_CONFIGURED } from "@/lib/supabase";
 
 const PLAN_INFO: Record<string, { name: string; price: number; seats: string }> = {
-  starter: { name: "Starter", price: 199, seats: "Up to 10 employees" },
-  growth: { name: "Growth", price: 399, seats: "Up to 25 employees" },
-  business: { name: "Business", price: 799, seats: "Up to 75 employees" },
+  starter: { name: "Starter", price: 199, seats: "Up to 10 assets" },
+  growth: { name: "Growth", price: 399, seats: "Up to 25 assets" },
+  business: { name: "Business", price: 799, seats: "Up to 75 assets" },
 };
 
 function SignUpInner() {
@@ -213,9 +213,9 @@ function SignUpInner() {
               </div>
               {[
                 "Real-time budget blocking",
-                "Employee key management",
+                "Asset key management",
                 "Intelligent ML routing",
-                "Per-employee visibility",
+                "Per-asset visibility",
                 "Monthly ROI report",
                 "Cancel anytime",
               ].map((f, i) => (
@@ -395,7 +395,7 @@ function TrialModal({ onClose }: { onClose: () => void }) {
                     <option value="Just getting started with AI">Just getting started with AI</option>
                   </select>
                 </Field>
-                <Field label="What are you hoping TokenGuard helps with? (optional)">
+                <Field label="What are you hoping Cypress Vision helps with? (optional)">
                   <textarea
                     value={hopingFor}
                     onChange={e => setHopingFor(e.target.value)}
@@ -438,7 +438,7 @@ function TrialModal({ onClose }: { onClose: () => void }) {
                     type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
                     style={{ marginTop: 3, accentColor: C.primary }}
                   />
-                  <span>I agree to be contacted by the TokenGuard team</span>
+                  <span>I agree to be contacted by the Cypress Vision team</span>
                 </label>
 
                 {submitError && (

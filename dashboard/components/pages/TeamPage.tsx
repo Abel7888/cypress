@@ -132,7 +132,7 @@ export default function TeamPage({ setPage }: { setPage?: (p: string) => void })
           routed_calls: u.routed_calls ?? 0,
           cache_hits: u.cache_hits ?? 0,
           blocked_calls: u.blocked_calls ?? 0,
-          role: u.role || "Team Member",
+          role: u.role || "Asset",
           top_model: u.top_model || u.most_used_model || "—",
         }));
         setUsers(normalized);
@@ -200,7 +200,7 @@ export default function TeamPage({ setPage }: { setPage?: (p: string) => void })
 
   // ─── CSV export ──────────────────────────────────────────────────────
   const exportCSV = () => {
-    const header = ["Employee", "Role", "Calls", "Routed", "Cache Hits", "Blocked", "Cost USD", "Budget USD", "Budget %", "Routing Eff %", "Savings USD", "Status"];
+    const header = ["Asset", "Role", "Calls", "Routed", "Cache Hits", "Blocked", "Cost USD", "Budget USD", "Budget %", "Routing Eff %", "Savings USD", "Status"];
     const rows = sorted.map((u) => [
       u.employee, u.role, u.api_calls, u.routed_calls, u.cache_hits, u.blocked_calls,
       (u.cost_usd || 0).toFixed(6), (u.budget_usd || 0).toFixed(2),
@@ -234,7 +234,7 @@ export default function TeamPage({ setPage }: { setPage?: (p: string) => void })
   if (loading && users.length === 0) {
     return (
       <div style={{ padding: 60, textAlign: "center", color: C.textDim, fontSize: 13, fontFamily: FONT_SANS }}>
-        Loading team intelligence…
+        Loading asset data…
       </div>
     );
   }
@@ -255,19 +255,19 @@ export default function TeamPage({ setPage }: { setPage?: (p: string) => void })
         }}>
           <span style={{ fontSize: 14 }}>ⓘ</span>
           <span>
-            <strong>Preview mode</strong> — showing demo team. Add employees in Settings and route API calls through the proxy to see real data here.
+            <strong>Preview mode</strong> — showing demo assets. Add assets in Settings and route API calls through the proxy to see real data here.
           </span>
         </div>
       )}
 
-      {/* ═══ SECTION 1 — TEAM COMMAND STRIP ═══════════════════════════════ */}
+      {/* ═══ SECTION 1 — ASSETS COMMAND STRIP ═════════════════════════════ */}
       <div style={{
         background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden",
       }}>
         <div style={{
           display: "grid", gridTemplateColumns: "repeat(5, 1fr)", borderBottom: `1px solid ${C.border}`,
         }}>
-          <StatCell label="TEAM MEMBERS"    value={String(users.length)}           sub="active members"     color={C.blue}   divider />
+          <StatCell label="ASSETS"          value={String(users.length)}           sub="active assets"        color={C.blue}   divider />
           <StatCell label="HEALTHY"         value={String(healthyCount)}           sub="under 70% budget"   color={C.green}  divider />
           <StatCell label="NEEDS ATTENTION" value={String(warningCount)}           sub="approaching limit"  color={C.amber}  divider />
           <StatCell label="BLOCKED"         value={String(blockedCount)}           sub="access blocked"     color={C.red}    divider />
@@ -278,9 +278,9 @@ export default function TeamPage({ setPage }: { setPage?: (p: string) => void })
           background: C.rowAlt, gap: 12, flexWrap: "wrap",
         }}>
           <div style={{ fontSize: 12, color: C.textMuted }}>
-            Team spending <strong style={{ color: C.text, fontFamily: FONT_MONO }}>{fmtMoney(totalTeamSpend, 4)}</strong> today · <strong style={{ color: C.text, fontFamily: FONT_MONO }}>{fmtInt(totalTeamCalls)}</strong> total API calls · budget resets in <strong style={{ color: C.text, fontFamily: FONT_MONO }}>{getResetCountdown()}</strong>
+            Assets spending <strong style={{ color: C.text, fontFamily: FONT_MONO }}>{fmtMoney(totalTeamSpend, 4)}</strong> today · <strong style={{ color: C.text, fontFamily: FONT_MONO }}>{fmtInt(totalTeamCalls)}</strong> total API calls · budget resets in <strong style={{ color: C.text, fontFamily: FONT_MONO }}>{getResetCountdown()}</strong>
           </div>
-          <button onClick={exportCSV} style={btnGhostSm}>⬇ Export Team Report</button>
+          <button onClick={exportCSV} style={btnGhostSm}>⬇ Export Assets Report</button>
         </div>
       </div>
 
@@ -301,7 +301,7 @@ export default function TeamPage({ setPage }: { setPage?: (p: string) => void })
                     padding: 20, display: "flex", alignItems: "center", justifyContent: "center",
                     minHeight: 180,
                   }}>
-                    <span style={{ fontSize: 13, color: C.textDim }}>+ Add employee</span>
+                    <span style={{ fontSize: 13, color: C.textDim }}>+ Add asset</span>
                   </div>
                 );
               }
@@ -311,14 +311,14 @@ export default function TeamPage({ setPage }: { setPage?: (p: string) => void })
         </div>
       </Card>
 
-      {/* ═══ SECTION 3 — FULL TEAM TABLE ══════════════════════════════════ */}
+      {/* ═══ SECTION 3 — FULL ASSETS TABLE ══════════════════════════════════ */}
       <Card>
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "18px 20px 12px", gap: 16, flexWrap: "wrap",
         }}>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>All Employees</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>All Assets</div>
             <div style={{ fontSize: 12, color: C.textMuted, marginTop: 3 }}>
               {filtered.length} members{searchQuery ? ` matching "${searchQuery}"` : ""}
             </div>
@@ -336,7 +336,7 @@ export default function TeamPage({ setPage }: { setPage?: (p: string) => void })
               onFocus={(e) => (e.currentTarget.style.borderColor = C.blue)}
               onBlur={(e) => (e.currentTarget.style.borderColor = C.border)}
             />
-            <button style={btnBlueFilled}>＋ Add Employee</button>
+            <button style={btnBlueFilled}>＋ Add Asset</button>
           </div>
         </div>
 
@@ -344,12 +344,12 @@ export default function TeamPage({ setPage }: { setPage?: (p: string) => void })
           <div style={{ padding: "60px 24px", textAlign: "center" }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>👥</div>
             <div style={{ fontSize: 16, fontWeight: 600, color: C.text, marginBottom: 6 }}>
-              {searchQuery ? "No employees match your search" : "No employees yet"}
+              {searchQuery ? "No assets match your search" : "No assets yet"}
             </div>
             <div style={{ fontSize: 13, color: C.textMuted, maxWidth: 440, margin: "0 auto 20px" }}>
-              {searchQuery ? "Try a different search term." : "Add your first employee to start tracking AI usage across your team."}
+              {searchQuery ? "Try a different search term." : "Add your first asset to start tracking AI usage across your team."}
             </div>
-            <button style={btnBlueFilled}>＋ Add Employee</button>
+            <button style={btnBlueFilled}>＋ Add Asset</button>
           </div>
         ) : (
           <div style={{ padding: "0 12px 16px" }}>
@@ -358,7 +358,7 @@ export default function TeamPage({ setPage }: { setPage?: (p: string) => void })
               display: "grid", gridTemplateColumns: gridCols, gap: 8,
               padding: "0 12px 10px", borderBottom: `2px solid ${C.border}`,
             }}>
-              {["#", "EMPLOYEE", "ROLE", "CALLS", "ROUTING EFF.", "CACHE", "BUDGET USED", "STATUS", "RESETS IN"].map((h) => (
+              {["#", "ASSET", "ROLE", "CALLS", "ROUTING EFF.", "CACHE", "BUDGET USED", "STATUS", "RESETS IN"].map((h) => (
                 <div key={h} style={{
                   fontSize: 10, fontWeight: 600, color: C.textDim, letterSpacing: "0.06em",
                   textTransform: "uppercase",
@@ -397,7 +397,7 @@ export default function TeamPage({ setPage }: { setPage?: (p: string) => void })
                     {medal || i + 1}
                   </div>
 
-                  {/* Employee */}
+                  {/* Asset */}
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", minWidth: 0 }}>
                     <span style={{
                       width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
@@ -681,7 +681,7 @@ function DetailPanel({
           <div style={{
             fontSize: 9, fontWeight: 700, color: C.greenText, letterSpacing: "0.08em",
             textTransform: "uppercase", marginBottom: 12,
-          }}>SAVINGS THIS EMPLOYEE</div>
+          }}>SAVINGS THIS ASSET</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, textAlign: "center" }}>
             <div>
               <div style={{ fontSize: 10, color: C.textDim }}>Actual Cost</div>
@@ -800,7 +800,7 @@ function DetailPanel({
               background: C.amberBg, border: `1px solid ${C.amberBorder}`, borderRadius: 6,
               padding: "8px 12px", marginTop: 8, fontSize: 11, color: C.amberText, textAlign: "left",
             }}>
-              This employee could save ~<strong>{fmtMoney(missedOpp, 2)}</strong> more this month at 80% efficiency.
+              This asset could save ~<strong>{fmtMoney(missedOpp, 2)}</strong> more this month at 80% efficiency.
             </div>
           )}
         </div>
@@ -814,7 +814,7 @@ function DetailPanel({
             textTransform: "uppercase", marginBottom: 4,
           }}>PERSONAL ALERTS</div>
           <div style={{ fontSize: 11, color: C.textDim, marginBottom: 10 }}>
-            This employee gets their own warning at 70% and 90% budget.
+            This asset gets their own warning at 70% and 90% budget.
           </div>
           <input
             type="email"

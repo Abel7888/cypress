@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Cypress TokenGuard — Stop surprise AI bills",
-  description: "Govern AI spend across your team. Real-time budget blocking, intelligent routing, and per-employee visibility.",
+  title: "Cypress Vision — Stop overpaying for AI",
+  description: "AI spend management for builders. Automatic routing, hard spend limits, and per-asset visibility. One 30-second setup.",
 };
 
 export default function RootLayout({

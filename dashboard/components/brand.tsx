@@ -43,7 +43,7 @@ export const BRAND = {
 export function LogoMark({ size = 36 }: { size?: number }) {
   const id = React.useId();
   return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-label="Cypress TokenGuard">
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-label="Cypress Vision">
       <defs>
         <linearGradient id={`g-${id}`} x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#2563EB" />
@@ -88,13 +88,13 @@ export function Logo({ size = 36, dark = false }: { size?: number; dark?: boolea
           fontSize: size * 0.52, fontWeight: 700, color: textColor,
           letterSpacing: "-0.02em",
         }}>
-          Cypress<span style={{ color: BRAND.primary }}> TokenGuard</span>
+          Cypress<span style={{ color: BRAND.primary }}> Vision</span>
         </div>
         <div style={{
           fontSize: size * 0.27, color: subColor,
           letterSpacing: "0.14em", marginTop: 4, fontWeight: 600,
         }}>
-          MULTI-MODEL AI COST GOVERNANCE
+          AI SPEND MANAGEMENT FOR BUILDERS
         </div>
       </div>
     </div>
