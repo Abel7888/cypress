@@ -55,7 +55,7 @@ const STEPS = [
 
 const INTENT_OPTIONS = [
   { id: "spend",      label: "OpenAI spend getting out of hand" },
-  { id: "visibility", label: "Team using AI with no visibility" },
+  { id: "visibility", label: "Agents or workflows with no visibility" },
   { id: "routing",    label: "Need to route to cheaper models" },
   { id: "all",        label: "All of the above" },
 ];
@@ -69,9 +69,9 @@ const PROVIDERS = [
 ];
 
 const BUDGET_TEMPLATES = [
-  { id: "engineering", label: "Engineering", amount: "50",  color: C.blue,   desc: "Heavy AI usage · code generation · analysis",    badge: "Recommended" },
-  { id: "marketing",   label: "Marketing",   amount: "20",  color: C.purple, desc: "Moderate usage · copy writing · research",         badge: "" },
-  { id: "exec",        label: "Executive",   amount: "999", color: C.green,  desc: "No cap · full access",                             badge: "" },
+  { id: "engineering", label: "Heavy Usage", amount: "50",  color: C.blue,   desc: "Heavy AI usage · code generation · analysis",    badge: "Recommended" },
+  { id: "marketing",   label: "Standard",   amount: "20",  color: C.purple, desc: "Moderate usage · copy writing · research",         badge: "" },
+  { id: "exec",        label: "No Cap",   amount: "999", color: C.green,  desc: "No cap · full access",                             badge: "" },
 ];
 
 interface Employee { name: string; email: string; role: string; budget: string; }
@@ -498,7 +498,7 @@ function OnboardingPage() {
           <span style={{ fontSize: 16, fontWeight: 700, color: C.text, letterSpacing: "-0.02em" }}>Cypress Vision</span>
         </div>
         <div style={{ fontSize: 12, color: C.textMuted }}>
-          Questions? <a href="mailto:support@tokenguard.io" style={{ color: C.blue, textDecoration: "none" }}>support@tokenguard.io</a>
+          Questions? <a href="mailto:info@cypressvision.xyz" style={{ color: C.blue, textDecoration: "none" }}>info@cypressvision.xyz</a>
         </div>
       </div>
 
@@ -641,7 +641,7 @@ function OnboardingPage() {
               </Card>
               {[
                 { title: "Master key generated", desc: "One admin key to manage your entire team" },
-                { title: "Add your team", desc: "Individual keys with daily budget caps" },
+                { title: "Add your assets", desc: "Individual keys with daily budget caps" },
                 { title: "One line change", desc: "Your devs update the base URL — live in minutes" },
                 { title: "Dashboard ready", desc: "See every dollar spent in real time" },
               ].map((f, i) => (
@@ -987,7 +987,7 @@ function OnboardingPage() {
 
             {/* Right: employee key delivery status */}
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 16 }}>Your team received</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 16 }}>Your assets received</div>
 
               {createdEmployeeKeys.length > 0 ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
@@ -1168,7 +1168,7 @@ function OnboardingPage() {
 
       {/* Footer */}
       <div style={{ textAlign: "center", padding: "16px 0 32px", fontSize: 12, color: C.textDim }}>
-        Questions? <a href="mailto:support@tokenguard.io" style={{ color: C.blue, textDecoration: "none" }}>support@tokenguard.io</a>
+        Questions? <a href="mailto:info@cypressvision.xyz" style={{ color: C.blue, textDecoration: "none" }}>info@cypressvision.xyz</a>
       </div>
     </div>
   );

@@ -6,15 +6,13 @@ import { BRAND as C, Logo, LogoMark } from "@/components/brand";
 import { createClient, SUPABASE_CONFIGURED } from "@/lib/supabase";
 
 const PLAN_INFO: Record<string, { name: string; price: number; seats: string }> = {
-  starter: { name: "Starter", price: 199, seats: "Up to 10 assets" },
-  growth: { name: "Growth", price: 399, seats: "Up to 25 assets" },
-  business: { name: "Business", price: 799, seats: "Up to 75 assets" },
+  starter: { name: "Starter", price: 49, seats: "100,000 calls/mo · 3 projects" },
 };
 
 function SignUpInner() {
   const params = useSearchParams();
-  const preselected = params.get("plan") || "growth";
-  const [plan, setPlan] = useState(preselected in PLAN_INFO ? preselected : "growth");
+  const preselected = params.get("plan") || "starter";
+  const [plan, setPlan] = useState(preselected in PLAN_INFO ? preselected : "starter");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [company, setCompany] = useState("");
@@ -26,10 +24,6 @@ function SignUpInner() {
   const CALENDLY_URL = "https://calendly.com/abelassefa19/cypress-tokenguard-premium";
 
   const handleSubmit = async (e: React.FormEvent) => {
-    if (plan === "growth" || plan === "business") {
-      window.open(CALENDLY_URL, "_blank");
-      return;
-    }
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -169,7 +163,7 @@ function SignUpInner() {
               <div>
                 <div style={{ fontSize: 20, fontWeight: 700, color: C.text }}>Free Trial</div>
                 <div style={{ fontSize: 13, color: C.textMuted, marginTop: 2 }}>
-                  7 days · 1 seat · full dashboard access
+                  7 days · full dashboard access · no credit card
                 </div>
               </div>
               <button
@@ -181,7 +175,7 @@ function SignUpInner() {
                   cursor: "pointer", width: "100%",
                 }}
               >
-                Request Free Trial Access
+                Start Your 7-Day Trial →
               </button>
             </div>
 
@@ -256,6 +250,7 @@ function TrialModal({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
+  const [password, setPassword] = useState("");
   // Step 2
   const [teamSize, setTeamSize] = useState("");
   const [currentTracking, setCurrentTracking] = useState("");
@@ -263,7 +258,7 @@ function TrialModal({ onClose }: { onClose: () => void }) {
   // Step 3
   const [agreed, setAgreed] = useState(false);
 
-  const step1Valid = name.trim() && email.trim() && company.trim();
+  const step1Valid = name.trim() && email.trim() && company.trim() && password.length >= 8;
   const step2Valid = teamSize && currentTracking;
 
   const handleSubmit = async () => {
@@ -280,8 +275,33 @@ function TrialModal({ onClose }: { onClose: () => void }) {
       });
       if (!res.ok) throw new Error("Request failed");
       setSubmitted(true);
+      // Create Supabase account instantly and redirect to onboarding
+      if (typeof window !== "undefined") {
+        try {
+          const { createClient } = await import("@/lib/supabase");
+          const supabase = createClient();
+          const trialStart = new Date().toISOString();
+          const { error: sErr } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: { company, name, plan: "trial", trial_start: trialStart },
+              emailRedirectTo: `${window.location.origin}/onboarding`,
+            },
+          });
+          localStorage.setItem("tg_trial_start", trialStart);
+          localStorage.setItem("tg_plan", "trial");
+          localStorage.setItem("tg_company", company);
+          if (!sErr) {
+            setTimeout(() => { window.location.href = "/onboarding"; }, 1200);
+          }
+        } catch (e) {
+          console.warn("[trial] Supabase signup failed:", e);
+          setTimeout(() => { window.location.href = "/onboarding"; }, 1200);
+        }
+      }
     } catch (err: any) {
-      setSubmitError("Something went wrong. Please try again or email support@tokenguard.io.");
+      setSubmitError("Something went wrong. Please try again or email info@cypressvision.xyz.");
     } finally {
       setSubmitting(false);
     }
@@ -359,6 +379,23 @@ function TrialModal({ onClose }: { onClose: () => void }) {
                 <Field label="Company Name">
                   <input value={company} onChange={e => setCompany(e.target.value)} placeholder="Acme Corp" style={trialInputStyle} />
                 </Field>
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "#64748B",
+                    textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    PASSWORD
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={8}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="At least 8 characters"
+                    style={{ width: "100%", marginTop: 6, padding: "10px 12px",
+                      border: "1px solid #E2E8F0", borderRadius: 8, fontSize: 14,
+                      fontFamily: "Inter, system-ui, sans-serif", outline: "none" }}
+                  />
+                </div>
                 <NavRow>
                   <span />
                   <button
@@ -486,15 +523,11 @@ function SuccessView({ email, onHome }: { email: string; onHome: () => void }) {
         margin: "8px auto 16px", fontSize: 26, fontWeight: 700,
       }}>✓</div>
       <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: C.text }}>
-        Request Received! ðŸŽ‰
+        Your 7-day trial has started! 🎉
       </h2>
       <p style={{ margin: "10px 0 22px", fontSize: 14, color: C.textMuted, lineHeight: 1.6 }}>
-        We'll review your request and send your trial credentials within 24 hours.
-        Check your inbox at <strong style={{ color: C.text }}>{email}</strong>.
+        Setting up your workspace — you'll be redirected to onboarding in a moment.
       </p>
-      <button type="button" onClick={onHome} style={{ ...primaryBtnStyle, width: "100%" }}>
-        Back to Home
-      </button>
     </div>
   );
 }
