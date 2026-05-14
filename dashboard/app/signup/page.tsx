@@ -338,7 +338,7 @@ function TrialModal({ onClose }: { onClose: () => void }) {
             background: "transparent", border: "none",
             fontSize: 22, color: C.textMuted, cursor: "pointer", lineHeight: 1,
           }}
-        >Ã—</button>
+        >&#x2715;</button>
 
         {submitted ? (
           <SuccessView email={email} onHome={() => router.push("/")} />

@@ -215,18 +215,53 @@ function downloadCSV(filename: string, rows: (string | number)[][]) {
 export default function CostAnalysisPage() {
   // ── PRESERVED STATE & FETCH LOGIC ──────────────────────────────────────
   const [playgroundPrompt, setPlaygroundPrompt] = useState("");
-  const [playgroundModel, setPlaygroundModel] = useState("claude-opus-4-6");
+
+  const savedDefaultProvider: string =
+    typeof window !== "undefined"
+      ? (localStorage.getItem("tg_default_provider") ||
+         (localStorage.getItem("tg_provider_openai") ? "openai" :
+          localStorage.getItem("tg_provider_anthropic") ? "anthropic" : "openai"))
+      : "openai";
+
+  const connectedProviders: string[] = typeof window !== "undefined"
+    ? (["openai", "anthropic", "google"] as const).filter(
+        p => !!localStorage.getItem(`tg_provider_${p}`)
+      )
+    : ["openai"];
+  
+  const defaultModel = savedDefaultProvider === "anthropic"
+    ? "claude-opus-4-6"
+    : savedDefaultProvider === "google"
+    ? "gemini-1.5-pro"
+    : "gpt-4.1";
+
+  const [playgroundModel, setPlaygroundModel] = useState(defaultModel);
   const [playgroundLoading, setPlaygroundLoading] = useState(false);
   const [playgroundResult, setPlaygroundResult] = useState<any>(null);
 
-  const MODEL_COSTS: Record<string, number> = {
-    "claude-opus-4-6": 75.0e-6,
-    "claude-sonnet-4-6": 15.0e-6,
-    "claude-haiku-4-5": 4.0e-6,
-    "claude-haiku-4-5-20251001": 4.0e-6,
-    "gpt-4o": 10.0e-6,
-    "gpt-4o-mini": 0.60e-6,
+  const PROVIDER_MODELS: Record<string, { id: string; cost: number; label: string }[]> = {
+    openai: [
+      { id: "gpt-4.1",      cost: 8.0e-6,  label: "gpt-4.1 (latest)" },
+      { id: "gpt-4o",       cost: 10.0e-6, label: "gpt-4o" },
+      { id: "gpt-4.1-mini", cost: 1.60e-6, label: "gpt-4.1-mini (fast)" },
+      { id: "gpt-4o-mini",  cost: 0.60e-6, label: "gpt-4o-mini (cheap)" },
+    ],
+    anthropic: [
+      { id: "claude-opus-4-6",   cost: 75.0e-6, label: "claude-opus-4-6 (latest)" },
+      { id: "claude-sonnet-4-6", cost: 15.0e-6, label: "claude-sonnet-4-6 (fast)" },
+      { id: "claude-haiku-4-5",  cost: 4.0e-6,  label: "claude-haiku-4-5 (cheap)" },
+    ],
+    google: [
+      { id: "gemini-1.5-pro",   cost: 10.5e-6, label: "gemini-1.5-pro (latest)" },
+      { id: "gemini-2.0-flash", cost: 0.40e-6, label: "gemini-2.0-flash (fast)" },
+    ],
   };
+
+  const availableModels = connectedProviders.flatMap(p => PROVIDER_MODELS[p] || []);
+
+  const MODEL_COSTS: Record<string, number> = Object.fromEntries(
+    availableModels.map(m => [m.id, m.cost])
+  );
 
   const runPlayground = async () => {
     if (!playgroundPrompt.trim()) return;
@@ -380,10 +415,22 @@ export default function CostAnalysisPage() {
   };
 
   // ── PLAYGROUND EXAMPLES ─────────────────────────────────────────────────
+  const providerHighModel = savedDefaultProvider === "anthropic"
+    ? "claude-opus-4-6"
+    : savedDefaultProvider === "google"
+    ? "gemini-1.5-pro"
+    : "gpt-4.1";
+
+  const providerMidModel = savedDefaultProvider === "anthropic"
+    ? "claude-sonnet-4-6"
+    : savedDefaultProvider === "google"
+    ? "gemini-2.0-flash"
+    : "gpt-4.1-mini";
+
   const examples = [
-    { label: "Simple — What is ML?",                    prompt: "What is machine learning in one sentence?",                                       model: "claude-opus-4-6" },
-    { label: "Medium — REST vs GraphQL",                prompt: "Compare REST vs GraphQL — when do you choose each?",                              model: "claude-sonnet-4-6" },
-    { label: "Complex — Distributed systems",           prompt: "Design a distributed system for processing 1M events/second with exactly-once delivery. Discuss trade-offs.", model: "claude-opus-4-6" },
+    { label: "Simple — What is ML?",          prompt: "What is machine learning in one sentence?",                                                                    model: providerMidModel },
+    { label: "Medium — REST vs GraphQL",       prompt: "Compare REST vs GraphQL — when do you choose each?",                                                          model: providerMidModel },
+    { label: "Complex — Distributed systems",  prompt: "Design a distributed system for processing 1M events/second with exactly-once delivery. Discuss trade-offs.", model: providerHighModel },
   ];
 
   return (
@@ -665,7 +712,7 @@ export default function CostAnalysisPage() {
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderLeft: `4px solid ${C.blue}`, borderRadius: 12, padding: "20px 22px", boxShadow: "0 1px 2px rgba(0,0,0,0.03)", width: "100%" }}>
         <SectionTitle
           title="Live Route Tester"
-          subtitle="Send a real prompt through your tenant key — see exactly how TokenGuard routes it, what model responds, and what you save."
+          subtitle="Send a real prompt through your tenant key — see exactly how Cypress Vision routes it, what model responds, and what you save."
         />
 
         {/* Examples */}
@@ -684,7 +731,7 @@ export default function CostAnalysisPage() {
           <textarea
             value={playgroundPrompt}
             onChange={(e) => setPlaygroundPrompt(e.target.value)}
-            placeholder="Type a prompt to test TokenGuard's routing decision…"
+            placeholder="Type a prompt to test Cypress Vision routing decision…"
             style={{ background: C.rowAlt, border: `1px solid ${C.border}`, borderRadius: 10, color: C.text, fontSize: 13, padding: 12, resize: "vertical", fontFamily: "inherit", minHeight: 80, width: "100%", outline: "none" }}
             onFocus={(e) => { e.currentTarget.style.borderColor = C.blue; }}
             onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
@@ -694,8 +741,8 @@ export default function CostAnalysisPage() {
               value={playgroundModel}
               onChange={(e) => setPlaygroundModel(e.target.value)}
               style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 12, padding: "8px 10px", width: "100%", marginBottom: 8, outline: "none", fontFamily: "inherit", cursor: "pointer" }}>
-              {Object.keys(MODEL_COSTS).map((m) => (
-                <option key={m} value={m}>{m}</option>
+              {availableModels.map((m) => (
+                <option key={m.id} value={m.id}>{m.label}</option>
               ))}
             </select>
             <button onClick={runPlayground} disabled={playgroundLoading || !playgroundPrompt.trim()}

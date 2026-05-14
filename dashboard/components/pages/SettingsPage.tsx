@@ -866,9 +866,6 @@ function EmployeeKeyManager() {
                   )}
                 </div>
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <button onClick={() => seedKey(k.id)} disabled={seedStatus[k.id] === "seeding"} style={btnBlueOutlineSm}>
-                    {seedStatus[k.id] === "seeding" ? "…" : seedStatus[k.id] === "done" ? "✓" : seedStatus[k.id] === "error" ? "✗" : "Test"}
-                  </button>
                   {(() => {
                     const rs = resetSpendStatus[k.id] || "idle";
                     const rsLabel = rs === "confirm" ? "✓ Confirm?" : rs === "resetting" ? "…" : rs === "done" ? "✓ Reset" : "Reset Spend";
