@@ -21,7 +21,7 @@ from budget import load_budgets, check_budget, record_spend, get_budget_status, 
 from billing import create_checkout_session, handle_webhook, PLANS, cancel_subscription
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="TokenGuard Proxy", version="0.2.0")
+app = FastAPI(title="Cypress Vision Proxy", version="0.3.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -303,10 +303,22 @@ def get_client_id(request: Request):
 
 def calculate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
     pricing = {
-        "gpt-4o-mini":  (0.00015, 0.0006),
-        "gpt-4o":       (0.005,   0.015),
+        # OpenAI
+        "gpt-4o":             (0.0025,   0.010),
+        "gpt-4o-mini":        (0.00015,  0.0006),
+        "gpt-4.1":            (0.002,    0.008),
+        "gpt-4.1-mini":       (0.0004,   0.0016),
+        "gpt-4.1-nano":       (0.0001,   0.0004),
+        # Anthropic
+        "claude-opus-4-6":    (0.015,    0.075),
+        "claude-sonnet-4-6":  (0.003,    0.015),
+        "claude-haiku-4-5":   (0.00025,  0.00125),
+        # Google
+        "gemini-1.5-pro":     (0.00125,  0.005),
+        "gemini-1.5-flash":   (0.000075, 0.0003),
+        "gemini-2.0-flash":   (0.0001,   0.0004),
     }
-    rates = pricing.get(model, (0.005, 0.015))
+    rates = pricing.get(model, (0.003, 0.012))
     return round((input_tokens / 1000 * rates[0]) + (output_tokens / 1000 * rates[1]), 6)
 
 
@@ -500,17 +512,13 @@ def get_provider_key(tenant_id: str, provider: str) -> str | None:
     except Exception as e:
         print(f"[ProviderKeys] DB lookup failed: {e}")
 
-    # Fallback to TokenGuard's own keys (for demo / new accounts)
-    fallbacks = {
-        "openai":    os.getenv("OPENAI_API_KEY", ""),
-        "anthropic": os.getenv("ANTHROPIC_API_KEY", ""),
-    }
-    return fallbacks.get(provider)
+    # No fallback — tenant must add their own provider key
+    return None
 
 
 async def call_anthropic(body: dict, api_key: str) -> dict:
     import anthropic as anthropic_sdk
-    model     = body.get("model", "claude-sonnet-4-6")
+    model     = body.get("model", "claude-haiku-4-5")
     max_tokens = body.get("max_tokens", 1024)
     messages  = body.get("messages", [])
 

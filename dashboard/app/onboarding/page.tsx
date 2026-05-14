@@ -229,6 +229,7 @@ function OnboardingPage() {
   // Step 2 — Providers
   const [providerKeys, setProviderKeys] = useState<Record<string, string>>({});
   const [expandedProvider, setExpandedProvider] = useState<string | null>(null);
+  const [defaultProvider, setDefaultProvider] = useState<string>("");
   const [savedProviders, setSavedProviders] = useState<Set<string>>(new Set());
   const [providerInputs, setProviderInputs] = useState<Record<string, string>>({});
 
@@ -291,6 +292,7 @@ function OnboardingPage() {
           email: adminEmail,
           slack_webhook: slackWebhook,
           alert_email: alertEmail,
+          default_provider: defaultProvider || "openai",
         }),
       });
       const data = await res.json();
@@ -424,6 +426,8 @@ function OnboardingPage() {
     if (!key.trim()) return;
     setProviderKeys(prev => ({ ...prev, [id]: key }));
     setSavedProviders(prev => new Set(Array.from(prev).concat(id)));
+    // Auto-select first connected provider as default
+    setDefaultProvider(prev => prev || id);
     setExpandedProvider(null);
     localStorage.setItem(`tg_provider_${id}`, key);
     if (tenantId && masterKey) {
@@ -760,6 +764,70 @@ function OnboardingPage() {
               </div>
             </div>
 
+            {savedProviders.size > 0 && (
+              <div style={{ marginBottom: 24, padding: "18px 20px", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 4 }}>
+                  Set your default provider
+                </div>
+                <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 16, lineHeight: 1.6 }}>
+                  Your tg- key will route calls through this provider by default.
+                  All your assets will use it unless you change it later in Settings.
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {PROVIDERS.filter(p => savedProviders.has(p.id) || !savedProviders.has(p.id)).map(prov => {
+                    const isConnected = savedProviders.has(prov.id);
+                    const isSelected = defaultProvider === prov.id;
+                    return (
+                      <button
+                        key={prov.id}
+                        onClick={() => isConnected && setDefaultProvider(prov.id)}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 14,
+                          padding: "12px 16px",
+                          background: isSelected ? C.blueBg : isConnected ? C.card : C.rowAlt,
+                          border: `2px solid ${isSelected ? C.blue : isConnected ? C.border : C.borderSoft}`,
+                          borderRadius: 10,
+                          cursor: isConnected ? "pointer" : "not-allowed",
+                          opacity: isConnected ? 1 : 0.4,
+                          textAlign: "left",
+                          transition: "border-color 0.15s, background 0.15s",
+                        }}
+                      >
+                        <div style={{
+                          width: 20, height: 20, borderRadius: "50%",
+                          border: `2px solid ${isSelected ? C.blue : C.border}`,
+                          background: isSelected ? C.blue : "transparent",
+                          flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          {isSelected && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#fff" }} />}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1 }}>
+                          <div style={{ width: 10, height: 10, borderRadius: "50%", background: prov.dot, flexShrink: 0 }} />
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: isConnected ? C.text : C.textDim }}>
+                              {prov.label}
+                            </div>
+                            <div style={{ fontSize: 11, color: C.textMuted }}>
+                              {isConnected ? "Connected — ready to use" : "Not connected"}
+                            </div>
+                          </div>
+                        </div>
+                        {isConnected && (
+                          <span style={{ fontSize: 11, color: C.green, fontWeight: 600 }}>✓</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                {defaultProvider && (
+                  <div style={{ marginTop: 12, padding: "8px 12px", background: C.greenBg, border: `1px solid ${C.greenBorder}`, borderRadius: 8, fontSize: 12, color: C.greenText }}>
+                    ✓ Your tg- key will route through <strong>{PROVIDERS.find(p => p.id === defaultProvider)?.label}</strong> by default.
+                    You can add more providers and change this any time in Settings.
+                  </div>
+                )}
+              </div>
+            )}
+
             <div style={{ display: "flex", gap: 10 }}>
               <GhostBtn onClick={() => setStep(1)}>Back</GhostBtn>
               <GhostBtn onClick={() => setStep(3)} style={{ color: C.textMuted }}>Skip for now</GhostBtn>
@@ -775,7 +843,20 @@ function OnboardingPage() {
           <div>
             <div style={{ marginBottom: 28 }}>
               <div style={{ fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 8 }}>Build your team</div>
-              <div style={{ fontSize: 14, color: C.textMuted }}>Each person gets their own key, their own budget, delivered to their inbox automatically.</div>
+              <div style={{ fontSize: 14, color: C.textMuted, marginBottom: 12 }}>
+                Each asset gets its own API key and daily spend limit. Add agents, bots, workflows, or people.
+              </div>
+              {defaultProvider ? (
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", background: C.greenBg, border: `1px solid ${C.greenBorder}`, borderRadius: 8, fontSize: 12, color: C.greenText, marginBottom: 4 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.green }} />
+                  All assets route through <strong style={{ marginLeft: 3 }}>{PROVIDERS.find(p => p.id === defaultProvider)?.label}</strong>
+                  <span style={{ color: C.textMuted, marginLeft: 4 }}>· Change in Settings after setup</span>
+                </div>
+              ) : (
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", background: C.amberBg, border: `1px solid ${C.amberBorder}`, borderRadius: 8, fontSize: 12, color: C.amberText, marginBottom: 4 }}>
+                  ⚠ No default provider set — go back to Step 2 and connect a provider key
+                </div>
+              )}
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
@@ -931,7 +1012,11 @@ function OnboardingPage() {
             <div>
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 6 }}>You're in.</div>
-                <div style={{ fontSize: 14, color: C.textMuted }}>Copy your master key now and store it securely — it controls all API access for your account.</div>
+                <div style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.6 }}>
+                  Copy your master key below. This is your <strong>tg-</strong> key — paste it anywhere you'd use your{" "}
+                  {PROVIDERS.find(p => p.id === defaultProvider)?.label || "provider"} key.
+                  Cursor, Windsurf, your app code — it works exactly the same, just routed through Cypress Vision.
+                </div>
               </div>
 
               {/* Master key display */}
@@ -969,6 +1054,7 @@ function OnboardingPage() {
                   {[
                     { label: "Company", value: company },
                     { label: "Plan", value: "Starter — $49/mo" },
+                    { label: "Default provider", value: PROVIDERS.find(p => p.id === defaultProvider)?.label || "OpenAI" },
                     { label: "Assets", value: `${employees.filter(e => e.name.trim()).length} keys created` },
                     { label: "Tenant ID", value: tenantId, mono: true },
                   ].map((r, i, arr) => (
@@ -1038,7 +1124,10 @@ function OnboardingPage() {
             <div>
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 6 }}>One line change</div>
-                <div style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.6 }}>Pick your stack. Change the base URL. Your existing code works exactly the same.</div>
+                <div style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.6 }}>
+                  Replace your {PROVIDERS.find(p => p.id === defaultProvider)?.label || "provider"} key with your tg- key and point to Cypress Vision.
+                  Your code works exactly the same — routing happens automatically.
+                </div>
               </div>
 
               {/* SDK tabs */}
