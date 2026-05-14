@@ -1,0 +1,5 @@
+﻿data = open(r'C:\Users\Abela\CascadeProjects\tokenguard\dashboard\app\signup\page.tsx', 'rb').read()
+data = data.replace(b'\xc3\xa2\xe2\x80\xa0\xe2\x80\x98', b'\xe2\x86\x90')
+data = data.replace(b'\xc3\xa2\xe2\x80\xa0\xe2\x80\x99', b'\xe2\x86\x92')
+open(r'C:\Users\Abela\CascadeProjects\tokenguard\dashboard\app\signup\page.tsx', 'wb').write(data)
+print('Done')

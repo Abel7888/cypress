@@ -1484,7 +1484,7 @@ function BillingTab({ overview, users }: { overview: any; users: any[] }) {
   const totalCalls = users.reduce((s, u) => s + (u.api_calls || 0), 0);
   const routingRate = totalCalls > 0 ? (routedCalls / totalCalls) * 100 : 0;
   const totalSaved = users.reduce((s, u) => s + (u.savings_usd || 0), 0);
-  const planCost = 199;
+  const planCost = 49;
   const netValue = totalSaved - planCost;
 
   return (
@@ -1507,7 +1507,7 @@ function BillingTab({ overview, users }: { overview: any; users: any[] }) {
             <div>
               <div style={{ fontSize: 18, fontWeight: 700, color: C.greenText }}>Starter Plan</div>
               <div style={{ fontSize: 14, fontFamily: FONT_MONO, color: C.green, marginTop: 4 }}>
-                $199 / month
+                $49 / month
               </div>
               <div style={{ fontSize: 11, color: C.textDim, marginTop: 4 }}>
                 Billed monthly · cancel anytime

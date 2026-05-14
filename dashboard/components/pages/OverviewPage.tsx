@@ -107,7 +107,7 @@ export default function OverviewPage({ setPage, onStatClick }: Props) {
   const totalSaved       = users.reduce((s, u) => s + (u.savings_usd || 0), 0);
   const cacheSaved       = cacheHits * 0.00005;
   const totalSavedCombined = totalSaved + cacheSaved;
-  const monthlyFee = 199;
+  const monthlyFee = 49;
   const netBenefit = totalSavedCombined - monthlyFee;
   const roiMultiple = monthlyFee > 0 ? totalSavedCombined / monthlyFee : 0;
 
@@ -278,7 +278,7 @@ function RoiHero({ totalSavedCombined, netBenefit, roiMultiple, cacheHits, cache
       </div>
       <div style={{ padding: "0 24px" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 1, background: C.border, borderRadius: 12, overflow: "hidden" }}>
-          <RoiCell label="CYPRESS VISION FEE" value="$199" valueColor={C.textDim} sub="Monthly subscription" big={28} />
+          <RoiCell label="CYPRESS VISION FEE" value="$49" valueColor={C.textDim} sub="Monthly subscription" big={28} />
           <RoiCell label="AI COSTS SAVED" value={fmtMoney(totalSavedCombined, 2)} valueColor={C.cyan} sub="Routing + caching" big={28} subColor={C.textMuted} />
           <RoiCell label="NET IN YOUR POCKET" labelColor={C.greenText}
             value={`${positive ? "+" : ""}${fmtMoney(netBenefit, 2)}`}

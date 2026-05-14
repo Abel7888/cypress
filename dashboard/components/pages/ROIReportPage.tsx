@@ -87,8 +87,8 @@ export default function ROIReportPage() {
   const totalSaved = routingSaved + cacheSaved;
   const savingsPct = totalActual > 0 ? Math.min(((totalSaved / (totalActual + totalSaved)) * 100), 99) : 0;
 
-  // ── New: prefer 199 monthly fee per spec ─────────────────────────────────
-  const fee = 199;
+  // ── New: prefer 49 monthly fee per spec ──────────────────────────────────
+  const fee = 49;
   const savings = billing?.financials?.savings_usd ?? totalSaved;
   const net = savings - fee;
   const roi = fee > 0 ? savings / fee : 0;

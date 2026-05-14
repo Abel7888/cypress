@@ -636,7 +636,7 @@ function OnboardingPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 14, paddingTop: 8 }}>
               <Card style={{ padding: "14px 18px", borderLeft: `4px solid ${C.blue}` }}>
                 <div style={{ fontSize: 11, color: C.textDim, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.08em" }}>Your plan</div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Starter — $199/mo</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Starter — $49/mo</div>
                 <div style={{ fontSize: 13, color: C.textMuted }}>Up to 10 assets · unlimited API calls</div>
               </Card>
               {[
@@ -968,7 +968,7 @@ function OnboardingPage() {
                   <div style={{ fontSize: 11, fontWeight: 600, color: C.textDim, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Account details</div>
                   {[
                     { label: "Company", value: company },
-                    { label: "Plan", value: "Starter — $199/mo" },
+                    { label: "Plan", value: "Starter — $49/mo" },
                     { label: "Assets", value: `${employees.filter(e => e.name.trim()).length} keys created` },
                     { label: "Tenant ID", value: tenantId, mono: true },
                   ].map((r, i, arr) => (
