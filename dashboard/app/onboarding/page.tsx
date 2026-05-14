@@ -74,7 +74,7 @@ const BUDGET_TEMPLATES = [
   { id: "exec",        label: "No Cap",   amount: "999", color: C.green,  desc: "No cap · full access",                             badge: "" },
 ];
 
-interface Employee { name: string; email: string; role: string; budget: string; }
+interface Employee { name: string; email: string; role: string; budget: string; type: string; provider: string; }
 
 // ── Reusable mini-components ──────────────────────────────────────────────────
 function Card({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) {
@@ -234,7 +234,7 @@ function OnboardingPage() {
   const [providerInputs, setProviderInputs] = useState<Record<string, string>>({});
 
   // Step 3 — Team
-  const [employees, setEmployees] = useState<Employee[]>([{ name: "", email: "", role: "", budget: "50" }]);
+  const [employees, setEmployees] = useState<Employee[]>([{ name: "", email: "", role: "", budget: "50", type: "Agent", provider: "" }]);
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [selectedEmployees, setSelectedEmployees] = useState<Set<number>>(new Set());
   const [seats] = useState(10);
@@ -326,9 +326,9 @@ function OnboardingPage() {
                 action: "create_user",
                 tenantId: data.tenant_id,
                 name: emp.name.trim(),
-                role: emp.role.trim(),
+                role: emp.type || emp.role || "Agent",
                 budget_usd: parseFloat(emp.budget) || 50,
-                email: emp.email || "",
+                email: "",
               }),
             })
           )
@@ -405,7 +405,7 @@ function OnboardingPage() {
   // ── Employee helpers ────────────────────────────────────────────────────────
   const addEmployee = () => {
     if (employees.length >= seats) return;
-    setEmployees(e => [...e, { name: "", email: "", role: "", budget: "50" }]);
+    setEmployees(e => [...e, { name: "", email: "", role: "", budget: "50", type: "Agent", provider: defaultProvider || "" }]);
   };
   const removeEmployee = (i: number) => setEmployees(e => e.filter((_, idx) => idx !== i));
   const updateEmployee = (i: number, field: keyof Employee, val: string) =>
@@ -842,7 +842,7 @@ function OnboardingPage() {
         {step === 3 && (
           <div>
             <div style={{ marginBottom: 28 }}>
-              <div style={{ fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 8 }}>Build your team</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 8 }}>Add your assets</div>
               <div style={{ fontSize: 14, color: C.textMuted, marginBottom: 12 }}>
                 Each asset gets its own API key and daily spend limit. Add agents, bots, workflows, or people.
               </div>
@@ -863,16 +863,56 @@ function OnboardingPage() {
               {/* Left: employee rows */}
               <div>
                 {/* Column headers */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 80px 36px", gap: 8, padding: "0 4px 8px", borderBottom: `1px solid ${C.border}`, marginBottom: 10 }}>
-                  {["Name", "Role", "Budget/day", ""].map(h => (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 80px 36px", gap: 8, padding: "0 4px 8px", borderBottom: `1px solid ${C.border}`, marginBottom: 10 }}>
+                  {["Name", "Type", "Provider", "Budget/day", ""].map(h => (
                     <div key={h} style={{ fontSize: 11, fontWeight: 600, color: C.textDim, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</div>
                   ))}
                 </div>
 
                 {employees.map((emp, i) => (
-                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 80px 36px", gap: 8, marginBottom: 8, alignItems: "center" }}>
-                    <TextInput value={emp.name} onChange={v => updateEmployee(i, "name", v)} placeholder="Sarah Chen" />
-                    <TextInput value={emp.role} onChange={v => updateEmployee(i, "role", v)} placeholder="Engineering" />
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 80px 36px", gap: 8, marginBottom: 8, alignItems: "center" }}>
+                    <TextInput value={emp.name} onChange={v => updateEmployee(i, "name", v)} placeholder="Sales Agent" />
+
+                    {/* Type dropdown */}
+                    <select
+                      value={emp.type || "Agent"}
+                      onChange={e => updateEmployee(i, "type", e.target.value)}
+                      style={{
+                        height: 38, borderRadius: 8, border: `1px solid ${C.border}`,
+                        background: C.card, color: C.text, fontSize: 13,
+                        padding: "0 8px", cursor: "pointer",
+                      }}
+                    >
+                      {["Agent", "Bot", "Workflow", "Human"].map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+
+                    {/* Provider dropdown */}
+                    <select
+                      value={emp.provider || defaultProvider || ""}
+                      onChange={e => updateEmployee(i, "provider", e.target.value)}
+                      style={{
+                        height: 38, borderRadius: 8, border: `1px solid ${C.border}`,
+                        background: C.card, color: C.text, fontSize: 13,
+                        padding: "0 8px", cursor: savedProviders.size <= 1 ? "default" : "pointer",
+                        opacity: savedProviders.size === 0 ? 0.5 : 1,
+                      }}
+                      disabled={savedProviders.size <= 1}
+                    >
+                      {savedProviders.size === 0 && (
+                        <option value="">No provider</option>
+                      )}
+                      {Array.from(savedProviders).map(pid => {
+                        const prov = PROVIDERS.find(p => p.id === pid);
+                        return <option key={pid} value={pid}>{prov?.label || pid}</option>;
+                      })}
+                      {savedProviders.size >= 2 && (
+                        <option value="auto">Auto (best)</option>
+                      )}
+                    </select>
+
+                    {/* Budget */}
                     <div style={{ position: "relative" }}>
                       <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: C.textMuted, fontSize: 13 }}>$</span>
                       <TextInput
@@ -882,6 +922,7 @@ function OnboardingPage() {
                         style={{ paddingLeft: 24 }}
                       />
                     </div>
+
                     <button onClick={() => removeEmployee(i)} style={{ background: "none", border: "none", cursor: "pointer", color: C.textDim, fontSize: 18, padding: 0, lineHeight: 1 }}>×</button>
                   </div>
                 ))}
@@ -891,7 +932,7 @@ function OnboardingPage() {
                     onClick={addEmployee}
                     style={{ width: "100%", background: "none", border: `1px dashed ${C.border}`, borderRadius: 8, padding: "10px 0", fontSize: 13, color: C.textMuted, cursor: "pointer", marginTop: 4 }}
                   >
-                    + Add another ({seats - employees.length} slots remaining)
+                    + Add asset ({seats - employees.length} remaining)
                   </button>
                 )}
 
@@ -983,7 +1024,7 @@ function OnboardingPage() {
                 disabled={creating}
                 style={{ flex: 1, padding: "14px", fontSize: 15 }}
               >
-                {creating ? "Creating your workspace..." : "Create account & continue →"}
+                {creating ? "Setting up your workspace..." : "Create workspace & continue →"}
               </PrimaryBtn>
             </div>
 
@@ -1065,6 +1106,15 @@ function OnboardingPage() {
                   ))}
                 </div>
               </Card>
+
+              <div style={{ marginTop: 20, padding: "14px 18px", background: C.amberBg, border: `1px solid ${C.amberBorder}`, borderRadius: 10 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.amberText, marginBottom: 4 }}>Before you go live</div>
+                <div style={{ fontSize: 12, color: C.amberText, lineHeight: 1.7 }}>
+                  • Go to <strong>Assets</strong> in the dashboard to copy and share individual keys<br/>
+                  • Go to <strong>Settings → Budgets</strong> to set or adjust spend limits<br/>
+                  • Your master tg- key controls all assets — keep it secure
+                </div>
+              </div>
 
               <PrimaryBtn onClick={() => setStep(5)} style={{ width: "100%", padding: "14px", fontSize: 15 }}>
                 Continue to integration →
