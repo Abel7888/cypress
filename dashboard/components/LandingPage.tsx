@@ -207,6 +207,7 @@ export default function LandingPage() {
           <Link href="/" style={{ textDecoration: "none" }}><Logo size={34} dark /></Link>
           <div className="cv-nav-links" style={{ display: "flex", alignItems: "center", gap: 28 }}>
             <a href="#features" style={navLinkDark}>Features</a>
+            <a href="#how-it-works" style={navLinkDark}>How It Works</a>
             <a href="#audiences" style={navLinkDark}>Who it&apos;s for</a>
             <a href="#pricing" style={navLinkDark}>Pricing</a>
             <a href="/docs" style={navLinkDark}>Docs</a>
@@ -434,6 +435,136 @@ client.chat.completions.create(model="gpt-4o", messages=[...])`}
         </div>
       </section>
 
+      {/* ═══ HOW IT WORKS ═══ */}
+      <section id="how-it-works" style={{ padding: "100px 32px", background: C.bg }}>
+        <div style={{ maxWidth: 960, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 64 }}>
+            <div style={{
+              display: "inline-block", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em",
+              textTransform: "uppercase", color: C.primary, background: C.primarySoft,
+              border: `1px solid ${C.primarySoft}`, borderRadius: 20, padding: "4px 14px", marginBottom: 16,
+            }}>How It Works</div>
+            <h2 style={{ fontSize: 32, fontWeight: 800, color: C.text, margin: "0 0 14px", lineHeight: 1.2 }}>
+              One integration. Full control over every AI call.
+            </h2>
+            <p style={{ fontSize: 16, color: C.textMuted, maxWidth: 580, margin: "0 auto", lineHeight: 1.7 }}>
+              TokenGuard sits between your application and your AI provider.
+              Nothing changes in your code except the base URL — and suddenly every call is tracked, optimized, and under control.
+            </p>
+          </div>
+
+          {/* Steps */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 0, position: "relative" }}>
+            {/* Connector line */}
+            <div style={{
+              position: "absolute", left: 31, top: 48, bottom: 48,
+              width: 2, background: `linear-gradient(to bottom, ${C.primary}, ${C.primaryHover})`,
+              opacity: 0.3,
+            }} />
+
+            {[
+              {
+                num: "1",
+                color: C.primary,
+                title: "Connect your AI provider",
+                body: "Add your OpenAI, Anthropic, or Google API key once. TokenGuard securely stores it and uses it on every call — your provider never changes, only the route does.",
+                detail: "Works with GPT-5.5, Claude Opus 4, Gemini 2.5 and every model in between.",
+              },
+              {
+                num: "2",
+                color: C.primaryHover,
+                title: "Add your assets — agents, bots, or team members",
+                body: "Create an asset for each agent, workflow, or person calling the API. Each gets its own key, its own budget cap, and its own usage analytics. You see everything — they notice nothing.",
+                detail: "Set a $20/day cap on your support bot. Give your power users unlimited access. Full control per asset.",
+              },
+              {
+                num: "3",
+                color: "#16A34A",
+                title: "Replace your base URL — that's it",
+                body: "One line change in your app config. Your application calls TokenGuard's proxy exactly like it called OpenAI or Anthropic directly. Same format, same response, same speed.",
+                detail: "Before: api.openai.com  →  After: your-proxy.tokenguard.app",
+              },
+              {
+                num: "4",
+                color: "#D97706",
+                title: "Smart routing starts immediately",
+                body: "Every prompt is scored across 10 signals in under 1ms. Simple tasks route to efficient models automatically — saving 60–94% on those calls. Complex tasks stay on your premium model. No quality compromise.",
+                detail: "\"4+4\" → GPT-4.1 nano.  \"Architect a fault-tolerant payment system\" → GPT-5.5. Automatic, every time.",
+              },
+              {
+                num: "5",
+                color: C.text,
+                title: "Watch your costs drop in real time",
+                body: "Your dashboard shows every call, every asset, every dollar — in real time. See which agents are driving costs, which are over budget, and exactly how much smart routing is saving you each day.",
+                detail: "Exportable reports for your CFO. Audit logs for compliance. Instant alerts when budgets are hit.",
+              },
+            ].map((step, i) => (
+              <div key={i} style={{
+                display: "flex", gap: 24, padding: "32px 0",
+                borderBottom: i < 4 ? `1px solid ${C.border}` : "none",
+                alignItems: "flex-start",
+              }}>
+                {/* Number bubble */}
+                <div style={{
+                  width: 48, height: 48, borderRadius: "50%", flexShrink: 0,
+                  background: step.color, display: "flex", alignItems: "center",
+                  justifyContent: "center", fontSize: 18, fontWeight: 800,
+                  color: "#fff", position: "relative", zIndex: 1,
+                  boxShadow: `0 0 0 4px ${C.bg}, 0 0 0 6px ${step.color}22`,
+                }}>{step.num}</div>
+
+                {/* Content */}
+                <div style={{ flex: 1, paddingTop: 8 }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>
+                    {step.title}
+                  </div>
+                  <div style={{ fontSize: 15, color: C.textMuted, lineHeight: 1.7, marginBottom: 10 }}>
+                    {step.body}
+                  </div>
+                  <div style={{
+                    fontSize: 12, color: step.color, fontFamily: "monospace",
+                    background: C.bgSoft, border: `1px solid ${C.border}`,
+                    borderRadius: 6, padding: "6px 12px", display: "inline-block",
+                    fontWeight: 500,
+                  }}>
+                    {step.detail}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom CTA */}
+          <div style={{
+            marginTop: 64, textAlign: "center", padding: "40px 32px",
+            background: C.primarySoft, border: `1px solid ${C.primarySoft}`,
+            borderRadius: 16,
+          }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 10 }}>
+              Ready to stop overpaying for AI?
+            </div>
+            <div style={{ fontSize: 15, color: C.textMuted, marginBottom: 24 }}>
+              Free plan available. No credit card required. Setup in under 2 minutes.
+            </div>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+              <Link href="/signup?plan=free" style={{
+                background: C.primary, color: "#fff", padding: "12px 28px",
+                borderRadius: 8, fontWeight: 700, fontSize: 15, textDecoration: "none",
+              }}>
+                Start free →
+              </Link>
+              <Link href="/signup?plan=starter" style={{
+                background: C.bgCard, color: C.text, padding: "12px 28px",
+                border: `1px solid ${C.border}`, borderRadius: 8,
+                fontWeight: 600, fontSize: 15, textDecoration: "none",
+              }}>
+                See Starter plan — $49/mo
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ═══ PRICING ═══ */}
       <section id="pricing" style={{ padding: "110px 32px", background: C.bgDark }}>
         <div style={{ maxWidth: 1240, margin: "0 auto" }}>
@@ -444,7 +575,7 @@ client.chat.completions.create(model="gpt-4o", messages=[...])`}
           </div>
 
           <div className="cv-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, alignItems: "stretch" }}>
-            {PLANS.map(p => {
+            {PLANS.filter(p => p.id === "free" || p.id === "starter").map(p => {
               const isPopular = !!p.popular;
               return (
                 <div key={p.id} style={{

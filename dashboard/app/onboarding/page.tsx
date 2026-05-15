@@ -69,9 +69,30 @@ const PROVIDERS = [
 ];
 
 const BUDGET_TEMPLATES = [
-  { id: "engineering", label: "Heavy Usage", amount: "50",  color: C.blue,   desc: "Heavy AI usage · code generation · analysis",    badge: "Recommended" },
-  { id: "marketing",   label: "Standard",   amount: "20",  color: C.purple, desc: "Moderate usage · copy writing · research",         badge: "" },
-  { id: "exec",        label: "No Cap",   amount: "999", color: C.green,  desc: "No cap · full access",                             badge: "" },
+  {
+    id: "heavy",
+    label: "Heavy Usage",
+    amount: "50",
+    color: C.blue,
+    desc: "High-volume agents · code gen · analysis · production workloads",
+    icon: "⚡",
+  },
+  {
+    id: "standard",
+    label: "Standard",
+    amount: "20",
+    color: C.purple,
+    desc: "Moderate usage · copywriting · research · internal tools",
+    icon: "●",
+  },
+  {
+    id: "nocap",
+    label: "No Cap",
+    amount: "999",
+    color: C.green,
+    desc: "Unrestricted access · executive or critical-path assets only",
+    icon: "∞",
+  },
 ];
 
 interface Employee { name: string; email: string; role: string; budget: string; type: string; provider: string; }
@@ -183,21 +204,21 @@ function ProgressBar({ pct }: { pct: number }) {
 // Savings estimator panel shown in step 3
 function SavingsEstimator({ connectedCount }: { connectedCount: number }) {
   const rows = [
-    { label: "OpenAI only",       saving: 180, providers: 1 },
-    { label: "+ Anthropic",       saving: 240, providers: 2 },
-    { label: "+ Google",          saving: 290, providers: 3 },
+    { label: "Single provider (OpenAI or Anthropic)", saving: connectedCount >= 1 ? 180 : 0 },
+    { label: "Two providers — smart cross-routing",   saving: connectedCount >= 2 ? 260 : 0 },
+    { label: "All three — maximum savings",            saving: connectedCount >= 3 ? 340 : 0 },
   ];
   return (
     <div style={{ background: C.greenBg, border: `1px solid ${C.greenBorder}`, borderRadius: 10, padding: "16px 18px" }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: C.greenText, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>
-        Estimated savings · 10-person team
+        Estimated savings · per 10 assets/month
       </div>
       {rows.map((r, i) => (
         <div key={i} style={{
           display: "flex", justifyContent: "space-between", alignItems: "center",
           padding: "8px 0",
           borderBottom: i < rows.length - 1 ? `1px solid ${C.greenBorder}` : "none",
-          opacity: connectedCount >= r.providers ? 1 : 0.4,
+          opacity: r.saving > 0 ? 1 : 0.4,
         }}>
           <span style={{ fontSize: 13, color: C.greenText }}>{r.label}</span>
           <span style={{ fontFamily: MONO, fontSize: 14, fontWeight: 700, color: C.green }}>~${r.saving}/mo saved</span>
@@ -863,14 +884,14 @@ function OnboardingPage() {
               {/* Left: employee rows */}
               <div>
                 {/* Column headers */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 80px 36px", gap: 8, padding: "0 4px 8px", borderBottom: `1px solid ${C.border}`, marginBottom: 10 }}>
-                  {["Name", "Type", "Provider", "Budget/day", ""].map(h => (
+                <div style={{ display: "grid", gridTemplateColumns: "1.6fr 90px 110px 74px 36px", gap: 8, padding: "0 4px 8px", borderBottom: `1px solid ${C.border}`, marginBottom: 10 }}>
+                  {["Asset Name", "Type", "Provider", "$/day", ""].map(h => (
                     <div key={h} style={{ fontSize: 11, fontWeight: 600, color: C.textDim, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</div>
                   ))}
                 </div>
 
                 {employees.map((emp, i) => (
-                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 80px 36px", gap: 8, marginBottom: 8, alignItems: "center" }}>
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1.6fr 90px 110px 74px 36px", gap: 8, marginBottom: 8, alignItems: "center" }}>
                     <TextInput value={emp.name} onChange={v => updateEmployee(i, "name", v)} placeholder="Sales Agent" />
 
                     {/* Type dropdown */}
@@ -944,8 +965,8 @@ function OnboardingPage() {
 
               {/* Right: budget templates */}
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 4 }}>💡 Quick setup templates</div>
-                <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 14 }}>Click a template then choose who to apply it to.</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 4 }}>💡 Quick budget templates</div>
+                <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 14 }}>Select a template, then choose which assets to apply it to — or apply to all.</div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
                   {BUDGET_TEMPLATES.map(t => (
@@ -965,14 +986,13 @@ function OnboardingPage() {
                       }}
                     >
                       <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{t.label}</span>
-                          {t.badge && <span style={{ fontSize: 10, fontWeight: 700, color: C.green, background: C.greenBg, border: `1px solid ${C.greenBorder}`, borderRadius: 999, padding: "1px 7px" }}>{t.badge}</span>}
+                        <div style={{ fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                          <span>{t.icon}</span>{t.label}
                         </div>
                         <div style={{ fontSize: 11, color: C.textMuted }}>{t.desc}</div>
                       </div>
                       <div style={{ fontFamily: MONO, fontSize: 20, fontWeight: 700, color: t.color, flexShrink: 0, marginLeft: 12 }}>
-                        {t.id === "exec" ? "∞" : `$${t.amount}`}
+                        {t.id === "nocap" ? "∞" : `$${t.amount}`}
                         <div style={{ fontSize: 10, fontWeight: 400, color: C.textDim, textAlign: "right" }}>/day</div>
                       </div>
                     </button>
@@ -1054,9 +1074,10 @@ function OnboardingPage() {
               <div style={{ marginBottom: 24 }}>
                 <div style={{ fontSize: 24, fontWeight: 700, color: C.text, marginBottom: 6 }}>You're in.</div>
                 <div style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.6 }}>
-                  Copy your master key below. This is your <strong>tg-</strong> key — paste it anywhere you'd use your{" "}
-                  {PROVIDERS.find(p => p.id === defaultProvider)?.label || "provider"} key.
-                  Cursor, Windsurf, your app code — it works exactly the same, just routed through Cypress Vision.
+                  Your workspace is live. Copy your master key below — this is your <strong>tg-</strong> key.
+                  Paste it anywhere your app calls{" "}
+                  {PROVIDERS.find(p => p.id === defaultProvider)?.label || "your AI provider"} today.
+                  Your proxy URL replaces the provider base URL. Every call is now tracked, routed, and budget-controlled automatically.
                 </div>
               </div>
 
@@ -1110,9 +1131,10 @@ function OnboardingPage() {
               <div style={{ marginTop: 20, padding: "14px 18px", background: C.amberBg, border: `1px solid ${C.amberBorder}`, borderRadius: 10 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: C.amberText, marginBottom: 4 }}>Before you go live</div>
                 <div style={{ fontSize: 12, color: C.amberText, lineHeight: 1.7 }}>
-                  • Go to <strong>Assets</strong> in the dashboard to copy and share individual keys<br/>
-                  • Go to <strong>Settings → Budgets</strong> to set or adjust spend limits<br/>
-                  • Your master tg- key controls all assets — keep it secure
+                  • Visit <strong>Assets</strong> in your dashboard to copy and distribute individual asset keys<br/>
+                  • Each asset gets its own key — share it with your agent, bot, or team member<br/>
+                  • Use <strong>Budgets</strong> to set per-asset daily spend limits at any time<br/>
+                  • Your master <strong>tg-</strong> key controls everything — store it securely
                 </div>
               </div>
 
@@ -1123,7 +1145,7 @@ function OnboardingPage() {
 
             {/* Right: employee key delivery status */}
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 16 }}>Your assets received</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 16 }}>Assets activated</div>
 
               {createdEmployeeKeys.length > 0 ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
