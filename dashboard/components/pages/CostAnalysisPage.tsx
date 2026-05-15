@@ -232,28 +232,32 @@ export default function CostAnalysisPage() {
   const defaultModel = savedDefaultProvider === "anthropic"
     ? "claude-opus-4-6"
     : savedDefaultProvider === "google"
-    ? "gemini-1.5-pro"
-    : "gpt-4.1";
+    ? "gemini-2.5-pro"
+    : "gpt-5.5";
 
   const [playgroundModel, setPlaygroundModel] = useState(defaultModel);
   const [playgroundLoading, setPlaygroundLoading] = useState(false);
   const [playgroundResult, setPlaygroundResult] = useState<any>(null);
 
-  const PROVIDER_MODELS: Record<string, { id: string; cost: number; label: string }[]> = {
+  const PROVIDER_MODELS: Record<string, { id: string; cost: number; label: string; tier: "premium" | "mid" | "efficient" }[]> = {
     openai: [
-      { id: "gpt-4.1",      cost: 8.0e-6,  label: "gpt-4.1 (latest)" },
-      { id: "gpt-4o",       cost: 10.0e-6, label: "gpt-4o" },
-      { id: "gpt-4.1-mini", cost: 1.60e-6, label: "gpt-4.1-mini (fast)" },
-      { id: "gpt-4o-mini",  cost: 0.60e-6, label: "gpt-4o-mini (cheap)" },
+      { id: "gpt-5.5",      cost: 32.0e-6, label: "GPT-5.5 — most capable",   tier: "premium" },
+      { id: "gpt-5",        cost: 20.0e-6, label: "GPT-5 — advanced",          tier: "premium" },
+      { id: "gpt-4.1",      cost: 8.0e-6,  label: "GPT-4.1 — balanced",        tier: "mid" },
+      { id: "gpt-4o",       cost: 10.0e-6, label: "GPT-4o — fast & capable",   tier: "mid" },
+      { id: "gpt-4.1-mini", cost: 1.60e-6, label: "GPT-4.1 mini — efficient",  tier: "efficient" },
+      { id: "gpt-4.1-nano", cost: 0.40e-6, label: "GPT-4.1 nano — cheapest",   tier: "efficient" },
+      { id: "gpt-4o-mini",  cost: 0.60e-6, label: "GPT-4o mini — fast & cheap",tier: "efficient" },
     ],
     anthropic: [
-      { id: "claude-opus-4-6",   cost: 75.0e-6, label: "claude-opus-4-6 (latest)" },
-      { id: "claude-sonnet-4-6", cost: 15.0e-6, label: "claude-sonnet-4-6 (fast)" },
-      { id: "claude-haiku-4-5",  cost: 4.0e-6,  label: "claude-haiku-4-5 (cheap)" },
+      { id: "claude-opus-4-6",   cost: 75.0e-6, label: "Claude Opus 4 — most capable", tier: "premium" },
+      { id: "claude-sonnet-4-6", cost: 15.0e-6, label: "Claude Sonnet 4 — balanced",   tier: "mid" },
+      { id: "claude-haiku-4-5",  cost: 4.0e-6,  label: "Claude Haiku 4 — efficient",   tier: "efficient" },
     ],
     google: [
-      { id: "gemini-1.5-pro",   cost: 10.5e-6, label: "gemini-1.5-pro (latest)" },
-      { id: "gemini-2.0-flash", cost: 0.40e-6, label: "gemini-2.0-flash (fast)" },
+      { id: "gemini-2.5-pro",        cost: 10.50e-6, label: "Gemini 2.5 Pro — most capable",   tier: "premium" },
+      { id: "gemini-2.5-flash",      cost: 0.30e-6,  label: "Gemini 2.5 Flash — fast",         tier: "efficient" },
+      { id: "gemini-2.5-flash-lite", cost: 0.08e-6,  label: "Gemini 2.5 Flash-Lite — cheapest",tier: "efficient" },
     ],
   };
 
@@ -418,14 +422,14 @@ export default function CostAnalysisPage() {
   const providerHighModel = savedDefaultProvider === "anthropic"
     ? "claude-opus-4-6"
     : savedDefaultProvider === "google"
-    ? "gemini-1.5-pro"
-    : "gpt-4.1";
+    ? "gemini-2.5-pro"
+    : "gpt-5.5";
 
   const providerMidModel = savedDefaultProvider === "anthropic"
     ? "claude-sonnet-4-6"
     : savedDefaultProvider === "google"
-    ? "gemini-2.0-flash"
-    : "gpt-4.1-mini";
+    ? "gemini-2.5-flash"
+    : "gpt-4.1";
 
   const examples = [
     { label: "Simple — What is ML?",          prompt: "What is machine learning in one sentence?",                                                                    model: providerMidModel },
@@ -742,7 +746,10 @@ export default function CostAnalysisPage() {
               onChange={(e) => setPlaygroundModel(e.target.value)}
               style={{ background: "#fff", border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 12, padding: "8px 10px", width: "100%", marginBottom: 8, outline: "none", fontFamily: "inherit", cursor: "pointer" }}>
               {availableModels.map((m) => (
-                <option key={m.id} value={m.id}>{m.label}</option>
+                <option key={m.id} value={m.id}>
+                  {m.tier === "premium" ? "⬆ " : m.tier === "efficient" ? "⚡ " : "● "}
+                  {m.label}
+                </option>
               ))}
             </select>
             <button onClick={runPlayground} disabled={playgroundLoading || !playgroundPrompt.trim()}
