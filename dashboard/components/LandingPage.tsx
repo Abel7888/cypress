@@ -265,8 +265,8 @@ export default function LandingPage() {
             <Link href="/signup" style={{ ...primaryBtn(), fontSize: 16, padding: "16px 28px" }}>
               Start Free — No Credit Card →
             </Link>
-            <a href="#demo" style={{ ...ghostBtnDark(), fontSize: 16, padding: "16px 28px" }}>
-              ▸ See a Live Demo
+            <a href="https://calendly.com/abelassefa19/cypress-tokenguard-premium" target="_blank" rel="noreferrer" style={{ ...ghostBtnDark(), fontSize: 16, padding: "16px 28px" }}>
+              ▸ Request a Live Demo
             </a>
           </div>
           <div style={{ fontSize: 13, color: "#7A8CA5" }}>
@@ -274,7 +274,7 @@ export default function LandingPage() {
           </div>
 
           {/* ─── Code snippet ─── */}
-          <div id="demo" style={{
+          <div style={{
             marginTop: 56, maxWidth: 720, marginLeft: "auto", marginRight: "auto",
             background: "#06152C", border: `1px solid #ffffff15`,
             borderRadius: 14, overflow: "hidden", textAlign: "left",
@@ -507,7 +507,7 @@ client.chat.completions.create(model="gpt-4o", messages=[...])`}
                 color: "#D97706",
                 title: "Smart routing starts immediately",
                 body: "Every prompt is scored across 10 signals in under 1ms — prompt length, tool use, code markers, conversation depth. Simple tasks route to efficient models automatically, saving 60–94% on those calls. Complex tasks stay on premium. No quality compromise, no code changes.",
-                detail: "\"4+4\" → GPT-4.1 nano.  \"Architect a fault-tolerant payment system\" → GPT-5.5. Automatic, every time.",
+                detail: "\"4+4\" → latest efficient model.  \"Architect a fault-tolerant payment system\" → latest premium model. Automatic, every time.",
               },
               {
                 num: "5",
@@ -694,12 +694,12 @@ client.chat.completions.create(model="gpt-4o", messages=[...])`}
               }}>
                 Start Free — No Credit Card →
               </Link>
-              <a href="#demo" style={{
+              <a href="https://calendly.com/abelassefa19/cypress-tokenguard-premium" target="_blank" rel="noreferrer" style={{
                 background: "transparent", color: "#fff", border: "1px solid #ffffff40",
                 borderRadius: 12, padding: "16px 32px", fontSize: 16, fontWeight: 600,
                 textDecoration: "none",
               }}>
-                See a Live Demo
+                Request a Live Demo
               </a>
             </div>
           </div>
@@ -720,7 +720,7 @@ client.chat.completions.create(model="gpt-4o", messages=[...])`}
             <a href="/docs" style={footerLinkDark}>Docs</a>
             <a href="#pricing" style={footerLinkDark}>Pricing</a>
             <a href="https://github.com/" target="_blank" rel="noreferrer" style={footerLinkDark}>GitHub</a>
-            <a href="mailto:abel@cypresspartners.com" style={footerLinkDark}>Contact</a>
+            <a href="mailto:info@cypressvision.xyz" style={footerLinkDark}>Contact</a>
           </div>
           <div style={{ fontSize: 12, color: "#7A8CA5" }}>© 2026 Cypress Vision</div>
         </div>
@@ -781,7 +781,7 @@ function UseCaseCards() {
       icon: "🤖",
       title: "AI Support Agent",
       industry: "Customer support",
-      pain: "Your bot calls GPT-4o on every ticket. 60% don't need it.",
+      pain: "Your bot calls the latest premium model on every ticket. 60% don't need it.",
       scenario: "A support agent handles thousands of tickets a day. Every call — including 'What are your hours?' — hits your most expensive model. You don't notice until the monthly invoice arrives.",
       features: [
         "Smart routing drops simple tickets to efficient models automatically",
