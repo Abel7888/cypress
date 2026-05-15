@@ -21,11 +21,11 @@ const PLANS: Plan[] = [
     name: "Free",
     priceLabel: "$0",
     priceSub: "/month",
-    tagline: "Try it on a side project.",
-    cta: "Get Started Free",
+    tagline: "Test it out — 7 days, no credit card.",
+    cta: "Start 7-Day Trial",
     highlights: [
-      "Up to 10,000 API calls/month",
-      "1 project · 1 provider",
+      "7-day free trial · 10,000 API calls",
+      "1 asset · 1 provider",
       "Auto-Router + asset tracking",
       "No credit card required",
     ],
@@ -39,7 +39,7 @@ const PLANS: Plan[] = [
     cta: "Start Starter",
     highlights: [
       "Up to 100,000 calls/month",
-      "3 projects · all providers",
+      "10 assets · all providers",
       "Full routing + caching + analytics",
       "Audit-ready logs",
     ],
@@ -54,7 +54,7 @@ const PLANS: Plan[] = [
     popular: true,
     highlights: [
       "Up to 1,000,000 calls/month",
-      "Unlimited projects",
+      "Unlimited assets",
       "Priority support · CSV export",
       "Custom routing rules",
     ],
@@ -67,7 +67,7 @@ const PLANS: Plan[] = [
     tagline: "For agencies and regulated industries.",
     cta: "Contact Us",
     highlights: [
-      "Unlimited calls · unlimited projects",
+      "Unlimited calls · unlimited assets",
       "SLA + dedicated support",
       "Compliance exports",
       "White-label option for agencies",
@@ -436,19 +436,19 @@ client.chat.completions.create(model="gpt-4o", messages=[...])`}
       </section>
 
       {/* ═══ HOW IT WORKS ═══ */}
-      <section id="how-it-works" style={{ padding: "100px 32px", background: C.bg }}>
+      <section id="how-it-works" style={{ padding: "100px 32px", background: C.bgDarkSoft }}>
         <div style={{ maxWidth: 960, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 64 }}>
             <div style={{
               display: "inline-block", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em",
-              textTransform: "uppercase", color: C.primary, background: C.primarySoft,
-              border: `1px solid ${C.primarySoft}`, borderRadius: 20, padding: "4px 14px", marginBottom: 16,
+              textTransform: "uppercase", color: "#93C5FD", background: "rgba(59,130,246,0.15)",
+              border: "1px solid rgba(59,130,246,0.3)", borderRadius: 20, padding: "4px 14px", marginBottom: 16,
             }}>How It Works</div>
-            <h2 style={{ fontSize: 32, fontWeight: 800, color: C.text, margin: "0 0 14px", lineHeight: 1.2 }}>
+            <h2 style={{ fontSize: 32, fontWeight: 800, color: C.textOnDark, margin: "0 0 14px", lineHeight: 1.2 }}>
               One integration. Full control over every AI call.
             </h2>
-            <p style={{ fontSize: 16, color: C.textMuted, maxWidth: 580, margin: "0 auto", lineHeight: 1.7 }}>
-              TokenGuard sits between your application and your AI provider.
+            <p style={{ fontSize: 16, color: C.textMutedOnDark, maxWidth: 580, margin: "0 auto", lineHeight: 1.7 }}>
+              Cypress Vision sits between your application and your AI provider.
               Nothing changes in your code except the base URL — and suddenly every call is tracked, optimized, and under control.
             </p>
           </div>
@@ -458,8 +458,8 @@ client.chat.completions.create(model="gpt-4o", messages=[...])`}
             {/* Connector line */}
             <div style={{
               position: "absolute", left: 31, top: 48, bottom: 48,
-              width: 2, background: `linear-gradient(to bottom, ${C.primary}, ${C.primaryHover})`,
-              opacity: 0.3,
+              width: 2, background: `linear-gradient(to bottom, ${C.primary}, #16A34A)`,
+              opacity: 0.5,
             }} />
 
             {[
@@ -467,7 +467,7 @@ client.chat.completions.create(model="gpt-4o", messages=[...])`}
                 num: "1",
                 color: C.primary,
                 title: "Connect your AI provider",
-                body: "Add your OpenAI, Anthropic, or Google API key once. TokenGuard securely stores it and uses it on every call — your provider never changes, only the route does.",
+                body: "Add your OpenAI, Anthropic, or Google API key once. Cypress Vision securely stores it and uses it on every call — your provider never changes, only the route does.",
                 detail: "Works with GPT-5.5, Claude Opus 4, Gemini 2.5 and every model in between.",
               },
               {
@@ -481,8 +481,8 @@ client.chat.completions.create(model="gpt-4o", messages=[...])`}
                 num: "3",
                 color: "#16A34A",
                 title: "Replace your base URL — that's it",
-                body: "One line change in your app config. Your application calls TokenGuard's proxy exactly like it called OpenAI or Anthropic directly. Same format, same response, same speed.",
-                detail: "Before: api.openai.com  →  After: your-proxy.tokenguard.app",
+                body: "One line change in your app config. Your application calls Cypress Vision's proxy exactly like it called OpenAI or Anthropic directly. Same format, same response, same speed.",
+                detail: "Before: api.openai.com  →  After: your-proxy.cypressvision.app",
               },
               {
                 num: "4",
@@ -510,20 +510,20 @@ client.chat.completions.create(model="gpt-4o", messages=[...])`}
                   background: step.color, display: "flex", alignItems: "center",
                   justifyContent: "center", fontSize: 18, fontWeight: 800,
                   color: "#fff", position: "relative", zIndex: 1,
-                  boxShadow: `0 0 0 4px ${C.bg}, 0 0 0 6px ${step.color}22`,
+                  boxShadow: `0 0 0 4px ${C.bgDarkSoft}, 0 0 0 6px ${step.color}22`,
                 }}>{step.num}</div>
 
                 {/* Content */}
                 <div style={{ flex: 1, paddingTop: 8 }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: C.textOnDark, marginBottom: 8 }}>
                     {step.title}
                   </div>
-                  <div style={{ fontSize: 15, color: C.textMuted, lineHeight: 1.7, marginBottom: 10 }}>
+                  <div style={{ fontSize: 15, color: C.textMutedOnDark, lineHeight: 1.7, marginBottom: 10 }}>
                     {step.body}
                   </div>
                   <div style={{
                     fontSize: 12, color: step.color, fontFamily: "monospace",
-                    background: C.bgSoft, border: `1px solid ${C.border}`,
+                    background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)",
                     borderRadius: 6, padding: "6px 12px", display: "inline-block",
                     fontWeight: 500,
                   }}>
@@ -537,13 +537,13 @@ client.chat.completions.create(model="gpt-4o", messages=[...])`}
           {/* Bottom CTA */}
           <div style={{
             marginTop: 64, textAlign: "center", padding: "40px 32px",
-            background: C.primarySoft, border: `1px solid ${C.primarySoft}`,
+            background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.3)",
             borderRadius: 16,
           }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 10 }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: C.textOnDark, marginBottom: 10 }}>
               Ready to stop overpaying for AI?
             </div>
-            <div style={{ fontSize: 15, color: C.textMuted, marginBottom: 24 }}>
+            <div style={{ fontSize: 15, color: C.textMutedOnDark, marginBottom: 24 }}>
               Free plan available. No credit card required. Setup in under 2 minutes.
             </div>
             <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
@@ -554,7 +554,7 @@ client.chat.completions.create(model="gpt-4o", messages=[...])`}
                 Start free →
               </Link>
               <Link href="/signup?plan=starter" style={{
-                background: C.bgCard, color: C.text, padding: "12px 28px",
+                background: "rgba(255,255,255,0.1)", color: C.textOnDark, padding: "12px 28px",
                 border: `1px solid ${C.border}`, borderRadius: 8,
                 fontWeight: 600, fontSize: 15, textDecoration: "none",
               }}>
