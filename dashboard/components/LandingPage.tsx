@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import React, { useState } from "react";
 import { BRAND as C, Logo, LogoMark } from "./brand";
+import { UseCaseCards } from "./UseCaseCards";
 
 // ─── PRICING ─────────────────────────────────────────────────────────────────
 type Plan = {
@@ -207,6 +208,7 @@ export default function LandingPage() {
           <Link href="/" style={{ textDecoration: "none" }}><Logo size={34} dark /></Link>
           <div className="cv-nav-links" style={{ display: "flex", alignItems: "center", gap: 28 }}>
             <a href="#features" style={navLinkDark}>Features</a>
+            <a href="#use-cases" style={navLinkDark}>Use Cases</a>
             <a href="#how-it-works" style={navLinkDark}>How It Works</a>
             <a href="#audiences" style={navLinkDark}>Who it&apos;s for</a>
             <a href="#pricing" style={navLinkDark}>Pricing</a>
@@ -435,6 +437,23 @@ client.chat.completions.create(model="gpt-4o", messages=[...])`}
         </div>
       </section>
 
+      {/* ═══ USE CASES ═══ */}
+      <section id="use-cases" style={{
+        padding: "100px 32px", background: C.bgDark,
+        borderTop: `1px solid #ffffff10`,
+      }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", maxWidth: 680, margin: "0 auto 64px" }}>
+            <SectionTag>Use Cases</SectionTag>
+            <SectionTitle>Built for every team shipping AI</SectionTitle>
+            <SectionSub>
+              Whether you run agents, build products, or manage a team — one integration gives you routing, budgets, and full visibility across every call.
+            </SectionSub>
+          </div>
+          <UseCaseCards />
+        </div>
+      </section>
+
       {/* ═══ HOW IT WORKS ═══ */}
       <section id="how-it-works" style={{ padding: "100px 32px", background: C.bgDarkSoft }}>
         <div style={{ maxWidth: 960, margin: "0 auto" }}>
@@ -468,14 +487,14 @@ client.chat.completions.create(model="gpt-4o", messages=[...])`}
                 color: C.primary,
                 title: "Connect your AI provider",
                 body: "Add your OpenAI, Anthropic, or Google API key once. Cypress Vision securely stores it and uses it on every call — your provider never changes, only the route does.",
-                detail: "Works with GPT-5.5, Claude Opus 4, Gemini 2.5 and every model in between.",
+                detail: "Works with every OpenAI, Anthropic, Google, and Grok model — all providers, all tiers.",
               },
               {
                 num: "2",
                 color: C.primaryHover,
                 title: "Add your assets — agents, bots, or team members",
-                body: "Create an asset for each agent, workflow, or person calling the API. Each gets its own key, its own budget cap, and its own usage analytics. You see everything — they notice nothing.",
-                detail: "Set a $20/day cap on your support bot. Give your power users unlimited access. Full control per asset.",
+                body: "Create an asset for each agent, bot, workflow, or team member calling the API. Each gets its own key, daily and monthly budget caps, real-time spend alerts, and full usage analytics. You see everything — they notice nothing.",
+                detail: "Daily and monthly caps per asset. Slack + email alerts at 70%, 90%, 100%. Hard block before damage is done.",
               },
               {
                 num: "3",
@@ -488,15 +507,15 @@ client.chat.completions.create(model="gpt-4o", messages=[...])`}
                 num: "4",
                 color: "#D97706",
                 title: "Smart routing starts immediately",
-                body: "Every prompt is scored across 10 signals in under 1ms. Simple tasks route to efficient models automatically — saving 60–94% on those calls. Complex tasks stay on your premium model. No quality compromise.",
+                body: "Every prompt is scored across 10 signals in under 1ms — prompt length, tool use, code markers, conversation depth. Simple tasks route to efficient models automatically, saving 60–94% on those calls. Complex tasks stay on premium. No quality compromise, no code changes.",
                 detail: "\"4+4\" → GPT-4.1 nano.  \"Architect a fault-tolerant payment system\" → GPT-5.5. Automatic, every time.",
               },
               {
                 num: "5",
                 color: C.text,
                 title: "Watch your costs drop in real time",
-                body: "Your dashboard shows every call, every asset, every dollar — in real time. See which agents are driving costs, which are over budget, and exactly how much smart routing is saving you each day.",
-                detail: "Exportable reports for your CFO. Audit logs for compliance. Instant alerts when budgets are hit.",
+                body: "Your dashboard shows every call, every asset, every dollar in real time — broken down by model, by provider, by day. See which agents drive costs, which are near their cap, and exactly how much routing saved you. Exportable for your CFO, audit-ready for compliance.",
+                detail: "Cost by asset · cost by model · cost by day · routing savings · budget burn rate · all in one view.",
               },
             ].map((step, i) => (
               <div key={i} style={{
