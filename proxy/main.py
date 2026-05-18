@@ -331,6 +331,7 @@ async def health():
     }
 
 
+@app.get("/models")
 @app.get("/v1/models")
 async def list_models(request: Request):
     authenticate(request)
