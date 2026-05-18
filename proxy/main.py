@@ -331,6 +331,39 @@ async def health():
     }
 
 
+@app.get("/v1/models")
+async def list_models(request: Request):
+    authenticate(request)
+
+    tenant_id = getattr(request.state, "tenant_id", None) or "client-default"
+    provider_key = get_provider_key(tenant_id, "openai")
+
+    if provider_key:
+        try:
+            async with httpx.AsyncClient(timeout=10) as http_client:
+                response = await http_client.get(
+                    "https://api.openai.com/v1/models",
+                    headers={"Authorization": f"Bearer {provider_key}"}
+                )
+            return JSONResponse(content=response.json())
+        except Exception as e:
+            print(f"[Models] OpenAI forwarding failed, using static list: {e}")
+
+    # Fallback — build from MODEL_PRICING in router.py
+    from router import MODEL_PRICING
+    return JSONResponse(content={
+        "object": "list",
+        "data": [
+            {"id": model_id, "object": "model", "owned_by": (
+                "anthropic" if model_id.startswith("claude") else
+                "google"    if model_id.startswith("gemini") else
+                "openai"
+            )}
+            for model_id in MODEL_PRICING.keys()
+        ]
+    })
+
+
 @app.get("/cache/stats")
 async def cache_stats(request: Request):
     client_id = authenticate(request)
