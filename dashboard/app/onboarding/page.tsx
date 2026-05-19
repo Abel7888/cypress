@@ -371,6 +371,25 @@ function OnboardingPage() {
             }
           } catch (e) { console.warn("Could not save to user_metadata", e); }
 
+        // Post any provider keys collected in Step 2 now that we have tenant + key
+        for (const [providerId, provKey] of Object.entries(providerKeys)) {
+          if (provKey) {
+            try {
+              await fetch(`${API_BASE}/api/tenants/${data.tenant_id}/provider-keys`, {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${keyData.api_key}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ provider: providerId, api_key: provKey }),
+              });
+              console.log(`[createTenant] Provider key saved for ${providerId}`);
+            } catch (e) {
+              console.warn(`[createTenant] Failed to save provider key for ${providerId}:`, e);
+            }
+          }
+        }
+
         setStep(4); // go to Keys step
       } else {
         setError(data.error || "Failed to create account");

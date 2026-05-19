@@ -403,7 +403,11 @@ function ProviderKeysCard() {
 
   const save = async (provider: string) => {
     const { tenantId: saveTenantId, apiKey } = await getTenantConfig();
-    const authHeaders = { Authorization: `Bearer ${apiKey || ""}` };
+    if (!saveTenantId || !apiKey) {
+      alert("Session error — tenant not found. Please refresh or re-login.");
+      return;
+    }
+    const authHeaders = { Authorization: `Bearer ${apiKey}` };
     const raw = inputs[provider].trim();
     if (!raw) return;
     setSaving(provider);
