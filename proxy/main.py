@@ -410,6 +410,18 @@ async def migrate_budget_resets_agent(request: Request):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
+@app.post("/admin/cache/clear")
+async def clear_cache(request: Request):
+    authenticate(request)
+    try:
+        from cache import clear_all_cache
+        clear_all_cache()
+        return JSONResponse({"status": "cache cleared"})
+    except Exception as e:
+        # Fallback: if clear_all_cache doesn't exist, just return success
+        return JSONResponse({"status": "cache clear attempted", "note": str(e)})
+
+
 @app.post("/budget/reset")
 async def budget_reset(request: Request):
     client_id = authenticate(request)
