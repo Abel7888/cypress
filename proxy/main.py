@@ -802,6 +802,185 @@ async def proxy_completion(request: Request):
     )
 
 
+@app.post("/v1/responses")
+async def proxy_responses(request: Request):
+    """
+    OpenAI Responses API compatibility endpoint.
+    n8n v2.3+ and some Flowise/CrewAI versions call this instead of /v1/chat/completions.
+    Translates to chat completions internally so all budget/logging/routing works identically.
+    """
+    client_id = authenticate(request)
+
+    _tenant_name = getattr(request.state, "tenant_name", "Unknown")
+    _tenant_id_str = getattr(request.state, "tenant_id", client_id)
+    cap_result = check_account_cap(_tenant_id_str, _tenant_name)
+    if cap_result["blocked"]:
+        return JSONResponse(status_code=429, content={
+            "error": {
+                "message": "Account monthly budget limit reached.",
+                "type": "account_budget_exceeded",
+            }
+        })
+
+    body = await request.json()
+    start_time = time.time()
+
+    # Translate Responses API format → chat completions format
+    original_model = body.get("model", "gpt-4o")
+    raw_input = body.get("input", "")
+
+    # input can be a string or a list of message objects
+    if isinstance(raw_input, str):
+        messages = [{"role": "user", "content": raw_input}]
+    elif isinstance(raw_input, list):
+        # Already in message format
+        messages = raw_input
+    else:
+        messages = [{"role": "user", "content": str(raw_input)}]
+
+    chat_body = {
+        "model": original_model,
+        "messages": messages,
+        "max_tokens": body.get("max_output_tokens", body.get("max_tokens", 1024)),
+    }
+
+    # Apply model routing
+    routing_decision = model_router.route(
+        tenant_id=client_id,
+        request_model=original_model,
+        request_body=chat_body,
+    )
+    chat_body["model"] = routing_decision.routed_model
+    was_routed = 1 if routing_decision.was_downgraded else 0
+
+    # Check budget
+    budget_result = check_budget(client_id)
+    if not budget_result.allowed:
+        return JSONResponse(status_code=429, content={
+            "error": "BUDGET_CAP_EXCEEDED",
+            "message": budget_result.message,
+        })
+
+    # Cache check
+    cached = check_cache(chat_body, client_id)
+    if cached is not None:
+        latency_ms = round((time.time() - start_time) * 1000)
+        log_event({
+            "client_id": client_id,
+            "agent_id": getattr(request.state, "agent_label", "unknown"),
+            "model_used": "cache",
+            "cost_usd": 0.0,
+            "latency_ms": latency_ms,
+            "cache_hit": 1,
+        })
+        # Translate cached chat response → Responses API format
+        content = cached.get("choices", [{}])[0].get("message", {}).get("content", "")
+        return JSONResponse(content={
+            "id": cached.get("id", "resp-cached"),
+            "object": "response",
+            "model": cached.get("model", original_model),
+            "output": [{"type": "message", "role": "assistant",
+                        "content": [{"type": "output_text", "text": content}]}],
+            "usage": cached.get("usage", {}),
+        })
+
+    routed_model = chat_body["model"]
+    is_claude = routed_model.startswith("claude-")
+    provider = "anthropic" if is_claude else "openai"
+
+    provider_api_key = get_provider_key(client_id, provider)
+    if not provider_api_key:
+        return JSONResponse(status_code=402, content={
+            "error": "NO_PROVIDER_KEY",
+            "message": f"No {provider} API key configured. Add your key in Settings → Provider Keys.",
+        })
+
+    try:
+        if is_claude:
+            result = await call_anthropic(chat_body, api_key=provider_api_key)
+        else:
+            async with httpx.AsyncClient(timeout=300) as http_client:
+                response = await http_client.post(
+                    "https://api.openai.com/v1/chat/completions",
+                    json=chat_body,
+                    headers={
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {provider_api_key}",
+                    }
+                )
+            result = response.json()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"AI provider error: {str(e)}")
+
+    latency_ms = round((time.time() - start_time) * 1000)
+    usage = result.get("usage", {})
+    input_tokens = usage.get("prompt_tokens", 0)
+    output_tokens = usage.get("completion_tokens", 0)
+    model_used = result.get("model", routed_model)
+    cost_usd = calculate_cost(model_used, input_tokens, output_tokens)
+
+    log_event({
+        "client_id": client_id,
+        "agent_id": getattr(request.state, "agent_label", "unknown"),
+        "model_requested": original_model,
+        "model_used": model_used,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "cost_usd": cost_usd,
+        "latency_ms": latency_ms,
+        "was_routed": was_routed,
+        "cache_hit": 0,
+        "blocked": 0,
+    })
+
+    # ClickHouse direct log
+    try:
+        _bearer = request.headers.get("Authorization", "").replace("Bearer ", "").strip()
+        _row = get_tenant_from_key(_bearer)
+        _key_id = str(_row[2]) if _row else ""
+        _ch = get_ch_client()
+        _ch.insert(
+            "tokenguard.events",
+            [[
+                datetime.utcnow(), client_id, _key_id,
+                original_model, model_used,
+                input_tokens, output_tokens, input_tokens + output_tokens,
+                cost_usd, 0,
+                1 if original_model != model_used else 0,
+                0, latency_ms,
+            ]],
+            column_names=[
+                "timestamp", "client_id", "agent_id",
+                "model_requested", "model_used",
+                "prompt_tokens", "completion_tokens", "total_tokens",
+                "cost_usd", "cache_hit", "was_routed", "blocked", "latency_ms"
+            ]
+        )
+    except Exception as _e:
+        print(f"[ClickHouse] Responses log failed (non-fatal): {_e}")
+
+    record_spend(client_id, cost_usd)
+
+    loop = asyncio.get_event_loop()
+    loop.run_in_executor(None, store_in_cache, chat_body, result, client_id)
+
+    # Translate chat completion response → Responses API format
+    content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+    return JSONResponse(content={
+        "id": result.get("id", "resp-001"),
+        "object": "response",
+        "created_at": result.get("created", int(time.time())),
+        "model": model_used,
+        "output": [{"type": "message", "role": "assistant",
+                    "content": [{"type": "output_text", "text": content}]}],
+        "usage": {
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "total_tokens": input_tokens + output_tokens,
+        },
+    })
+
+
 # ── BILLING ENDPOINTS ──────────────────────────────────────────────────
 
 @app.get("/billing/plans")
