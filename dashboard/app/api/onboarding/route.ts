@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
         try {
           const supabase = getSupabaseAdmin();
           if (supabase) {
+            await new Promise(resolve => setTimeout(resolve, 1500));
             const { data: { users } } = await supabase.auth.admin.listUsers();
             const user = users.find(u => u.email === data.email);
             if (user) {

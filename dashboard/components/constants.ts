@@ -51,17 +51,29 @@ export async function getTenantConfig(): Promise<{ apiKey: string | null; tenant
   try {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (user?.user_metadata?.api_key) {
+    if (user?.user_metadata?.api_key && user?.user_metadata?.tenant_id) {
+      // Also sync to localStorage so fallback stays correct
+      if (typeof window !== "undefined") {
+        localStorage.setItem("tg_api_key", user.user_metadata.api_key);
+        localStorage.setItem("tg_tenant_id", user.user_metadata.tenant_id);
+      }
       return {
         apiKey: user.user_metadata.api_key,
         tenantId: user.user_metadata.tenant_id,
       };
     }
   } catch (e) { console.warn("Supabase session read failed", e); }
-  return {
-    apiKey: typeof window !== "undefined" ? localStorage.getItem("tg_api_key") : null,
-    tenantId: typeof window !== "undefined" ? localStorage.getItem("tg_tenant_id") : null,
-  };
+
+  // Fallback to localStorage
+  const apiKey = typeof window !== "undefined" ? localStorage.getItem("tg_api_key") : null;
+  const tenantId = typeof window !== "undefined" ? localStorage.getItem("tg_tenant_id") : null;
+
+  // Guard — never return null tenant silently
+  if (!tenantId) {
+    console.error("[getTenantConfig] No tenant ID found — user may need to re-login");
+  }
+
+  return { apiKey, tenantId };
 }
 
 // DEMO_EMPLOYEES removed - use real tenant keys
