@@ -88,3 +88,12 @@ def clear_cache(client_id: str) -> int:
         redis_client.delete(*keys)
     print(f"[Cache] Cleared {len(keys)} entries for {client_id}")
     return len(keys)
+
+
+def clear_all_cache():
+    """Clear all cached entries from Redis."""
+    keys = list(redis_client.scan_iter("tg:cache:*"))
+    if keys:
+        redis_client.delete(*keys)
+    print(f"[Cache] Cleared {len(keys)} total entries")
+    return len(keys)
