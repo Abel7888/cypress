@@ -875,7 +875,7 @@ async def proxy_responses(request: Request):
             "cache_hit": 1,
         })
         # Translate cached chat response → Responses API format
-        content = cached.get("choices", [{}])[0].get("message", {}).get("content", "")
+        content = cached.get("output", [{}])[0].get("content", [{}])[0].get("text", "")
         return JSONResponse(content={
             "id": cached.get("id", "resp-cached"),
             "object": "response",
