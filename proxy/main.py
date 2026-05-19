@@ -966,7 +966,12 @@ async def proxy_responses(request: Request):
     loop.run_in_executor(None, store_in_cache, chat_body, result, client_id)
 
     # Translate chat completion response → Responses API format
-    content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+    content = ""
+    choices = result.get("choices", [])
+    if choices:
+        msg = choices[0].get("message", {})
+        content = msg.get("content", "") or ""
+    print(f"[Responses] Extracted content length: {len(content)} chars")
     return JSONResponse(content={
         "id": result.get("id", "resp-001"),
         "object": "response",
