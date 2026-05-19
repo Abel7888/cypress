@@ -802,6 +802,7 @@ async def proxy_completion(request: Request):
     )
 
 
+@app.post("/responses")
 @app.post("/v1/responses")
 async def proxy_responses(request: Request):
     """
