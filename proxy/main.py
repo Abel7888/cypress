@@ -910,6 +910,7 @@ async def proxy_responses(request: Request):
                     }
                 )
             result = response.json()
+            print(f"[Responses] Raw result keys: {list(result.keys()) if isinstance(result, dict) else type(result)}, choices: {result.get('choices', 'MISSING')}")
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"AI provider error: {str(e)}")
 
