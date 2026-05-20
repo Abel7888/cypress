@@ -912,6 +912,16 @@ async def proxy_responses(request: Request):
         if is_claude:
             result = await call_anthropic(chat_body, api_key=provider_api_key)
         else:
+            # Normalize message content - n8n sends content as list, OpenAI chat completions needs string
+            for msg in chat_body.get("messages", []):
+                if isinstance(msg.get("content"), list):
+                    text_parts = []
+                    for part in msg["content"]:
+                        if isinstance(part, dict):
+                            text_parts.append(part.get("text", "") or part.get("content", ""))
+                        else:
+                            text_parts.append(str(part))
+                    msg["content"] = " ".join(text_parts).strip()
             print(f"[Responses] Sending to OpenAI: {str(chat_body)}")
             async with httpx.AsyncClient(timeout=300) as http_client:
                 response = await httpx.post(
