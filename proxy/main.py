@@ -912,8 +912,9 @@ async def proxy_responses(request: Request):
         if is_claude:
             result = await call_anthropic(chat_body, api_key=provider_api_key)
         else:
+            print(f"[Responses] Sending to OpenAI: {json.dumps(chat_body)}")
             async with httpx.AsyncClient(timeout=300) as http_client:
-                response = await http_client.post(
+                response = await httpx.post(
                     "https://api.openai.com/v1/chat/completions",
                     json=chat_body,
                     headers={
