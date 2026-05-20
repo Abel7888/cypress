@@ -6,7 +6,7 @@ interface AlertPayload {
   budget_usd: number;
   spent_usd: number;
   percentage: number;
-  threshold: 70 | 90 | 100;
+  threshold: number;
   slack_webhook_url?: string;
   alert_email?: string;
   company: string;
@@ -17,28 +17,28 @@ function getThresholdMessage(payload: AlertPayload) {
   const spent = payload.spent_usd.toFixed(4);
   const budget = payload.budget_usd.toFixed(2);
 
-  if (payload.threshold === 100) {
+  if (payload.threshold >= 100) {
     return {
       emoji: "🔴",
       subject: `${payload.employee_name} has been blocked — daily budget reached`,
       headline: `${payload.employee_name} hit 100% of their daily budget and has been blocked.`,
-      detail: `They spent $${spent} of their $${budget} daily limit. Access will resume tomorrow.`,
+      detail: `They spent $${spent} of their $${budget} daily limit. Reset their budget in the dashboard to restore access.`,
       color: "#EF4444",
     };
   }
-  if (payload.threshold === 90) {
+  if (payload.threshold >= 85) {
     return {
       emoji: "🟠",
-      subject: `${payload.employee_name} is at 90% of their daily budget`,
-      headline: `${payload.employee_name} has used 90% of their daily budget.`,
+      subject: `${payload.employee_name} is at ${payload.threshold}% of their daily budget`,
+      headline: `${payload.employee_name} has used ${payload.threshold}% of their daily budget.`,
       detail: `They've spent $${spent} of $${budget}. Only $${remaining} remaining today.`,
       color: "#F59E0B",
     };
   }
   return {
     emoji: "🟡",
-    subject: `${payload.employee_name} is at 70% of their daily budget`,
-    headline: `${payload.employee_name} has used 70% of their daily budget.`,
+    subject: `${payload.employee_name} is at ${payload.threshold}% of their daily budget`,
+    headline: `${payload.employee_name} has used ${payload.threshold}% of their daily budget.`,
     detail: `They've spent $${spent} of $${budget}. $${remaining} remaining today.`,
     color: "#F59E0B",
   };
