@@ -288,6 +288,7 @@ function MasterKeyCard() {
   const [visible, setVisible] = useState(false);
   const [copied, setCopied] = useState(false);
   const masterKey = typeof window !== "undefined" ? (localStorage.getItem("tg_api_key") || "") : "";
+  const tenantId = typeof window !== "undefined" ? (localStorage.getItem("tg_tenant_id") || "") : "";
 
   const copy = () => {
     if (!masterKey) return;
@@ -320,6 +321,15 @@ function MasterKeyCard() {
         <InfoBanner variant="red" icon="⚠" style={{ marginTop: 14 }}>
           This key has full admin access. Treat it like a password — store it in an environment variable, never in code.
         </InfoBanner>
+
+        {/* Tenant ID display */}
+        {tenantId && (
+          <div style={{ marginTop: 14, marginBottom: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: C.textMuted, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>Tenant ID</div>
+            <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 6 }}>Your unique account identifier. Use this when connecting to the API or contacting support.</div>
+            <div style={{ fontFamily: FONT_MONO, fontSize: 12, color: C.textDim, background: C.rowAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px" }}>{tenantId}</div>
+          </div>
+        )}
 
         {/* Key display */}
         <div style={{
@@ -577,6 +587,11 @@ function EmployeeKeyManager() {
       setNewKey(data.api_key);
       setNewName(""); setNewRole("");
       setAdding(false);
+      if (data.api_key && data.label) {
+        const stored = JSON.parse(localStorage.getItem("tg_asset_keys") || "{}");
+        stored[data.key_id] = { key: data.api_key, label: data.label, created_at: new Date().toISOString() };
+        localStorage.setItem("tg_asset_keys", JSON.stringify(stored));
+      }
       await load();
     } catch (e) { console.error(e); }
     setActionLoading(null);
@@ -828,7 +843,17 @@ function EmployeeKeyManager() {
                 onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
               >
                 <div style={{ fontSize: 13, color: C.text, fontWeight: 500 }}>{k.label}</div>
-                <div style={{ fontFamily: FONT_MONO, fontSize: 12, color: C.textDim }}>{k.key_preview}</div>
+                <div style={{ fontFamily: FONT_MONO, fontSize: 12, color: C.textDim }}>
+                  {(() => {
+                    const stored = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("tg_asset_keys") || "{}") : {};
+                    const full = stored[k.id]?.key;
+                    return full ? (
+                      <span style={{ color: C.blue, cursor: "pointer" }} title={full} onClick={() => { navigator.clipboard.writeText(full); }}>
+                        {k.key_preview} 📋
+                      </span>
+                    ) : k.key_preview;
+                  })()}
+                </div>
                 <div style={{ fontSize: 12, color: C.textMuted }}>
                   {k.created_at ? new Date(k.created_at).toLocaleDateString() : "—"}
                 </div>
