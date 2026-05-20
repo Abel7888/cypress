@@ -56,7 +56,7 @@ def load_tenant_budgets():
                 name=f"{label} Daily Cap",
                 period=BudgetPeriod.DAILY,
                 limit_usd=float(budget_usd),
-                alert_thresholds=[50, 80, 95],
+                alert_thresholds=[60, 85, 100],
                 action_on_limit=BudgetAction.BLOCK
             )
             load_budgets(str(tenant_id), [key_budget])
@@ -800,6 +800,12 @@ async def proxy_completion(request: Request):
     except Exception as _e:
         print(f"[ClickHouse] Direct log failed (non-fatal): {_e}")
 
+    post_check = check_budget(client_id)
+    if not post_check.allowed:
+        return JSONResponse(status_code=429, content={
+            "error": "BUDGET_CAP_EXCEEDED",
+            "message": post_check.message,
+        })
     record_spend(client_id, cost_usd)
 
     loop = asyncio.get_event_loop()
@@ -981,6 +987,12 @@ async def proxy_responses(request: Request):
     except Exception as _e:
         print(f"[ClickHouse] Responses log failed (non-fatal): {_e}")
 
+    post_check = check_budget(client_id)
+    if not post_check.allowed:
+        return JSONResponse(status_code=429, content={
+            "error": "BUDGET_CAP_EXCEEDED",
+            "message": post_check.message,
+        })
     record_spend(client_id, cost_usd)
 
     loop = asyncio.get_event_loop()
