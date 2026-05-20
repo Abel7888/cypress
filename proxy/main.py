@@ -912,7 +912,6 @@ async def proxy_responses(request: Request):
         if is_claude:
             result = await call_anthropic(chat_body, api_key=provider_api_key)
         else:
-            # Normalize message content - n8n sends content as list, OpenAI chat completions needs string
             for msg in chat_body.get("messages", []):
                 if isinstance(msg.get("content"), list):
                     text_parts = []
@@ -922,9 +921,8 @@ async def proxy_responses(request: Request):
                         else:
                             text_parts.append(str(part))
                     msg["content"] = " ".join(text_parts).strip()
-            print(f"[Responses] Sending to OpenAI: {str(chat_body)}")
-            async with httpx.AsyncClient(timeout=300) as http_client:
-                response = await httpx.post(
+            async with httpx.AsyncClient(timeout=60) as http_client:
+                response = await http_client.post(
                     "https://api.openai.com/v1/chat/completions",
                     json=chat_body,
                     headers={
@@ -932,8 +930,7 @@ async def proxy_responses(request: Request):
                         "Authorization": f"Bearer {provider_api_key}",
                     }
                 )
-            result = response.json()
-            print(f"[Responses] Raw result keys: {list(result.keys()) if isinstance(result, dict) else type(result)}, choices: {result.get('choices', 'MISSING')}")
+                result = response.json()
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"AI provider error: {str(e)}")
 
