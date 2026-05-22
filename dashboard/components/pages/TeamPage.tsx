@@ -531,7 +531,7 @@ function StatCell({
 function Card({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
-      background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden",
+      background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", width: "100%",
     }}>{children}</div>
   );
 }

@@ -1644,7 +1644,7 @@ function Card({ children, borderLeft }: { children: React.ReactNode; borderLeft?
     <div style={{
       background: C.card, border: `1px solid ${C.border}`,
       borderLeft: borderLeft ? `4px solid ${borderLeft}` : undefined,
-      borderRadius: 12, overflow: "hidden",
+      borderRadius: 12, overflow: "hidden", width: "100%",
     }}>{children}</div>
   );
 }
