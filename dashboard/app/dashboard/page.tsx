@@ -26,7 +26,7 @@ export default async function DashboardPage() {
   return (
     <>
       <TrialBanner />
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-screen overflow-hidden w-full">
         <Dashboard />
       </div>
     </>
