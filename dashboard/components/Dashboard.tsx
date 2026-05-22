@@ -669,7 +669,7 @@ RULES:
           })}
 
           {/* Scrollable content */}
-          <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
+          <div style={{ flex: 1, overflowY: "auto", padding: 24, width: "100%", minWidth: 0 }}>
             {renderPage()}
           </div>
 
