@@ -581,7 +581,7 @@ RULES:
         <Sidebar page={page} setPage={setPage} overview={overview} setAssistantInput={setAssistantInput} setAssistantOpen={setAssistantOpen} />
 
         {/* Main */}
-        <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden", minWidth: 0, width: 0 }}>
+        <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
           {/* Topbar */}
           <div
             style={{
