@@ -72,9 +72,12 @@ function Sidebar({
 
   // Fetch sidebar users
   useEffect(() => {
-    if (!TENANT_ID) return;
-    const fetchUsers = () => {
-      fetch(`${API_BASE}/api/tenants/${TENANT_ID}/users`, { headers: HEADERS })
+    const fetchUsers = async () => {
+      const { tenantId, apiKey } = await getTenantConfig();
+      if (!tenantId) return;
+      fetch(`${API_BASE}/api/tenants/${tenantId}/users`, {
+        headers: { Authorization: `Bearer ${apiKey || ""}` },
+      })
         .then((r) => r.json())
         .then((d) => setSidebarUsers(d.users || d || []))
         .catch(() => {});
@@ -273,24 +276,30 @@ function Sidebar({
         )}
 
         {/* Provider health */}
-        <div style={{ marginTop: 12, padding: "0 8px" }}>
-          <div style={{ fontSize: 9, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: 6 }}>
-            PROVIDERS
-          </div>
-          {[
-            { name: "OpenAI", status: "ok" },
-            { name: "Anthropic", status: "ok" },
-            { name: "Google", status: "ok" as const },
-          ].map((p) => (
-            <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "3px 0", fontSize: 11 }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: p.status === "ok" ? "#10B981" : "#EF4444", flexShrink: 0 }} />
-              <span style={{ color: "#64748B", flex: 1 }}>{p.name}</span>
-              <span style={{ fontSize: 10, color: p.status === "ok" ? "#10B981" : "#EF4444" }}>
-                {p.status === "ok" ? "Operational" : "Incident"}
-              </span>
+        {(() => {
+          const PROVIDER_LABELS: Record<string, string> = {
+            openai: "OpenAI", anthropic: "Anthropic", google: "Google",
+            azure: "Azure", mistral: "Mistral",
+          };
+          const connected = typeof window !== "undefined"
+            ? Object.keys(PROVIDER_LABELS).filter(id => !!localStorage.getItem(`tg_provider_${id}`))
+            : [];
+          if (connected.length === 0) return null;
+          return (
+            <div style={{ marginTop: 12, padding: "0 8px" }}>
+              <div style={{ fontSize: 9, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: 6 }}>
+                PROVIDERS
+              </div>
+              {connected.map((id) => (
+                <div key={id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "3px 0", fontSize: 11 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10B981", flexShrink: 0 }} />
+                  <span style={{ color: "#64748B", flex: 1 }}>{PROVIDER_LABELS[id]}</span>
+                  <span style={{ fontSize: 10, color: "#10B981" }}>Connected</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          );
+        })()}
       </div>
 
       {/* Bottom */}
@@ -682,13 +691,14 @@ RULES:
             <span
               style={{ width: 6, height: 6, borderRadius: "50%", background: lastCall ? "#10B981" : "#94A3B8", flexShrink: 0 }}
             />
-            {lastCall ? (
+            {lastCall && lastCall.api_calls > 0 ? (
               <span style={{ color: "#64748B" }}>
                 Last call:{" "}
                 <strong style={{ color: "#0F172A" }}>{lastCall.employee || lastCall.name}</strong>
-                {" · gpt-4o → gpt-4o-mini · "}
-                <span style={{ color: "#10B981" }}>${(lastCall.cost_usd || 0.000043).toFixed(6)}</span>
-                {" · saved 94%"}
+                {" · "}
+                <span style={{ color: "#10B981" }}>${(lastCall.cost_usd || 0).toFixed(6)}</span>
+                {lastCall.savings_usd > 0 ? <span style={{ color: "#10B981" }}>{" · saved $"}{lastCall.savings_usd.toFixed(4)}</span> : null}
+                {lastCall.routed_calls > 0 ? <span style={{ color: "#8B5CF6" }}>{" · "}{lastCall.routed_calls} routed</span> : null}
               </span>
             ) : (
               <span style={{ color: "#94A3B8" }}>
