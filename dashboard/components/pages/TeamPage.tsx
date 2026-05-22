@@ -233,7 +233,7 @@ export default function TeamPage({ setPage }: { setPage?: (p: string) => void })
 
   if (loading && users.length === 0) {
     return (
-      <div style={{ padding: 60, textAlign: "center", color: C.textDim, fontSize: 13, fontFamily: FONT_SANS }}>
+      <div style={{ padding: 60, textAlign: "center", color: C.textDim, fontSize: 13, fontFamily: FONT_SANS, width: "100%" }}>
         Loading asset data…
       </div>
     );

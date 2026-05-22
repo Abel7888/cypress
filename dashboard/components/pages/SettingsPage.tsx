@@ -94,7 +94,7 @@ export default function SettingsPage() {
       {/* ═══ TABS ═══════════════════════════════════════════════════════ */}
       <div style={{
         display: "flex", gap: 2, background: C.borderSoft, borderRadius: 10,
-        padding: 4, marginBottom: 24, width: "fit-content",
+        padding: 4, marginBottom: 24,
       }}>
         {tabs.map((t) => (
           <button

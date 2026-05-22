@@ -248,6 +248,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
           background: C.borderSoft, border: `1px solid ${C.border}`,
           borderRadius: 10, padding: "10px 16px", fontSize: 12,
           display: "flex", alignItems: "center", gap: 10, color: C.textMuted,
+          width: "100%",
         }}>
           <span style={{ width: 8, height: 8, borderRadius: "50%", background: C.textDim, opacity: 0.5 }} />
           Loading budgets…
