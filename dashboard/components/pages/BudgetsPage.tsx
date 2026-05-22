@@ -282,7 +282,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
       {/* ═══ SECTION 1 — BUDGET HEALTH COMMAND STRIP ══════════════════════ */}
       <div style={{
         background: C.card, border: `1px solid ${C.border}`, borderRadius: 12,
-        display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", overflow: "hidden",
+        display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", overflow: "hidden", width: "100%",
       }}>
         <StatCell label="HEALTHY ASSETS" value={String(stats.healthy)} sub="assets" color={C.green} divider />
         <StatCell label="APPROACHING LIMIT" value={String(stats.warning)} sub="need attention" color={C.amber} divider />
