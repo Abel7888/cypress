@@ -241,7 +241,9 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
   return (
     <div style={{
       display: "flex", flexDirection: "column", gap: 16,
-      width: "100%", fontFamily: FONT_SANS, color: C.text,
+      width: "100%", minWidth: 0, alignSelf: "stretch",
+      boxSizing: "border-box" as const,
+      fontFamily: FONT_SANS, color: C.text,
     }}>
       {!loaded && (
         <div style={{
