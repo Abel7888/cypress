@@ -669,7 +669,7 @@ RULES:
           })}
 
           {/* Scrollable content */}
-          <div style={{ flex: 1, overflowY: "auto", padding: 24, width: "100%", minWidth: 0, boxSizing: "border-box" as const, background: "#F1F5F9" }}>
+          <div style={{ flex: 1, overflowY: "auto", padding: 24, width: "100%", minWidth: 0, boxSizing: "border-box" as const, background: "#F1F5F9", scrollbarColor: "#CBD5E1 #F1F5F9" }}>
             {renderPage()}
           </div>
 
