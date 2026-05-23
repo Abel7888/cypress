@@ -581,7 +581,7 @@ RULES:
         <Sidebar page={page} setPage={setPage} overview={overview} setAssistantInput={setAssistantInput} setAssistantOpen={setAssistantOpen} />
 
         {/* Main */}
-        <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
+        <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden", minWidth: 0 }}>
           {/* Topbar */}
           <div
             style={{
@@ -669,7 +669,7 @@ RULES:
           })}
 
           {/* Scrollable content */}
-          <div style={{ flex: 1, overflowY: "auto", padding: 24, width: "100%", minWidth: 0 }}>
+          <div style={{ flex: 1, overflowY: "auto", padding: 24, width: "100%", minWidth: 0, boxSizing: "border-box" as const }}>
             {renderPage()}
           </div>
 
