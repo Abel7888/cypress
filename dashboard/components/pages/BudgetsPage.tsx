@@ -242,6 +242,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
     <div style={{
       display: "flex", flexDirection: "column", gap: 16,
       width: "100%", fontFamily: FONT_SANS, color: C.text,
+      outline: "3px solid red",
     }}>
       {!loaded && (
         <div style={{
