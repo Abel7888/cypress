@@ -341,7 +341,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                 </div>
               }
             />
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 20px 20px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 20px 20px", width: "100%" }}>
               {loaded && userBudgets.length === 0 && <EmptyCard />}
               {userBudgets.map((u) => {
                 const pct = pctOf(u);
@@ -718,7 +718,7 @@ function ForecastSection({ users }: { users: U[] }) {
   return (
     <div style={{
       background: C.card, border: `1px solid ${C.border}`, borderLeft: `4px solid ${C.green}`,
-      borderRadius: 12,
+      borderRadius: 12, width: "100%",
     }}>
       <CardHeader
         title="Spend Forecast"
@@ -777,7 +777,7 @@ function ForecastSection({ users }: { users: U[] }) {
         {/* RIGHT: Savings opportunity */}
         <div style={{
           background: C.greenBg, border: `1px solid ${C.greenBorder}`, borderRadius: 12,
-          padding: 18, height: "fit-content",
+          padding: 18,
         }}>
           <div style={{
             display: "flex", alignItems: "center", gap: 8, fontSize: 13,
