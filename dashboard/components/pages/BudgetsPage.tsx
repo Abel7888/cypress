@@ -244,6 +244,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
       width: "100%", minWidth: "100%", alignSelf: "stretch",
       boxSizing: "border-box" as const,
       fontFamily: FONT_SANS, color: C.text,
+      background: "red",
     }}>
       {!loaded && (
         <div style={{
