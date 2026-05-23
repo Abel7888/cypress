@@ -258,7 +258,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
         </div>
       )}
       {/* ═══ HEADER ════════════════════════════════════════════════════════ */}
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 0, gap: 12, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 0, gap: 12, flexWrap: "wrap" }}>
         <div>
           <div style={{
             fontSize: 11, fontWeight: 700, color: C.textMuted, letterSpacing: "0.12em",
