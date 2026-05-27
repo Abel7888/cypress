@@ -1623,12 +1623,16 @@ async def get_user_breakdown(tenant_id: str, request: Request):
     # Pull live spend from Redis for each agent (overrides ClickHouse so bar is real-time)
     redis_spend = {}
     try:
-        import redis as redis_lib
-        _r = redis_lib.from_url(os.getenv("REDIS_URL", "redis://localhost:6379"), decode_responses=True)
-        for label, key_id in key_ids.items():
-            val = _r.get(f"budget:{key_id}:spent")
-            if val is not None:
-                redis_spend[label] = float(val)
+        from budget import _redis, _budgets_cache, _period_key, BudgetPeriod
+        agent_budgets = _budgets_cache.get(tenant_id, [])
+        for b in agent_budgets:
+            # budget_id is now "budget-{key_id}" — match back to label via name
+            label = b.name
+            period_str = _period_key(b.period)
+            key = f"tg:budget:{tenant_id}:{b.budget_id}:{period_str}"
+            raw = _redis.get(key)
+            if raw is not None:
+                redis_spend[label] = int(raw) / 1_000_000
     except Exception as e:
         print(f"[Users] Redis spend fetch failed: {e}")
 
