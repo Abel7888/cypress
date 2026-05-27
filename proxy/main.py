@@ -51,7 +51,7 @@ def load_tenant_budgets():
 
         for key_id, label, budget_usd, tenant_name, tenant_id in keys:
             key_budget = BudgetDefinition(
-                budget_id=f"budget-{key_id}",
+                budget_id=f"budget-{tenant_id}",
                 tenant_id=str(tenant_id),
                 name=f"{label} Daily Cap",
                 period=BudgetPeriod.DAILY,
@@ -1620,29 +1620,15 @@ async def get_user_breakdown(tenant_id: str, request: Request):
         except Exception as e:
             print(f"[Users] ClickHouse query failed for {label}: {e}")
 
-    # Pull live spend from Redis for each agent (overrides ClickHouse so bar is real-time)
-    redis_spend = {}
-    try:
-        import redis as redis_lib
-        _r = redis_lib.from_url(os.getenv("REDIS_URL", "redis://localhost:6379"), decode_responses=True)
-        for label, key_id in key_ids.items():
-            val = _r.get(f"budget:{key_id}:spent")
-            if val is not None:
-                redis_spend[label] = float(val)
-    except Exception as e:
-        print(f"[Users] Redis spend fetch failed: {e}")
-
     # Build users list from Postgres keys as base (always show all active employees)
     users = []
     for label, key_id in key_ids.items():
         spend = spend_data.get(label, {})
-        # Use Redis spend if available (real-time) — fallback to ClickHouse
-        live_cost = redis_spend.get(label, spend.get("cost_usd", 0.0))
         users.append({
             "employee": label,
             "name": label,
             "api_calls": spend.get("api_calls", 0),
-            "cost_usd": live_cost,
+            "cost_usd": spend.get("cost_usd", 0.0),
             "cache_hits": spend.get("cache_hits", 0),
             "routed_calls": spend.get("routed_calls", 0),
             "blocked_calls": spend.get("blocked_calls", 0),
