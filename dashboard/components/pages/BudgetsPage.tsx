@@ -33,7 +33,7 @@ function pctOf(u: U) {
 }
 function statusOf(pct: number): "healthy" | "warning" | "blocked" {
   if (pct >= 100) return "blocked";
-  if (pct >= 70) return "warning";
+  if (pct >= 60) return "warning";
   return "healthy";
 }
 function nameOf(u: U) { return u.employee || u.name || u.user_id || "—"; }
@@ -54,7 +54,7 @@ function resetCountdown(): { hrs: number; mins: number } {
 }
 function colorForPct(pct: number) {
   if (pct >= 100) return C.red;
-  if (pct >= 70) return C.amber;
+  if (pct >= 60) return C.amber;
   return C.green;
 }
 
@@ -558,7 +558,7 @@ export default function BudgetsPage({ userBudgets: propBudgets, setUserBudgets: 
                       </div>
                     )}
                     {/* Warning banner at 70-99% */}
-                    {monthlyPct >= 70 && monthlyPct < 100 && (
+                    {monthlyPct >= 60 && monthlyPct < 100 && (
                       <div style={{
                         marginTop: 10, background: C.amberBg,
                         border: `1px solid ${C.amberBorder}`,
