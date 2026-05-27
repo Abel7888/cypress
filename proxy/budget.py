@@ -21,7 +21,6 @@ _redis = redis.from_url(
 )
 
 _budgets_cache: dict[str, list] = {}
-_alerted_thresholds: dict[str, set] = {}
 
 
 class BudgetAction(str, Enum):
@@ -41,7 +40,7 @@ class BudgetDefinition(BaseModel):
     name: str
     period: BudgetPeriod = BudgetPeriod.DAILY
     limit_usd: float
-    alert_thresholds: list[int] = [70, 90, 100]
+    alert_thresholds: list[int] = [60, 85, 100]
     action_on_limit: BudgetAction = BudgetAction.BLOCK
 
 
@@ -112,12 +111,10 @@ def check_budget(tenant_id: str) -> BudgetCheckResult:
                 breached = t
                 break
 
-        alert_key = f"{tenant_id}:{b.budget_id}:{_period_key(b.period)}"
-        if alert_key not in _alerted_thresholds:
-            _alerted_thresholds[alert_key] = set()
+        alert_key = f"tg:alerted:{tenant_id}:{b.budget_id}:{_period_key(b.period)}:{breached}"
 
-        if breached and breached not in _alerted_thresholds[alert_key]:
-            _alerted_thresholds[alert_key].add(breached)
+        if breached and not _redis.exists(alert_key):
+            _redis.set(alert_key, "1", ex=_period_ttl_seconds(b.period))
             _fire_alert(b, breached, spent_usd, pct)
 
         result = BudgetCheckResult(
@@ -180,8 +177,11 @@ def reset_budget(tenant_id: str, budget_id: str):
         if b.budget_id == budget_id:
             key = _budget_redis_key(b)
             _redis.delete(key)
-            alert_key = f"{tenant_id}:{budget_id}:{_period_key(b.period)}"
-            _alerted_thresholds.pop(alert_key, None)
+            # Delete all alert keys for this budget
+            period_key = _period_key(b.period)
+            pattern = f"tg:alerted:{tenant_id}:{budget_id}:{period_key}:*"
+            for alert_key in _redis.keys(pattern):
+                _redis.delete(alert_key)
             print(f"[Budget] Reset budget {budget_id} for tenant {tenant_id}")
             return
 
