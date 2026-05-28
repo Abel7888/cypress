@@ -55,7 +55,7 @@ def load_tenant_budgets():
             key_budget = BudgetDefinition(
                 budget_id=f"budget-{key_id}",
                 tenant_id=tid,
-                name=label,
+                name=label or "Unknown Agent",
                 period=BudgetPeriod.DAILY,
                 limit_usd=float(budget_usd),
                 alert_thresholds=[60, 85, 100],
@@ -65,6 +65,7 @@ def load_tenant_budgets():
         for tid, budgets in tenant_budgets.items():
             load_budgets(tid, budgets)
             print(f"[Budget] Loaded {len(budgets)} budgets for tenant {tid}")
+
 
     except Exception as e:
         print(f"[Budget] Could not load from Postgres, using default: {e}")
