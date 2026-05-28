@@ -27,6 +27,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://cypress-production-36c0.up.railway.app",
+        "https://cypressvision.xyz",
         "http://localhost:3000",
     ],
     allow_credentials=False,
