@@ -152,9 +152,26 @@ export async function POST(req: NextRequest) {
       results.push("slack");
     }
 
-    if (payload.alert_email) {
-      await sendEmailAlert(payload.alert_email, payload, msg);
-      results.push("email");
+    // Always look up the tenant's real email from Supabase
+    try {
+      const { createClient } = await import("@supabase/supabase-js");
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      const { data: { users } } = await supabase.auth.admin.listUsers();
+      const match = users?.find(u => u.user_metadata?.tenant_id === payload.tenant_id);
+      const emailToSend = match?.email || payload.alert_email;
+      if (emailToSend) {
+        await sendEmailAlert(emailToSend, payload, msg);
+        results.push("email");
+      }
+    } catch (e) {
+      console.error("[alerts] Email lookup failed", e);
+      if (payload.alert_email) {
+        await sendEmailAlert(payload.alert_email, payload, msg);
+        results.push("email");
+      }
     }
 
     return NextResponse.json({ success: true, sent_via: results });
