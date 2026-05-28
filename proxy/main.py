@@ -479,7 +479,12 @@ async def budget_reset(request: Request):
                 INSERT INTO budget_resets (tenant_id, reset_at)
                 VALUES (%s::uuid, now())
             """, (tid,))
-            reset_budget(tid, f"budget-{tid}")
+            # Reset all per-agent budgets for this tenant
+            from budget import _budgets_cache, _budget_redis_key, _redis, _period_key
+            for b in _budgets_cache.get(tid, []):
+                key = _budget_redis_key(b)
+                _redis.delete(key)
+                print(f"[Reset] Cleared Redis key {key}")
             print(f"[Reset] Wrote reset_at for tenant {tid}")
 
         conn.commit()
