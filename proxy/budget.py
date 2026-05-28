@@ -75,13 +75,15 @@ def _period_ttl_seconds(period: BudgetPeriod) -> int:
 
 def load_budgets(tenant_id: str, budgets: list):
     _budgets_cache[tenant_id] = budgets
+    for b in budgets:
+        _budgets_cache[b.budget_id] = [b]
     print(f"[Budget] Loaded {len(budgets)} budget(s) for tenant {tenant_id}")
 
 
-def record_spend(tenant_id: str, cost_usd: float):
+def record_spend(lookup_key: str, cost_usd: float):
     if cost_usd <= 0:
         return
-    budgets = _budgets_cache.get(tenant_id, [])
+    budgets = _budgets_cache.get(lookup_key, [])
     if not budgets:
         return
     cost_micro = int(cost_usd * 1_000_000)
@@ -91,8 +93,8 @@ def record_spend(tenant_id: str, cost_usd: float):
         _redis.expire(key, _period_ttl_seconds(b.period))
 
 
-def check_budget(tenant_id: str) -> BudgetCheckResult:
-    budgets = _budgets_cache.get(tenant_id, [])
+def check_budget(lookup_key: str) -> BudgetCheckResult:
+    budgets = _budgets_cache.get(lookup_key, [])
     if not budgets:
         return BudgetCheckResult()
 
@@ -111,11 +113,11 @@ def check_budget(tenant_id: str) -> BudgetCheckResult:
                 breached = t
                 break
 
-        alert_key = f"tg:alerted:{tenant_id}:{b.budget_id}:{_period_key(b.period)}:{breached}"
-
-        if breached and not _redis.exists(alert_key):
-            _redis.set(alert_key, "1", ex=_period_ttl_seconds(b.period))
-            _fire_alert(b, breached, spent_usd, pct)
+        if breached is not None:
+            alert_key = f"tg:alerted:{b.tenant_id}:{b.budget_id}:{_period_key(b.period)}:{breached}"
+            if not _redis.exists(alert_key):
+                _redis.set(alert_key, "1", ex=_period_ttl_seconds(b.period))
+                _fire_alert(b, breached, spent_usd, pct)
 
         result = BudgetCheckResult(
             budget_id=b.budget_id,
@@ -148,7 +150,6 @@ def check_budget(tenant_id: str) -> BudgetCheckResult:
 
     return worst
 
-
 def get_budget_status(tenant_id: str) -> list[dict]:
     budgets = _budgets_cache.get(tenant_id, [])
     results = []
@@ -174,7 +175,7 @@ def get_budget_status(tenant_id: str) -> list[dict]:
 def reset_budget(tenant_id: str, budget_id: str):
     budgets = _budgets_cache.get(tenant_id, [])
     for b in budgets:
-        if b.budget_id == budget_id:
+        if True:
             key = _budget_redis_key(b)
             _redis.delete(key)
             # Delete all alert keys for this budget

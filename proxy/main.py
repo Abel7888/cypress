@@ -49,18 +49,22 @@ def load_tenant_budgets():
         cur.close()
         conn.close()
 
+        tenant_budgets: dict[str, list] = {}
         for key_id, label, budget_usd, tenant_name, tenant_id in keys:
+            tid = str(tenant_id)
             key_budget = BudgetDefinition(
-                budget_id=f"budget-{tenant_id}",
-                tenant_id=str(tenant_id),
-                name=f"{label} Daily Cap",
+                budget_id=f"budget-{key_id}",
+                tenant_id=tid,
+                name=label,
                 period=BudgetPeriod.DAILY,
                 limit_usd=float(budget_usd),
                 alert_thresholds=[60, 85, 100],
                 action_on_limit=BudgetAction.BLOCK
             )
-            load_budgets(str(tenant_id), [key_budget])
-            print(f"[Budget] Loaded budget for: {label} (${budget_usd})")
+            tenant_budgets.setdefault(tid, []).append(key_budget)
+        for tid, budgets in tenant_budgets.items():
+            load_budgets(tid, budgets)
+            print(f"[Budget] Loaded {len(budgets)} budgets for tenant {tid}")
 
     except Exception as e:
         print(f"[Budget] Could not load from Postgres, using default: {e}")
@@ -626,7 +630,8 @@ async def proxy_completion(request: Request):
     body = await request.json()
     start_time = time.time()
 
-    # Apply model routing
+    
+# Apply model routing
     original_model = body.get("model", "unknown")
     routing_decision = model_router.route(
         tenant_id=client_id,
@@ -641,8 +646,11 @@ async def proxy_completion(request: Request):
               f"({routing_decision.routing_reason}, "
               f"~{routing_decision.estimated_savings_pct}% savings)")
 
+    # ── Per-agent budget key (scalable to 200+ agents) ───────────────────────
+    agent_budget_id = getattr(request.state, "budget_id", client_id)  # ← NEW
+
     # Check budget before hitting the API
-    budget_result = check_budget(client_id)
+    budget_result = check_budget(agent_budget_id)  # ← CHANGED
     if not budget_result.allowed:
         print(f"[Budget] BLOCKED — {budget_result.message}")
         log_event({
@@ -800,13 +808,13 @@ async def proxy_completion(request: Request):
     except Exception as _e:
         print(f"[ClickHouse] Direct log failed (non-fatal): {_e}")
 
-    post_check = check_budget(client_id)
+    post_check = check_budget(agent_budget_id)  # ← CHANGED
     if not post_check.allowed:
         return JSONResponse(status_code=429, content={
             "error": "BUDGET_CAP_EXCEEDED",
             "message": post_check.message,
         })
-    record_spend(client_id, cost_usd)
+    record_spend(agent_budget_id, cost_usd)  # ← CHANGED
 
     loop = asyncio.get_event_loop()
     loop.run_in_executor(None, store_in_cache, body, result, client_id)
@@ -829,6 +837,7 @@ async def proxy_responses(request: Request):
     Translates to chat completions internally so all budget/logging/routing works identically.
     """
     client_id = authenticate(request)
+    agent_budget_id = getattr(request.state, "budget_id", client_id)  # ← NEW
 
     _tenant_name = getattr(request.state, "tenant_name", "Unknown")
     _tenant_id_str = getattr(request.state, "tenant_id", client_id)
@@ -852,7 +861,6 @@ async def proxy_responses(request: Request):
     if isinstance(raw_input, str):
         messages = [{"role": "user", "content": raw_input}]
     elif isinstance(raw_input, list):
-        # Already in message format
         messages = raw_input
     else:
         messages = [{"role": "user", "content": str(raw_input)}]
@@ -873,7 +881,7 @@ async def proxy_responses(request: Request):
     was_routed = 1 if routing_decision.was_downgraded else 0
 
     # Check budget
-    budget_result = check_budget(client_id)
+    budget_result = check_budget(agent_budget_id)  # ← CHANGED
     if not budget_result.allowed:
         return JSONResponse(status_code=429, content={
             "error": "BUDGET_CAP_EXCEEDED",
@@ -892,7 +900,6 @@ async def proxy_responses(request: Request):
             "latency_ms": latency_ms,
             "cache_hit": 1,
         })
-        # Translate cached chat response → Responses API format
         content = cached.get("output", [{}])[0].get("content", [{}])[0].get("text", "")
         return JSONResponse(content={
             "id": cached.get("id", "resp-cached"),
@@ -987,18 +994,17 @@ async def proxy_responses(request: Request):
     except Exception as _e:
         print(f"[ClickHouse] Responses log failed (non-fatal): {_e}")
 
-    post_check = check_budget(client_id)
+    post_check = check_budget(agent_budget_id)  # ← CHANGED
     if not post_check.allowed:
         return JSONResponse(status_code=429, content={
             "error": "BUDGET_CAP_EXCEEDED",
             "message": post_check.message,
         })
-    record_spend(client_id, cost_usd)
+    record_spend(agent_budget_id, cost_usd)  # ← CHANGED
 
     loop = asyncio.get_event_loop()
     loop.run_in_executor(None, store_in_cache, chat_body, result, client_id)
 
-    # Translate chat completion response → Responses API format
     content = ""
     choices = result.get("choices", [])
     if choices:
@@ -1018,7 +1024,6 @@ async def proxy_responses(request: Request):
             "total_tokens": input_tokens + output_tokens,
         },
     })
-
 
 # ── BILLING ENDPOINTS ──────────────────────────────────────────────────
 
