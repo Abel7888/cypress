@@ -290,6 +290,7 @@ def authenticate(request: Request):
             request.state.agent_label = label
             request.state.tenant_name = tenant_name
             request.state.tenant_id = str(tenant_id)
+            request.state.budget_id = f"budget-{key_id}"
             print(f"[Auth] Authenticated: {tenant_name} key={key_id} budget=${budget_usd}")
             return str(tenant_id)
         else:

@@ -195,17 +195,33 @@ def _fire_alert(budget: BudgetDefinition, threshold: int, spent_usd: float, pct:
     print(f"[Budget]    Used    : {round(pct, 1)}% (threshold: {threshold}%)")
     print(f"[Budget]    Time    : {now}\n")
 
-    # Fire real alert to dashboard
     import threading
     def _send():
         try:
             import httpx
+            import psycopg2
             dashboard_url = os.getenv("DASHBOARD_URL", "")
             slack_webhook = os.getenv("SLACK_WEBHOOK_URL", "")
             alert_email = os.getenv("ALERT_EMAIL", "")
 
             if not dashboard_url:
+                print(f"[Budget] DASHBOARD_URL not set — alert skipped")
                 return
+
+            try:
+                conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+                cur = conn.cursor()
+                cur.execute(
+                    "SELECT email FROM tenants WHERE id = %s",
+                    (budget.tenant_id,)
+                )
+                row = cur.fetchone()
+                cur.close()
+                conn.close()
+                if row and row[0]:
+                    alert_email = row[0]
+            except Exception as e:
+                print(f"[Budget] Could not fetch tenant email: {e}")
 
             payload = {
                 "tenant_id": budget.tenant_id,
@@ -224,7 +240,7 @@ def _fire_alert(budget: BudgetDefinition, threshold: int, spent_usd: float, pct:
                 json=payload,
                 timeout=10,
             )
-            print(f"[Budget] Alert sent for {budget.name} at {threshold}%")
+            print(f"[Budget] Alert sent for {budget.name} at {threshold}% to {alert_email}")
         except Exception as e:
             print(f"[Budget] Alert send failed: {e}")
 
