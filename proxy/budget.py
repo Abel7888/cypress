@@ -174,17 +174,14 @@ def get_budget_status(tenant_id: str) -> list[dict]:
 
 def reset_budget(tenant_id: str, budget_id: str):
     budgets = _budgets_cache.get(tenant_id, [])
+    period_key = _period_key(BudgetPeriod.DAILY)
     for b in budgets:
-        if True:
-            key = _budget_redis_key(b)
-            _redis.delete(key)
-            # Delete all alert keys for this budget
-            period_key = _period_key(b.period)
-            pattern = f"tg:alerted:{tenant_id}:{budget_id}:{period_key}:*"
-            for alert_key in _redis.keys(pattern):
-                _redis.delete(alert_key)
-            print(f"[Budget] Reset budget {budget_id} for tenant {tenant_id}")
-            return
+        key = _budget_redis_key(b)
+        _redis.delete(key)
+        pattern = f"tg:alerted:{b.tenant_id}:{b.budget_id}:{period_key}:*"
+        for alert_key in _redis.keys(pattern):
+            _redis.delete(alert_key)
+        print(f"[Budget] Reset spend + alert keys for {b.name}")
 
 
 def _fire_alert(budget: BudgetDefinition, threshold: int, spent_usd: float, pct: float):
@@ -201,7 +198,18 @@ def _fire_alert(budget: BudgetDefinition, threshold: int, spent_usd: float, pct:
             import httpx
             import psycopg2
             dashboard_url = os.getenv("DASHBOARD_URL", "")
-            slack_webhook = os.getenv("SLACK_WEBHOOK_URL", "")
+            slack_webhook = ""
+            try:
+                conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+                cur = conn.cursor()
+                cur.execute("SELECT slack_webhook FROM tenants WHERE id = %s", (budget.tenant_id,))
+                row = cur.fetchone()
+                cur.close()
+                conn.close()
+                if row and row[0]:
+                    slack_webhook = row[0]
+            except Exception as e:
+                print(f"[Budget] Could not fetch tenant slack_webhook: {e}")
             alert_email = os.getenv("ALERT_EMAIL", "")
 
             if not dashboard_url:
