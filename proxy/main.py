@@ -484,7 +484,12 @@ async def budget_reset(request: Request):
             for b in _budgets_cache.get(tid, []):
                 key = _budget_redis_key(b)
                 _redis.delete(key)
-                print(f"[Reset] Cleared Redis key {key}")
+                # Also clear alert keys so emails fire fresh after reset
+                period_key = _period_key(b.period)
+                pattern = f"tg:alerted:{tid}:{b.budget_id}:{period_key}:*"
+                for alert_key in _redis.keys(pattern):
+                    _redis.delete(alert_key)
+                print(f"[Reset] Cleared spend + alert keys for {b.name}")
             print(f"[Reset] Wrote reset_at for tenant {tid}")
 
         conn.commit()
