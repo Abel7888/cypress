@@ -41,8 +41,8 @@ export const FONTS = {
 };
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
-export const API_KEY = typeof window !== "undefined" ? localStorage.getItem("tg_api_key") : null;
-export const TENANT_ID = typeof window !== "undefined" ? localStorage.getItem("tg_tenant_id") : null;
+export const API_KEY = null;
+export const TENANT_ID = null;
 export const HEADERS = { Authorization: `Bearer ${API_KEY}` };
 
 // Read tenant config from Supabase session (works across devices)
