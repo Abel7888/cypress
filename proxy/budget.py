@@ -208,20 +208,9 @@ def _fire_alert(budget: BudgetDefinition, threshold: int, spent_usd: float, pct:
                 print(f"[Budget] DASHBOARD_URL not set — alert skipped")
                 return
 
-            try:
-                conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
-                cur = conn.cursor()
-                cur.execute(
-                    "SELECT email FROM tenants WHERE id = %s",
-                    (budget.tenant_id,)
-                )
-                row = cur.fetchone()
-                cur.close()
-                conn.close()
-                if row and row[0]:
-                    alert_email = row[0]
-            except Exception as e:
-                print(f"[Budget] Could not fetch tenant email: {e}")
+            # alert_email is just a fallback — alerts/route.ts looks up
+            # the real tenant email from Supabase using tenant_id automatically
+            print(f"[Budget] alert_email fallback: {alert_email or 'none set'}")
 
             payload = {
                 "tenant_id": budget.tenant_id,
