@@ -37,28 +37,41 @@ export async function POST(req: NextRequest) {
       });
       const result = await res.json();
 
-      // Create Supabase auth user so they can sign in
+      // Write tenant_id into Supabase user metadata so alert emails route correctly
       if (result.tenant_id && data.email) {
         const supabase = getSupabaseAdmin();
         if (supabase) {
-          const tempPassword = "TG-" + Math.random().toString(36).slice(2, 10) + "!";
-          const { error: authError } = await supabase.auth.admin.createUser({
-            email: data.email,
-            password: tempPassword,
-            email_confirm: true,
-            user_metadata: {
-              tenant_id: result.tenant_id,
-              company: data.company,
-            },
-          });
-          if (authError) {
-            console.error("[onboarding] Supabase user creation failed:", authError.message);
+          try {
+            // User already exists from signup — find them and update metadata
+            const { data: { users } } = await supabase.auth.admin.listUsers();
+            const existing = users.find((u: { email?: string }) => u.email === data.email);
+            if (existing) {
+              await supabase.auth.admin.updateUserById(existing.id, {
+                user_metadata: {
+                  ...existing.user_metadata,
+                  tenant_id: result.tenant_id,
+                  company: data.company,
+                },
+              });
+              console.log("[onboarding] Wrote tenant_id to Supabase metadata for", data.email);
+            } else {
+              // Edge case: user doesn't exist yet — create them
+              const tempPassword = "TG-" + Math.random().toString(36).slice(2, 10) + "!";
+              await supabase.auth.admin.createUser({
+                email: data.email,
+                password: tempPassword,
+                email_confirm: true,
+                user_metadata: {
+                  tenant_id: result.tenant_id,
+                  company: data.company,
+                },
+              });
+              console.log("[onboarding] Created new Supabase user with tenant_id for", data.email);
+            }
+          } catch (e) {
+            console.error("[onboarding] Could not write tenant_id to Supabase metadata:", e);
           }
-          // Send password reset email so they set their own password
-          await supabase.auth.resetPasswordForEmail(data.email, {
-            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
-          });
-          return NextResponse.json({ ...result, auth_email_sent: !authError });
+          return NextResponse.json({ ...result, auth_email_sent: true });
         }
       }
 
