@@ -303,10 +303,13 @@ export default function CostAnalysisPage() {
       });
       const data = await res.json();
       const routedModel = data.model || playgroundModel;
-      const wasRouted = !routedModel.startsWith(playgroundModel) && !playgroundModel.startsWith(routedModel);
+      const resolvedRoutedModel = Object.keys(MODEL_COSTS).find(
+        k => routedModel.startsWith(k) || k.startsWith(routedModel)
+      ) || routedModel;
+      const wasRouted = resolvedRoutedModel !== playgroundModel;
       const totalTokens = data.usage?.total_tokens || 100;
       const originalCost = (MODEL_COSTS[playgroundModel] || 10e-6) * totalTokens;
-      const actualCost = (MODEL_COSTS[routedModel] || 10e-6) * totalTokens;
+      const actualCost = (MODEL_COSTS[resolvedRoutedModel] || MODEL_COSTS[playgroundModel] || 10e-6) * totalTokens;
       const saved = originalCost - actualCost;
       const savingsPct = originalCost > 0 ? Math.round((saved / originalCost) * 100) : 0;
       const answer = data.choices?.[0]?.message?.content || "";
@@ -329,9 +332,11 @@ export default function CostAnalysisPage() {
   useEffect(() => {
     async function load() {
       try {
+        const { apiKey } = await getTenantConfig();
+        const authH = { Authorization: `Bearer ${apiKey || ""}` };
         const [ag, mo] = await Promise.all([
-          fetch(`${API_BASE}/api/dashboard/agents`, { headers: HEADERS }).then(r => r.json()),
-          fetch(`${API_BASE}/api/dashboard/models`, { headers: HEADERS }).then(r => r.json()),
+          fetch(`${API_BASE}/api/dashboard/agents`, { headers: authH }).then(r => r.json()),
+          fetch(`${API_BASE}/api/dashboard/models`, { headers: authH }).then(r => r.json()),
         ]);
         setAgents(Array.isArray(ag) ? ag : [ag]);
         setModels(Array.isArray(mo) ? mo : (mo?.models || []));
