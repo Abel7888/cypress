@@ -216,18 +216,30 @@ export default function CostAnalysisPage() {
   // ── PRESERVED STATE & FETCH LOGIC ──────────────────────────────────────
   const [playgroundPrompt, setPlaygroundPrompt] = useState("");
 
-  const savedDefaultProvider: string =
-    typeof window !== "undefined"
-      ? (localStorage.getItem("tg_default_provider") ||
-         (localStorage.getItem("tg_provider_openai") ? "openai" :
-          localStorage.getItem("tg_provider_anthropic") ? "anthropic" : "openai"))
-      : "openai";
+  const [connectedProviders, setConnectedProviders] = useState<string[]>(["openai"]);
+  const [savedDefaultProvider, setSavedDefaultProvider] = useState<string>("openai");
 
-  const connectedProviders: string[] = typeof window !== "undefined"
-    ? (["openai", "anthropic", "google"] as const).filter(
-        p => !!localStorage.getItem(`tg_provider_${p}`)
-      )
-    : ["openai"];
+  useEffect(() => {
+    async function loadProviders() {
+      try {
+        const { tenantId, apiKey } = await getTenantConfig();
+        const res = await fetch(`${API_BASE}/api/tenants/${tenantId}/providers`, {
+          headers: { Authorization: `Bearer ${apiKey || ""}` },
+        });
+        const data = await res.json();
+        const providers: string[] = Array.isArray(data)
+          ? data.filter((p: any) => p.is_active).map((p: any) => p.provider)
+          : [];
+        if (providers.length > 0) {
+          setConnectedProviders(providers);
+          setSavedDefaultProvider(providers[0]);
+        }
+      } catch (e) {
+        console.warn("Could not load providers", e);
+      }
+    }
+    loadProviders();
+  }, []);
   
   const defaultModel = savedDefaultProvider === "anthropic"
     ? "claude-opus-4-6"
