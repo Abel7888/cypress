@@ -293,19 +293,6 @@ export default function CostAnalysisPage() {
       return;
     }
 
-    // Check localStorage for saved provider keys as secondary signal
-    const hasProvider = localStorage.getItem("tg_provider_openai") ||
-                        localStorage.getItem("tg_provider_anthropic") ||
-                        localStorage.getItem("tg_provider_google");
-    if (!hasProvider) {
-      setPlaygroundResult({
-        error: true,
-        errorMessage: "Add your OpenAI or Anthropic API key in Settings → Provider Keys before using the Route Tester.",
-      });
-      setPlaygroundLoading(false);
-      return;
-    }
-
     setPlaygroundLoading(true);
     setPlaygroundResult(null);
     const { apiKey } = await getTenantConfig();
