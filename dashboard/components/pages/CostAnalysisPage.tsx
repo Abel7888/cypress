@@ -227,9 +227,8 @@ export default function CostAnalysisPage() {
           headers: { Authorization: `Bearer ${apiKey || ""}` },
         });
         const data = await res.json();
-        const providers: string[] = Array.isArray(data)
-          ? data.filter((p: any) => p.is_active).map((p: any) => p.provider)
-          : [];
+        const list = Array.isArray(data) ? data : (data?.keys || []);
+        const providers = list.filter((p: any) => p.is_active).map((p: any) => p.provider);
         if (providers.length > 0) {
           setConnectedProviders(providers);
           setSavedDefaultProvider(providers[0]);

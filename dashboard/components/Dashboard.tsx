@@ -290,9 +290,8 @@ function Sidebar({
                   headers: { Authorization: `Bearer ${apiKey || ""}` },
                 });
                 const data = await res.json();
-                const providers = Array.isArray(data)
-                  ? data.filter((p: any) => p.is_active).map((p: any) => p.provider)
-                  : [];
+                const list = Array.isArray(data) ? data : (data?.keys || []);
+                const providers = list.filter((p: any) => p.is_active).map((p: any) => p.provider);
                 setConnected(providers);
               } catch (e) {}
             }
