@@ -304,7 +304,7 @@ export default function CostAnalysisPage() {
       });
       const data = await res.json();
       const routedModel = data.model || playgroundModel;
-      const wasRouted = routedModel !== playgroundModel;
+      const wasRouted = !routedModel.startsWith(playgroundModel) && !playgroundModel.startsWith(routedModel);
       const totalTokens = data.usage?.total_tokens || 100;
       const originalCost = (MODEL_COSTS[playgroundModel] || 10e-6) * totalTokens;
       const actualCost = (MODEL_COSTS[routedModel] || 10e-6) * totalTokens;
