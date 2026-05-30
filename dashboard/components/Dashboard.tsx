@@ -281,9 +281,23 @@ function Sidebar({
             openai: "OpenAI", anthropic: "Anthropic", google: "Google",
             azure: "Azure", mistral: "Mistral",
           };
-          const connected = typeof window !== "undefined"
-            ? Object.keys(PROVIDER_LABELS).filter(id => !!localStorage.getItem(`tg_provider_${id}`))
-            : [];
+          const [connected, setConnected] = useState<string[]>([]);
+          useEffect(() => {
+            async function loadProviders() {
+              try {
+                const { tenantId, apiKey } = await getTenantConfig();
+                const res = await fetch(`${API_BASE}/api/tenants/${tenantId}/providers`, {
+                  headers: { Authorization: `Bearer ${apiKey || ""}` },
+                });
+                const data = await res.json();
+                const providers = Array.isArray(data)
+                  ? data.filter((p: any) => p.is_active).map((p: any) => p.provider)
+                  : [];
+                setConnected(providers);
+              } catch (e) {}
+            }
+            loadProviders();
+          }, []);
           if (connected.length === 0) return null;
           return (
             <div style={{ marginTop: 12, padding: "0 8px" }}>
