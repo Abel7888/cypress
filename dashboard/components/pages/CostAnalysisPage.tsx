@@ -306,10 +306,7 @@ export default function CostAnalysisPage() {
       const wasRouted = !routedModel.startsWith(playgroundModel) && !playgroundModel.startsWith(routedModel);
       const totalTokens = data.usage?.total_tokens || 100;
       const originalCost = (MODEL_COSTS[playgroundModel] || 10e-6) * totalTokens;
-      const resolvedRoutedModel = Object.keys(MODEL_COSTS).find(
-        k => routedModel.startsWith(k) || k.startsWith(routedModel)
-      ) || routedModel;
-      const actualCost = (MODEL_COSTS[resolvedRoutedModel] || MODEL_COSTS[playgroundModel] || 10e-6) * totalTokens;
+      const actualCost = (MODEL_COSTS[routedModel] || 10e-6) * totalTokens;
       const saved = originalCost - actualCost;
       const savingsPct = originalCost > 0 ? Math.round((saved / originalCost) * 100) : 0;
       const answer = data.choices?.[0]?.message?.content || "";
