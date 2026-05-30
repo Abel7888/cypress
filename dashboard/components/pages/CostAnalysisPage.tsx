@@ -223,7 +223,7 @@ export default function CostAnalysisPage() {
     async function loadProviders() {
       try {
         const { tenantId, apiKey } = await getTenantConfig();
-        const res = await fetch(`${API_BASE}/api/tenants/${tenantId}/providers`, {
+        const res = await fetch(`${API_BASE}/api/tenants/${tenantId}/provider-keys`, {
           headers: { Authorization: `Bearer ${apiKey || ""}` },
         });
         const data = await res.json();
