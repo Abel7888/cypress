@@ -49,6 +49,10 @@ export const HEADERS = { Authorization: `Bearer ${API_KEY}` };
 // Falls back to localStorage for existing sessions
 let _tenantConfigCache: { apiKey: string | null; tenantId: string | null } | null = null;
 
+export function clearTenantConfigCache() {
+  _tenantConfigCache = null;
+}
+
 export async function getTenantConfig(): Promise<{ apiKey: string | null; tenantId: string | null }> {
   if (_tenantConfigCache) return _tenantConfigCache;
   try {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { COLORS, FONTS, API_BASE, API_KEY, TENANT_ID, HEADERS, getTenantConfig } from "./constants";
+import { COLORS, FONTS, API_BASE, API_KEY, TENANT_ID, HEADERS, getTenantConfig, clearTenantConfigCache } from "./constants";
 import { Logo } from "./brand";
 import OverviewPage from "./pages/OverviewPage";
 import CostAnalysisPage from "./pages/CostAnalysisPage";
@@ -638,7 +638,7 @@ RULES:
             <span style={{ fontSize: 11, color: "#94A3B8" }}>
               {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
             </span>
-            <button onClick={() => { window.location.href = "/signin"; }} style={{ background: "transparent", border: "1px solid #E2E8F0", color: "#64748B", fontSize: 12, padding: "6px 12px", borderRadius: 6, cursor: "pointer" }}>Sign out</button>
+            <button onClick={() => { clearTenantConfigCache(); window.location.href = "/signin"; }} style={{ background: "transparent", border: "1px solid #E2E8F0", color: "#64748B", fontSize: 12, padding: "6px 12px", borderRadius: 6, cursor: "pointer" }}>Sign out</button>
           </div>
 
           {/* Alert bar */}
