@@ -294,11 +294,24 @@ export default function CostAnalysisPage() {
 
     setPlaygroundLoading(true);
     setPlaygroundResult(null);
-    const { apiKey } = await getTenantConfig();
+    const { apiKey, tenantId } = await getTenantConfig();
+    let callKey = apiKey || "";
+    try {
+      const keysRes = await fetch(`${API_BASE}/api/tenants/${tenantId}/keys`, {
+        headers: { Authorization: `Bearer ${callKey}` },
+      });
+      const keysData = await keysRes.json();
+      const firstActive = (keysData.keys || []).find((k: any) => k.is_active);
+      if (firstActive?.key_preview) {
+        const stored = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("tg_asset_keys") || "{}") : {};
+        const full = Object.values(stored).find((v: any) => v.label === firstActive.label) as any;
+        if (full?.key) callKey = full.key;
+      }
+    } catch (e) {}
     try {
       const res = await fetch(`${API_BASE}/v1/chat/completions`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${apiKey || ""}`, "Content-Type": "application/json", "X-Agent-ID": "route-tester" },
+        headers: { Authorization: `Bearer ${callKey}`, "Content-Type": "application/json", "X-Agent-ID": "route-tester" },
         body: JSON.stringify({ model: playgroundModel, max_tokens: 300, messages: [{ role: "user", content: playgroundPrompt }] }),
       });
       const data = await res.json();
