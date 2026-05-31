@@ -525,6 +525,53 @@ async def reset_employee_budget(tenant_id: str, request: Request):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
+@app.post("/v1/route-test")
+async def route_test(request: Request):
+    """Test routing using tenant's own provider key. Accepts master admin key."""
+    client_id = authenticate(request)
+    body = await request.json()
+    model = body.get("model", "gpt-4o")
+    messages = body.get("messages", [])
+    max_tokens = body.get("max_tokens", 300)
+
+    # Look up tenant's provider key
+    try:
+        conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL", ""))
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT encrypted_key FROM provider_keys
+            WHERE tenant_id = %s::uuid AND provider = 'openai' AND is_active = TRUE
+            LIMIT 1
+        """, (client_id,))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        if not row:
+            return JSONResponse(status_code=402, content={"error": "No provider key configured"})
+        provider_key = row[0]
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+    # Apply routing decision
+    prompt_text = " ".join(m.get("content", "") for m in messages if isinstance(m.get("content"), str))
+    decision = model_router.route(client_id, model, body, labels={"agent_id": "route-tester"})
+    routed_model = decision.routed_model
+
+    # Make the actual call
+    import httpx
+    resp = httpx.post(
+        "https://api.openai.com/v1/chat/completions",
+        headers={"Authorization": f"Bearer {provider_key}", "Content-Type": "application/json"},
+        json={"model": routed_model, "messages": messages, "max_tokens": max_tokens},
+        timeout=30,
+    )
+    result = resp.json()
+    result["_routed_from"] = model
+    result["_routing_reason"] = decision.routing_reason
+    result["_savings_pct"] = decision.estimated_savings_pct
+    return JSONResponse(content=result)
+
+
 @app.post("/budget/reload")
 async def budget_reload(request: Request):
     """Reload all tenant budgets from Postgres. Call after creating new tenants."""
