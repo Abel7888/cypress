@@ -540,7 +540,7 @@ async def route_test(request: Request):
         cur = conn.cursor()
         cur.execute("""
             SELECT encrypted_key FROM provider_keys
-            WHERE tenant_id = %s::uuid AND provider = 'openai' AND is_active = TRUE
+            WHERE tenant_id::text = %s AND provider = 'openai' AND is_active = TRUE
             LIMIT 1
         """, (client_id,))
         row = cur.fetchone()
