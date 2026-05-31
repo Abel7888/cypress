@@ -548,7 +548,7 @@ async def route_test(request: Request):
         conn.close()
         if not row:
             return JSONResponse(status_code=402, content={"error": "No provider key configured"})
-        provider_key = row[0]
+        provider_key = decrypt_key(row[0])
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
