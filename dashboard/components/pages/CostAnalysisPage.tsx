@@ -302,7 +302,7 @@ export default function CostAnalysisPage() {
         body: JSON.stringify({ model: playgroundModel, max_tokens: 300, messages: [{ role: "user", content: playgroundPrompt }] }),
       });
       const data = await res.json();
-      const routedModel = data.model || playgroundModel;
+      const routedModel = (data.model || playgroundModel).replace(/-\d{4}-\d{2}-\d{2}$/, "");
       const resolvedRoutedModel = Object.keys(MODEL_COSTS).find(
         k => routedModel.startsWith(k) || k.startsWith(routedModel)
       ) || routedModel;
