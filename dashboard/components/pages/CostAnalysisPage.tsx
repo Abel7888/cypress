@@ -303,9 +303,9 @@ export default function CostAnalysisPage() {
       });
       const data = await res.json();
       const routedModel = (data.model || playgroundModel).replace(/-\d{4}-\d{2}-\d{2}$/, "");
-      const resolvedRoutedModel = Object.keys(MODEL_COSTS).find(
-        k => routedModel.startsWith(k) || k.startsWith(routedModel)
-      ) || routedModel;
+      const resolvedRoutedModel = Object.keys(MODEL_COSTS).find(k => k === routedModel)
+        || Object.keys(MODEL_COSTS).find(k => routedModel.startsWith(k + "-"))
+        || routedModel;
       const wasRouted = resolvedRoutedModel !== playgroundModel;
       const totalTokens = data.usage?.total_tokens || 100;
       const originalCost = (MODEL_COSTS[playgroundModel] || 10e-6) * totalTokens;
