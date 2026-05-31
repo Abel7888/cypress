@@ -338,17 +338,6 @@ class ModelRouter:
                     estimated_savings_pct=savings,
                 )
         elif complexity == "moderate":
-            downgraded = DOWNGRADE_MAP.get(request_model, request_model)
-            if downgraded != request_model:
-                savings = self._estimate_savings(request_model, downgraded)
-                return RoutingDecision(
-                    original_model=request_model,
-                    routed_model=downgraded,
-                    provider=self._infer_provider(downgraded),
-                    was_downgraded=True,
-                    routing_reason=f"auto:moderate_task (score={score}/10)",
-                    estimated_savings_pct=savings,
-                )
             return RoutingDecision(
                 original_model=request_model,
                 routed_model=request_model,
