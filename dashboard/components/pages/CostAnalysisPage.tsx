@@ -296,7 +296,7 @@ export default function CostAnalysisPage() {
     setPlaygroundResult(null);
     const { apiKey } = await getTenantConfig();
     try {
-      const res = await fetch(`${API_BASE}/v1/chat/completions`, {
+      const res = await fetch(`${API_BASE}/v1/route-test`, {
         method: "POST",
         headers: { Authorization: `Bearer ${apiKey || ""}`, "Content-Type": "application/json", "X-Agent-ID": "route-tester" },
         body: JSON.stringify({ model: playgroundModel, max_tokens: 300, messages: [{ role: "user", content: playgroundPrompt }] }),
